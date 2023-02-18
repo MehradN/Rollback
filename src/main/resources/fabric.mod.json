@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "rollback",
+	"version": "${version}",
+	"name": "Rollback",
+	"description": "This mod will allow you to rollback your single-player worlds up to 4 in-game days.",
+	"authors": [
+		"Mehrad Nayyeri"
+	],
+	"contact": {
+		"homepage": "https://github.com/MehradN/Rollback",
+		"sources": "https://github.com/MehradN/Rollback"
+	},
+	"license": "GPL-3.0",
+	"icon": "assets/rollback/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"ir.mehradn.Rollback"
+		]
+	},
+	"mixins": [
+		"rollback.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.14",
+		"minecraft": "~1.19.3",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
