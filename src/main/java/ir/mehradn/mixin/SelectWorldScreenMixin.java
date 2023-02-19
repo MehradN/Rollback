@@ -25,7 +25,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
     private void onInit(CallbackInfo ci) {
         this.recreateButton.visible = false;
         this.recreateButton.active = false;
-        this.rollbackButton = (ButtonWidget)this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.button"), (button) -> {
+        this.rollbackButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.selectWorld"), (button) -> {
             System.out.println("BUTTON PRESSED!!!");
         }).dimensions(this.recreateButton.getX(), this.recreateButton.getY(), this.recreateButton.getWidth(), this.recreateButton.getHeight()).build());
     }
