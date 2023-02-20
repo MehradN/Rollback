@@ -1,4 +1,5 @@
 {
-  "rollback.selectWorld": "Rollback",
-  "rollback.editWorld": "Backups & Rollback"
+  "rollback.selectWorld.button": "Rollback",
+  "rollback.editWorld.button": "Backups & Rollback",
+  "rollback.editWorld.recreate": "Re-Create World"
 }
