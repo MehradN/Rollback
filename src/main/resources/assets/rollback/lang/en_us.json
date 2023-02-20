@@ -1,5 +1,8 @@
 {
   "rollback.selectWorld.button": "Rollback",
   "rollback.editWorld.button": "Backups & Rollback",
-  "rollback.editWorld.recreate": "Re-Create World"
+  "rollback.editWorld.recreate": "Re-Create World",
+  "rollback.screen.title": "Select Backup",
+  "rollback.screen.rollbackButton": "Play Selected Backup",
+  "rollback.screen.manualBackup": "Make Manual Backup"
 }

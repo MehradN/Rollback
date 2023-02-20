@@ -1,5 +1,6 @@
 package ir.mehradn.mixin;
 
+import ir.mehradn.gui.RollbackScreen;
 import ir.mehradn.util.PublicStatics;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
@@ -11,6 +12,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Optional;
 
 @Mixin(SelectWorldScreen.class)
 public abstract class SelectWorldScreenMixin extends Screen {
@@ -28,12 +31,13 @@ public abstract class SelectWorldScreenMixin extends Screen {
         this.recreateButton.visible = false;
         this.recreateButton.active = false;
         this.rollbackButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.selectWorld.button"), (button) -> {
-            System.out.println("BUTTON PRESSED!!!");
+            Optional<WorldListWidget.WorldEntry> w = this.levelList.getSelectedAsOptional();
+            w.ifPresent(entry -> this.client.setScreen(new RollbackScreen(this, ((WorldEntryAccessor)(Object)entry).getLevel())));
         }).dimensions(this.recreateButton.getX(), this.recreateButton.getY(), this.recreateButton.getWidth(), this.recreateButton.getHeight()).build());
     }
 
     @Inject(method = "init", at = @At("RETURN"))
-    private void recreateWorldIfNeeded(CallbackInfo ci) {
+    private void changeScreen(CallbackInfo ci) {
         if (PublicStatics.recreateWorld != null) {
             try (WorldListWidget.WorldEntry world = this.levelList.new WorldEntry(this.levelList, PublicStatics.recreateWorld)) {
                 this.levelList.setSelected(world);
@@ -42,6 +46,9 @@ public abstract class SelectWorldScreenMixin extends Screen {
             finally {
                 PublicStatics.recreateWorld = null;
             }
+        } else if (PublicStatics.rollbackWorld != null) {
+            this.client.setScreen(new RollbackScreen(this, PublicStatics.rollbackWorld));
+            PublicStatics.rollbackWorld = null;
         }
     }
 

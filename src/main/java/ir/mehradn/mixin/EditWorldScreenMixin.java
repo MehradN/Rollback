@@ -36,13 +36,16 @@ public abstract class EditWorldScreenMixin extends Screen {
         backupButton.visible = false;
         backupButton.active = false;
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.button"), (button) -> {
-            System.out.println("BUTTON PRESSED!!!");
+            PublicStatics.recreateWorld = null;
+            PublicStatics.rollbackWorld = this.storageSession.getLevelSummary();
+            this.callback.accept(false);
         }).dimensions(backupButton.getX(), backupButton.getY(), backupButton.getWidth(), backupButton.getHeight()).build());
 
         openBackupFolderButton.visible = false;
         openBackupFolderButton.active = false;
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.recreate"), (button) -> {
             PublicStatics.recreateWorld = this.storageSession.getLevelSummary();
+            PublicStatics.rollbackWorld = null;
             this.callback.accept(false);
         }).dimensions(openBackupFolderButton.getX(), openBackupFolderButton.getY(), openBackupFolderButton.getWidth(), openBackupFolderButton.getHeight()).build());
     }
