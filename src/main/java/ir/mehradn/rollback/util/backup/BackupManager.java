@@ -50,7 +50,7 @@ public class BackupManager {
         }
     }
 
-    public void createNormalBackup(LevelSummary summary) {
+    public boolean createNormalBackup(LevelSummary summary) {
         long l;
         try (LevelStorage.Session session = MinecraftClient.getInstance().getLevelStorage().createSession(summary.getName())) {
             l = session.createBackup();
@@ -58,11 +58,13 @@ public class BackupManager {
                     Text.translatable("selectWorld.edit.backupCreated", session.getDirectoryName()),
                     Text.translatable("selectWorld.edit.backupSize", MathHelper.ceil((double)l / 1048576.0))
             ));
+            return true;
         } catch (IOException e) {
             MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
                     Text.translatable("selectWorld.edit.backupFailed"),
                     Text.literal(e.getMessage())
             ));
+            return false;
         }
     }
 

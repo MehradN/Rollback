@@ -1,4 +1,4 @@
-package ir.mehradn;
+package ir.mehradn.rollback;
 
 import net.fabricmc.api.ModInitializer;
 

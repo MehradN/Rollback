@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"ir.mehradn.Rollback"
+          "ir.mehradn.rollback.Rollback"
 		]
 	},
 	"mixins": [
