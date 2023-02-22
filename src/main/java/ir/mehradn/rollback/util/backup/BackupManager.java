@@ -23,12 +23,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Environment(EnvType.CLIENT)
 public class BackupManager {
     private JsonObject backupInfo;
-    private final Path rollbackDirectory;
-    private final Path iconsDirectory;
+    public final Path rollbackDirectory;
+    public final Path iconsDirectory;
     private final Path backupInfoFile;
 
     public BackupManager() {
@@ -36,7 +38,7 @@ public class BackupManager {
         iconsDirectory = Path.of(rollbackDirectory.toString(), "icons");
         backupInfoFile = Path.of(rollbackDirectory.toString(), "rollbacks.json");
         try {
-            backupInfo = JsonParser.parseReader(new FileReader(backupInfoFile.toFile())).getAsJsonObject();
+            this.loadBackupInfo();
         } catch (FileNotFoundException e) {
             backupInfo = new JsonObject();
             try {
@@ -45,6 +47,10 @@ public class BackupManager {
                 throw new RuntimeException(ex);
             }
         }
+    }
+
+    public void loadBackupInfo() throws FileNotFoundException {
+        backupInfo = JsonParser.parseReader(new FileReader(backupInfoFile.toFile())).getAsJsonObject();
     }
 
     private void saveBackupInfo() throws IOException {
@@ -123,7 +129,7 @@ public class BackupManager {
         path2 = rollbackDirectory.relativize(path2);
         path3 = rollbackDirectory.relativize(path3);
         RollbackBackup backup = new RollbackBackup(session.getDirectoryName(), path2, path3, LocalDateTime.now(), daysPlayed);
-        String worldName = session.getDirectoryName();
+        String worldName = session.getLevelSummary().getName();
         if (!this.backupInfo.has(worldName))
             this.backupInfo.add(worldName, new JsonArray());
         this.backupInfo.getAsJsonArray(worldName).add(backup.toObject());
@@ -138,9 +144,16 @@ public class BackupManager {
         return true;
     }
 
-    /*public void loadBackupInfo() {}
+    public List<RollbackBackup> getRollbacksFor(String worldName) {
+        ArrayList<RollbackBackup> list = new ArrayList<>();
+        if (!backupInfo.has(worldName))
+            return list;
 
-    public List<RollbackBackup> getRollbacksFor(String worldName) {}
+        JsonArray array = backupInfo.getAsJsonArray(worldName);
+        for (JsonElement elm : array)
+            list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
+        return list;
+    }
 
-    public void rollbackTo(RollbackBackup backup) {}*/
+    /*public void rollbackTo(RollbackBackup backup) {}*/
 }

@@ -20,7 +20,10 @@ public abstract class WorldEntryMixin extends WorldListWidget.Entry implements A
 
     @Shadow @Final private SelectWorldScreen screen;
 
+    @Shadow protected abstract void openReadingWorldScreen();
+
     public void rollback() {
+        this.openReadingWorldScreen();
         this.client.setScreen(new RollbackScreen(this.level, (reload) -> {
             if (reload)
                 ((WorldListWidgetAccessor)field_19135).InvokeLoad();
