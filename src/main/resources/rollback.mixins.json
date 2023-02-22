@@ -5,7 +5,11 @@
 	"client": [
 		"EditWorldScreenMixin",
 		"SelectWorldScreenMixin",
-		"WorldEntryMixin"
+		"WorldEntryMixin",
+		"WorldListWidgetAccessor",
+		"LevelStorageSessionMixin",
+		"MinecraftServerMixin",
+		"GameRendererAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -1,14 +1,17 @@
-package ir.mehradn.util.backup;
+package ir.mehradn.rollback.util.backup;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import ir.mehradn.rollback.mixin.GameRendererAccessor;
+import ir.mehradn.rollback.util.mixin.LevelStorageSessionExpanded;
+import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.toast.SystemToast;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
+import net.minecraft.util.PathUtil;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.level.storage.LevelSummary;
@@ -19,35 +22,45 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.time.LocalDateTime;
 
 @Environment(EnvType.CLIENT)
 public class BackupManager {
     private JsonObject backupInfo;
-    private final Path backupDirectory;
+    private final Path rollbackDirectory;
+    private final Path iconsDirectory;
     private final Path backupInfoFile;
 
     public BackupManager() {
-        backupDirectory = MinecraftClient.getInstance().getLevelStorage().getBackupsDirectory();
-        backupInfoFile = Path.of(backupDirectory.toString(), "rollbacks", "rollbacks.json");
+        rollbackDirectory = Path.of(MinecraftClient.getInstance().getLevelStorage().getBackupsDirectory().toString(), "rollbacks");
+        iconsDirectory = Path.of(rollbackDirectory.toString(), "icons");
+        backupInfoFile = Path.of(rollbackDirectory.toString(), "rollbacks.json");
         try {
             backupInfo = JsonParser.parseReader(new FileReader(backupInfoFile.toFile())).getAsJsonObject();
         } catch (FileNotFoundException e) {
             backupInfo = new JsonObject();
-            saveBackupInfo();
+            try {
+                saveBackupInfo();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
-    private void saveBackupInfo() {
-        try {
-            Files.createDirectories(Path.of(backupDirectory.toString(), "rollbacks"));
-            FileWriter writer = new FileWriter(backupInfoFile.toFile());
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            gson.toJson(backupInfo, writer);
-            writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private void saveBackupInfo() throws IOException {
+        Files.createDirectories(rollbackDirectory);
+        Files.createDirectories(iconsDirectory);
+        FileWriter writer = new FileWriter(backupInfoFile.toFile());
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        gson.toJson(backupInfo, writer);
+        writer.close();
+    }
+
+    private void showErrorToast(IOException e) {
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                Text.translatable("selectWorld.edit.backupFailed"),
+                Text.literal(e.getMessage())
+        ));
     }
 
     public boolean createNormalBackup(LevelSummary summary) {
@@ -60,17 +73,70 @@ public class BackupManager {
             ));
             return true;
         } catch (IOException e) {
-            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
-                    Text.translatable("selectWorld.edit.backupFailed"),
-                    Text.literal(e.getMessage())
-            ));
+            showErrorToast(e);
             return false;
         }
     }
 
-    /*public void createRollbackBackup() {}
+    public boolean createRollbackBackup(MinecraftServer server) {
+        boolean bl = server.saveAll(true, false, true);
+        if (!bl) {
+            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                    Text.translatable("selectWorld.edit.backupFailed"),
+                    Text.translatable("commands.save.failed")
+            ));
+            return false;
+        }
 
-    public void loadBackupInfo() {}
+        LevelStorage.Session session = ((MinecraftServerExpanded) server).getSession();
+        try {
+            session.createBackup();
+        } catch (IOException e) {
+            showErrorToast(e);
+            return false;
+        }
+
+        Path path1 = ((LevelStorageSessionExpanded) session).getLatestBackupPath();
+        Path path2 = Path.of(rollbackDirectory.toString(), path1.getFileName().toString());
+        try {
+            Files.move(path1, path2);
+        } catch (IOException e) {
+            showErrorToast(e);
+            return false;
+        }
+
+        Path path3;
+        try {
+            path3 = iconsDirectory.resolve(PathUtil.getNextUniqueName(iconsDirectory, session.getDirectoryName(), ".png"));
+            Path finalPath = path3;
+            MinecraftClient.getInstance().execute(() -> {
+                GameRenderer renderer =  MinecraftClient.getInstance().gameRenderer;
+                ((GameRendererAccessor) renderer).InvokeUpdateWorldIcon(finalPath);
+            });
+        } catch (IOException e) {
+            showErrorToast(e);
+            return false;
+        }
+
+        path2 = rollbackDirectory.relativize(path2);
+        path3 = rollbackDirectory.relativize(path3);
+        RollbackBackup backup = new RollbackBackup(session.getDirectoryName(), path2, path3, LocalDateTime.now());
+        String worldName = session.getDirectoryName();
+        if (!this.backupInfo.has(worldName))
+            this.backupInfo.add(worldName, new JsonArray());
+        this.backupInfo.getAsJsonArray(worldName).add(backup.toObject());
+
+        try {
+            saveBackupInfo();
+        } catch (IOException e) {
+            showErrorToast(e);
+            return false;
+        }
+
+        return true;
+    }
+
+    /*public void loadBackupInfo() {}
 
     public List<RollbackBackup> getRollbacksFor(String worldName) {}
 

@@ -4,5 +4,7 @@
   "rollback.editWorld.recreate": "Re-Create World",
   "rollback.screen.title": "Select Backup",
   "rollback.screen.rollbackButton": "Play Selected Backup",
-  "rollback.screen.manualBackup": "Make Manual Backup"
+  "rollback.screen.manualBackup": "Make Manual Backup",
+  "rollback.command.backupNow.failed": "Failed to create a rollback backup!",
+  "rollback.command.backupNow.success": "Created a rollback backup successfully."
 }
