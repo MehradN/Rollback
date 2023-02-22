@@ -118,9 +118,11 @@ public class BackupManager {
             return false;
         }
 
+        int daysPlayed = (int) (MinecraftClient.getInstance().world.getTimeOfDay() / 24000);
+
         path2 = rollbackDirectory.relativize(path2);
         path3 = rollbackDirectory.relativize(path3);
-        RollbackBackup backup = new RollbackBackup(session.getDirectoryName(), path2, path3, LocalDateTime.now());
+        RollbackBackup backup = new RollbackBackup(session.getDirectoryName(), path2, path3, LocalDateTime.now(), daysPlayed);
         String worldName = session.getDirectoryName();
         if (!this.backupInfo.has(worldName))
             this.backupInfo.add(worldName, new JsonArray());

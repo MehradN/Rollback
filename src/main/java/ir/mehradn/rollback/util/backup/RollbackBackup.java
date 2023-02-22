@@ -15,10 +15,12 @@ public class RollbackBackup {
     public final Path backupPath;
     public final Path iconPath;
     public final LocalDateTime backupTime;
+    public final int daysPlayed;
 
     public RollbackBackup(String directoryName, JsonObject rollbackData) {
         worldName = directoryName;
         backupTime = LocalDateTime.parse(rollbackData.get("creation_date").getAsString(), TIME_FORMATTER);
+        daysPlayed = rollbackData.get("days_played").getAsInt();
         backupPath = Path.of(rollbackData.get("backup_file").getAsString());
         if (rollbackData.has("icon_file"))
             iconPath = Path.of(rollbackData.get("icon_file").getAsString());
@@ -26,16 +28,18 @@ public class RollbackBackup {
             iconPath = null;
     }
 
-    public RollbackBackup(String worldName, Path backupPath, Path iconPath, LocalDateTime backupTime) {
+    public RollbackBackup(String worldName, Path backupPath, Path iconPath, LocalDateTime backupTime, int daysPlayed) {
         this.worldName = worldName;
         this.backupPath = backupPath;
         this.iconPath = iconPath;
         this.backupTime = backupTime;
+        this.daysPlayed = daysPlayed;
     }
 
     public JsonObject toObject() {
         JsonObject obj = new JsonObject();
         obj.addProperty("creation_date", backupTime.format(TIME_FORMATTER));
+        obj.addProperty("days_played", daysPlayed);
         obj.addProperty("backup_file", backupPath.toString());
         if (iconPath != null)
             obj.addProperty("icon_file", iconPath.toString());
