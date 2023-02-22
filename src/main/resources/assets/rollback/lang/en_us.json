@@ -9,5 +9,9 @@
   "rollback.screen.created": "Created: %s",
   "rollback.narrator.selectRollback": "Selected backup %d, created: %s, day: %d",
   "rollback.command.backupNow.failed": "Failed to create a rollback backup!",
-  "rollback.command.backupNow.success": "Created a rollback backup successfully."
+  "rollback.command.backupNow.success": "Created a rollback backup successfully.",
+  "rollback.command.backupDelete.success": "Deleted the backup successfully.",
+  "rollback.command.list.title": "Backups:",
+  "rollback.command.list.day": "Day %d",
+  "rollback.command.list.created": "Created: %s    "
 }

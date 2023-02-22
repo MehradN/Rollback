@@ -21,10 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,13 +70,11 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
 
     @Environment(EnvType.CLIENT)
     public final class RollbackEntry extends AlwaysSelectedEntryListWidget.Entry<RollbackEntry> implements AutoCloseable {
-        private static final DateFormat DATE_FORMAT = new SimpleDateFormat();
         private static final Identifier UNKNOWN_SERVER_LOCATION = new Identifier("textures/misc/unknown_server.png");
         private static final Identifier WORLD_SELECTION_LOCATION = new Identifier("textures/gui/world_selection.png");
         private final MinecraftClient client;
         private final int backupNumber;
         private final RollbackBackup backup;
-        private final Date creationDate;
         private final Identifier iconLocation;
         private final NativeImageBackedTexture icon;
 
@@ -88,7 +82,6 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
             this.client = RollbackListWidget.this.client;
             this.backupNumber = backupNumber;
             this.backup = rollbackBackup;
-            this.creationDate = Date.from(backup.backupTime.toInstant(ZoneOffset.UTC));
             this.iconLocation = new Identifier("rollback", "backup/" + this.backupNumber + "/icon.png");
             this.icon = getIconTexture();
         }
@@ -96,14 +89,14 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
         public Text getNarration() {
             return Text.translatable("rollback.narrator.selectRollback",
                     backupNumber,
-                    creationDate,
+                    backup.getDateAsString(),
                     backup.daysPlayed
             );
         }
 
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             Text title = Text.translatable("rollback.screen.day", backup.daysPlayed);
-            Text created = Text.translatable("rollback.screen.created", DATE_FORMAT.format(creationDate));
+            Text created = Text.translatable("rollback.screen.created", backup.getDateAsString());
             this.client.textRenderer.draw(matrices, title, (float)(x + 32 + 3), (float)(y + 1), 0xFFFFFF);
             this.client.textRenderer.draw(matrices, created, (float)(x + 32 + 3), (float)(y + this.client.textRenderer.fontHeight + 3), 0x808080);
 

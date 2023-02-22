@@ -49,7 +49,7 @@ public class BackupManager {
         }
     }
 
-    public void loadBackupInfo() throws FileNotFoundException {
+    private void loadBackupInfo() throws FileNotFoundException {
         backupInfo = JsonParser.parseReader(new FileReader(backupInfoFile.toFile())).getAsJsonObject();
     }
 
@@ -69,6 +69,10 @@ public class BackupManager {
         ));
     }
 
+    private int getMaxBackupCount() {
+        return 5;
+    }
+
     public boolean createNormalBackup(LevelSummary summary) {
         long l;
         try (LevelStorage.Session session = MinecraftClient.getInstance().getLevelStorage().createSession(summary.getName())) {
@@ -85,6 +89,15 @@ public class BackupManager {
     }
 
     public boolean createRollbackBackup(MinecraftServer server) {
+        LevelStorage.Session session = ((MinecraftServerExpanded) server).getSession();
+        String worldName = session.getLevelSummary().getName();
+        if (!this.backupInfo.has(worldName))
+            this.backupInfo.add(worldName, new JsonArray());
+        JsonArray array = this.backupInfo.getAsJsonArray(worldName);
+
+        while (array.size() >= getMaxBackupCount())
+            deleteOldestBackup(worldName);
+
         boolean bl = server.saveAll(true, false, true);
         if (!bl) {
             MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
@@ -94,7 +107,6 @@ public class BackupManager {
             return false;
         }
 
-        LevelStorage.Session session = ((MinecraftServerExpanded) server).getSession();
         try {
             session.createBackup();
         } catch (IOException e) {
@@ -128,11 +140,8 @@ public class BackupManager {
 
         path2 = rollbackDirectory.relativize(path2);
         path3 = rollbackDirectory.relativize(path3);
-        RollbackBackup backup = new RollbackBackup(session.getDirectoryName(), path2, path3, LocalDateTime.now(), daysPlayed);
-        String worldName = session.getLevelSummary().getName();
-        if (!this.backupInfo.has(worldName))
-            this.backupInfo.add(worldName, new JsonArray());
-        this.backupInfo.getAsJsonArray(worldName).add(backup.toObject());
+        RollbackBackup backup = new RollbackBackup(worldName, path2, path3, LocalDateTime.now(), daysPlayed);
+        array.add(backup.toObject());
 
         try {
             saveBackupInfo();
@@ -153,6 +162,47 @@ public class BackupManager {
         for (JsonElement elm : array)
             list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
         return list;
+    }
+
+    public void deleteOldestBackup(String worldName) {
+        if (!backupInfo.has(worldName))
+            return;
+
+        JsonArray array = backupInfo.getAsJsonArray(worldName);
+        RollbackBackup backup = new RollbackBackup(worldName, array.get(0).getAsJsonObject());
+        array.remove(0);
+
+        try {
+            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.iconPath.toString()));
+        } catch (IOException ignored) {}
+        try {
+            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.backupPath.toString()));
+        } catch (IOException ignored) {}
+
+        try {
+            saveBackupInfo();
+        } catch (IOException ignored) {}
+    }
+
+    public void deleteLatestBackup(String worldName) {
+        if (!backupInfo.has(worldName))
+            return;
+
+        JsonArray array = backupInfo.getAsJsonArray(worldName);
+        int index = array.size() - 1;
+        RollbackBackup backup = new RollbackBackup(worldName, array.get(index).getAsJsonObject());
+        array.remove(index);
+
+        try {
+            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.iconPath.toString()));
+        } catch (IOException ignored) {}
+        try {
+            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.backupPath.toString()));
+        } catch (IOException ignored) {}
+
+        try {
+            saveBackupInfo();
+        } catch (IOException ignored) {}
     }
 
     /*public void rollbackTo(RollbackBackup backup) {}*/
