@@ -45,11 +45,16 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
     }
 
     private void addEntries() {
+        this.clearEntries();
         List<RollbackBackup> backups = backupManager.getRollbacksFor(worldName);
         for (int i = 1; i <= backups.size(); i++)
             this.addEntry(new RollbackEntry(i, backups.get(backups.size()-i)));
         this.screen.narrateScreenIfNarrationEnabled(true);
         addedEntries = true;
+    }
+
+    protected int getScrollbarPositionX() {
+        return super.getScrollbarPositionX() + 20;
     }
 
     public int getRowWidth() {
@@ -154,6 +159,11 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
 
         public void play() {
             System.out.println("ROLLBACK_SCREEN: rollbackButton");
+        }
+
+        public void delete() {
+            RollbackListWidget.this.backupManager.deleteBackup(backup.worldName, backupNumber);
+            RollbackListWidget.this.addedEntries = false;
         }
 
         public void close() {

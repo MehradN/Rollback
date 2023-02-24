@@ -21,6 +21,7 @@ public class RollbackScreen extends Screen {
     private final BackupManager backupManager;
     private RollbackListWidget rollbackList;
     private ButtonWidget rollbackButton;
+    private ButtonWidget deleteButton;
 
     public RollbackScreen(LevelSummary summary, BooleanConsumer callback) {
         super(Text.translatable("rollback.screen.title"));
@@ -41,12 +42,15 @@ public class RollbackScreen extends Screen {
             boolean b = backupManager.createNormalBackup(this.levelSummary);
             callback.accept(!b);
         }).dimensions(this.width / 2 + 4, this.height - 52, 150, 20).build());
+        this.deleteButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.screen.delete"),
+                (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.RollbackEntry::delete)
+        ).dimensions(this.width / 2 - 154, this.height - 28, 72, 20).build());
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.screen.openFolder"),
                 (button) -> Util.getOperatingSystem().open(this.client.getLevelStorage().getBackupsDirectory().toFile())
-        ).dimensions(this.width / 2 - 154, this.height - 28, 150, 20).build());
+        ).dimensions(this.width / 2 - 76, this.height - 28, 150, 20).build());
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CANCEL,
                 (button) -> this.callback.accept(false)
-        ).dimensions(this.width / 2 + 4, this.height - 28, 150, 20).build());
+        ).dimensions(this.width / 2 + 82, this.height - 28, 72, 20).build());
         this.rollbackSelected(false);
     }
 
@@ -59,6 +63,7 @@ public class RollbackScreen extends Screen {
 
     public void rollbackSelected(boolean active) {
         this.rollbackButton.active = active;
+        this.deleteButton.active = active;
     }
 
     public void removed() {

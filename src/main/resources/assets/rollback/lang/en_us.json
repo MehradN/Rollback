@@ -12,6 +12,7 @@
   "rollback.screen.rollbackButton": "Play Selected Backup",
   "rollback.screen.manualBackup": "Make Manual Backup",
   "rollback.screen.openFolder": "Open Backups Folder",
+  "rollback.screen.delete": "Delete",
   "rollback.narrator.selectRollback": "Selected backup %d, created: %s, day: %d",
   "rollback.command.list.title": "Backups:"
 }
