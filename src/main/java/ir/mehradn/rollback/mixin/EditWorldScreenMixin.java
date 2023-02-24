@@ -42,12 +42,14 @@ public abstract class EditWorldScreenMixin extends Screen {
     @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/client/gui/screen/world/EditWorldScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
     private void addButtons(CallbackInfo ci) {
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.button"), (button) -> {
+            PublicStatics.playWorld = null;
             PublicStatics.recreateWorld = null;
             PublicStatics.rollbackWorld = this.storageSession.getLevelSummary();
             this.callback.accept(false);
         }).dimensions(buttonPosition1[0], buttonPosition1[1], buttonPosition1[2], buttonPosition1[3]).build());
 
         this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.recreateButton"), (button) -> {
+            PublicStatics.playWorld = null;
             PublicStatics.recreateWorld = this.storageSession.getLevelSummary();
             PublicStatics.rollbackWorld = null;
             this.callback.accept(false);

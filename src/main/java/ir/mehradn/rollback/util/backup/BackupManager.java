@@ -16,15 +16,15 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.level.storage.LevelSummary;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 @Environment(EnvType.CLIENT)
 public class BackupManager {
@@ -197,5 +197,37 @@ public class BackupManager {
         return list;
     }
 
-    /*public void rollbackTo(RollbackBackup backup) {}*/
+    public boolean rollbackTo(RollbackBackup backup) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        try (LevelStorage.Session session = client.getLevelStorage().createSession(backup.worldName)) {
+            session.deleteSessionLock();
+        } catch (IOException e) {
+            showErrorToast("rollback.rollback.failed", e);
+            return false;
+        }
+
+        Path source = Path.of(rollbackDirectory.toString(), backup.backupPath.toString());
+        Path dest = client.getLevelStorage().getSavesDirectory();
+        try (ZipFile zip = new ZipFile(source.toFile())) {
+            Enumeration<? extends ZipEntry> entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                Path path = Path.of(dest.toString(), entry.getName());
+                if (entry.isDirectory())
+                    Files.createDirectories(path);
+                else {
+                    Files.createDirectories(path.getParent());
+                    try (InputStream in = zip.getInputStream(entry);
+                         OutputStream out = Files.newOutputStream(path)) {
+                        in.transferTo(out);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            showErrorToast("rollback.rollback.failed", e);
+            return false;
+        }
+
+        return true;
+    }
 }

@@ -4,10 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import ir.mehradn.rollback.gui.RollbackScreen;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
+import ir.mehradn.rollback.util.mixin.PublicStatics;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.texture.NativeImage;
@@ -15,6 +17,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.level.storage.LevelSummary;
 import org.apache.commons.lang3.Validate;
 
 import java.io.IOException;
@@ -28,14 +31,14 @@ import java.util.Optional;
 public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackListWidget.RollbackEntry> {
     private final RollbackScreen screen;
     private final BackupManager backupManager;
-    private final String worldName;
+    private final LevelSummary summary;
     private boolean addedEntries = false;
 
-    public RollbackListWidget(RollbackScreen screen, BackupManager backupManager, String worldName, MinecraftClient minecraftClient, int width, int height, int top, int bottom, int itemHeight) {
+    public RollbackListWidget(RollbackScreen screen, BackupManager backupManager, LevelSummary levelSummary, MinecraftClient minecraftClient, int width, int height, int top, int bottom, int itemHeight) {
         super(minecraftClient, width, height, top, bottom, itemHeight);
         this.screen = screen;
         this.backupManager = backupManager;
-        this.worldName = worldName;
+        this.summary = levelSummary;
     }
 
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
@@ -46,7 +49,7 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
 
     private void addEntries() {
         this.clearEntries();
-        List<RollbackBackup> backups = backupManager.getRollbacksFor(worldName);
+        List<RollbackBackup> backups = backupManager.getRollbacksFor(summary.getName());
         for (int i = 1; i <= backups.size(); i++)
             this.addEntry(new RollbackEntry(i, backups.get(backups.size()-i)));
         this.screen.narrateScreenIfNarrationEnabled(true);
@@ -158,12 +161,36 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
         }
 
         public void play() {
-            System.out.println("ROLLBACK_SCREEN: rollbackButton");
+            this.client.setScreen(new ConfirmScreen(
+                    (confirmed) -> {
+                        if (RollbackListWidget.this.backupManager.rollbackTo(this.backup)) {
+                            PublicStatics.playWorld = RollbackListWidget.this.summary;
+                            PublicStatics.rollbackWorld = null;
+                            PublicStatics.recreateWorld = null;
+                        }
+                        RollbackListWidget.this.screen.closeAndReload();
+                    },
+                    Text.translatable("rollback.screen.rollbackQuestion"),
+                    Text.translatable("rollback.screen.rollbackWarning"),
+                    Text.translatable("rollback.button"),
+                    Text.translatable("rollback.screen.cancel")
+            ));
         }
 
         public void delete() {
-            RollbackListWidget.this.backupManager.deleteBackup(backup.worldName, backupNumber);
-            RollbackListWidget.this.addedEntries = false;
+            this.client.setScreen(new ConfirmScreen(
+                    (confirmed) -> {
+                        if (confirmed) {
+                            RollbackListWidget.this.backupManager.deleteBackup(backup.worldName, backupNumber);
+                            RollbackListWidget.this.addedEntries = false;
+                        }
+                        this.client.setScreen(RollbackListWidget.this.screen);
+                    },
+                    Text.translatable("rollback.screen.deleteQuestion"),
+                    Text.empty(),
+                    Text.translatable("rollback.screen.delete"),
+                    Text.translatable("rollback.screen.cancel")
+            ));
         }
 
         public void close() {

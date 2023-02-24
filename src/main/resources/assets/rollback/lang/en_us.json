@@ -1,11 +1,11 @@
 {
   "rollback.day": "Day %d",
   "rollback.created": "Created: %s",
+  "rollback.button": "Rollback",
   "rollback.createBackup.failed": "Failed to create a rollback backup!",
   "rollback.createBackup.success": "Created a rollback backup successfully.",
   "rollback.deleteBackup.failed": "Failed to delete a rollback backup!",
   "rollback.deleteBackup.success": "Deleted the backup successfully.",
-  "rollback.selectWorld.button": "Rollback",
   "rollback.editWorld.button": "Backups & Rollback",
   "rollback.editWorld.recreateButton": "Re-Create World",
   "rollback.screen.title": "Select Backup",
@@ -13,6 +13,10 @@
   "rollback.screen.manualBackup": "Make Manual Backup",
   "rollback.screen.openFolder": "Open Backups Folder",
   "rollback.screen.delete": "Delete",
+  "rollback.screen.cancel": "Cancel",
+  "rollback.screen.deleteQuestion": "Are you sure you want to delete this backup?",
+  "rollback.screen.rollbackQuestion": "Are you sure you want to rollback to this backup?",
+  "rollback.screen.rollbackWarning": "Any not backed up progress will be lost!",
   "rollback.narrator.selectRollback": "Selected backup %d, created: %s, day: %d",
   "rollback.command.list.title": "Backups:"
 }

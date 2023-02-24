@@ -31,7 +31,7 @@ public class RollbackScreen extends Screen {
     }
 
     protected void init() {
-        this.rollbackList = new RollbackListWidget(this, this.backupManager, this.levelSummary.getName(), this.client,
+        this.rollbackList = new RollbackListWidget(this, this.backupManager, this.levelSummary, this.client,
                 this.width, this.height, 22, this.height - 64, 36);
         this.addSelectableChild(this.rollbackList);
 
@@ -52,6 +52,10 @@ public class RollbackScreen extends Screen {
                 (button) -> this.callback.accept(false)
         ).dimensions(this.width / 2 + 82, this.height - 28, 72, 20).build());
         this.rollbackSelected(false);
+    }
+
+    public void closeAndReload() {
+        this.callback.accept(true);
     }
 
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
