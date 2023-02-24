@@ -1,5 +1,6 @@
 package ir.mehradn.rollback.event;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -27,9 +28,11 @@ public class CommandHandler {
                                         .executes(CommandHandler::backupNow))
                                 .then(CommandManager.literal("delete")
                                         .then(CommandManager.literal("oldest")
-                                                .executes(CommandHandler::deleteOldestBackup))
+                                                .executes((context) -> deleteBackup(context, 0)))
                                         .then(CommandManager.literal("latest")
-                                                .executes(CommandHandler::deleteLatestBackup))))
+                                                .executes((context) -> deleteBackup(context, 1)))
+                                        .then(CommandManager.argument("number", IntegerArgumentType.integer(1, getMaxBackupCount()))
+                                                .executes((context) -> deleteBackup(context, 2)))))
                         .then(CommandManager.literal("list")
                                 .executes(CommandHandler::listBackups)));
         }));
@@ -39,34 +42,34 @@ public class CommandHandler {
         return true;
     }
 
+    public static int getMaxBackupCount() {
+        return 5;
+    }
+
     public static int backupNow(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded) server).getBackupManager();
+
         if (!backupManager.createRollbackBackup(server))
             throw new SimpleCommandExceptionType(Text.translatable("rollback.command.backupNow.failed")).create();
+
         context.getSource().sendFeedback(Text.translatable("rollback.command.backupNow.success"), true);
         return 1;
     }
 
-    public static int deleteOldestBackup(CommandContext<ServerCommandSource> context) {
+    public static int deleteBackup(CommandContext<ServerCommandSource> context, int index) throws CommandSyntaxException {
+        if (index == 1)
+            index = -1;
+        else if (index == 2)
+            index = IntegerArgumentType.getInteger(context, "number")-1;
+
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded) server).getBackupManager();
         LevelStorage.Session session = ((MinecraftServerExpanded) server).getSession();
         String worldName = session.getLevelSummary().getName();
 
-        backupManager.deleteOldestBackup(worldName);
-
-        context.getSource().sendFeedback(Text.translatable("rollback.command.backupDelete.success"), true);
-        return 1;
-    }
-
-    public static int deleteLatestBackup(CommandContext<ServerCommandSource> context) {
-        MinecraftServer server = context.getSource().getServer();
-        BackupManager backupManager = ((MinecraftServerExpanded) server).getBackupManager();
-        LevelStorage.Session session = ((MinecraftServerExpanded) server).getSession();
-        String worldName = session.getLevelSummary().getName();
-
-        backupManager.deleteLatestBackup(worldName);
+        if (!backupManager.deleteBackup(worldName, index))
+            throw new SimpleCommandExceptionType(Text.translatable("rollback.command.backupDelete.failed")).create();
 
         context.getSource().sendFeedback(Text.translatable("rollback.command.backupDelete.success"), true);
         return 1;

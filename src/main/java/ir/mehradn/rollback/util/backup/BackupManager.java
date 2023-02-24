@@ -62,9 +62,9 @@ public class BackupManager {
         writer.close();
     }
 
-    private void showErrorToast(IOException e) {
+    private void showErrorToast(String title, IOException e) {
         MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
-                Text.translatable("selectWorld.edit.backupFailed"),
+                Text.translatable(title),
                 Text.literal(e.getMessage())
         ));
     }
@@ -83,7 +83,7 @@ public class BackupManager {
             ));
             return true;
         } catch (IOException e) {
-            showErrorToast(e);
+            showErrorToast("selectWorld.edit.backupFailed", e);
             return false;
         }
     }
@@ -96,12 +96,12 @@ public class BackupManager {
         JsonArray array = this.backupInfo.getAsJsonArray(worldName);
 
         while (array.size() >= getMaxBackupCount())
-            deleteOldestBackup(worldName);
+            deleteBackup(worldName, 0);
 
         boolean bl = server.saveAll(true, false, true);
         if (!bl) {
             MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
-                    Text.translatable("selectWorld.edit.backupFailed"),
+                    Text.translatable("rollback.command.backupNow.failed"),
                     Text.translatable("commands.save.failed")
             ));
             return false;
@@ -110,7 +110,7 @@ public class BackupManager {
         try {
             session.createBackup();
         } catch (IOException e) {
-            showErrorToast(e);
+            showErrorToast("rollback.command.backupNow.failed", e);
             return false;
         }
 
@@ -119,7 +119,7 @@ public class BackupManager {
         try {
             Files.move(path1, path2);
         } catch (IOException e) {
-            showErrorToast(e);
+            showErrorToast("rollback.command.backupNow.failed", e);
             return false;
         }
 
@@ -132,7 +132,7 @@ public class BackupManager {
                 ((GameRendererAccessor) renderer).InvokeUpdateWorldIcon(finalPath);
             });
         } catch (IOException e) {
-            showErrorToast(e);
+            showErrorToast("rollback.command.backupNow.failed", e);
             return false;
         }
 
@@ -146,7 +146,40 @@ public class BackupManager {
         try {
             saveBackupInfo();
         } catch (IOException e) {
-            showErrorToast(e);
+            showErrorToast("rollback.command.backupNow.failed", e);
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean deleteBackup(String worldName, int index) {
+        if (!backupInfo.has(worldName))
+            return true;
+
+        JsonArray array = backupInfo.getAsJsonArray(worldName);
+        if (index == -1)
+            index += array.size();
+        if (array.size() <= index)
+            return true;
+
+        RollbackBackup backup = new RollbackBackup(worldName, array.get(index).getAsJsonObject());
+
+        try {
+            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.iconPath.toString()));
+            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.backupPath.toString()));
+        } catch (IOException e) {
+            showErrorToast("rollback.command.backupDelete.failed", e);
+            return false;
+        }
+
+        JsonArray oldArray = array.deepCopy();
+        array.remove(index);
+        try {
+            saveBackupInfo();
+        } catch (IOException e) {
+            backupInfo.add(worldName, oldArray);
+            showErrorToast("rollback.command.backupDelete.failed", e);
             return false;
         }
 
@@ -162,47 +195,6 @@ public class BackupManager {
         for (JsonElement elm : array)
             list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
         return list;
-    }
-
-    public void deleteOldestBackup(String worldName) {
-        if (!backupInfo.has(worldName))
-            return;
-
-        JsonArray array = backupInfo.getAsJsonArray(worldName);
-        RollbackBackup backup = new RollbackBackup(worldName, array.get(0).getAsJsonObject());
-        array.remove(0);
-
-        try {
-            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.iconPath.toString()));
-        } catch (IOException ignored) {}
-        try {
-            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.backupPath.toString()));
-        } catch (IOException ignored) {}
-
-        try {
-            saveBackupInfo();
-        } catch (IOException ignored) {}
-    }
-
-    public void deleteLatestBackup(String worldName) {
-        if (!backupInfo.has(worldName))
-            return;
-
-        JsonArray array = backupInfo.getAsJsonArray(worldName);
-        int index = array.size() - 1;
-        RollbackBackup backup = new RollbackBackup(worldName, array.get(index).getAsJsonObject());
-        array.remove(index);
-
-        try {
-            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.iconPath.toString()));
-        } catch (IOException ignored) {}
-        try {
-            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.backupPath.toString()));
-        } catch (IOException ignored) {}
-
-        try {
-            saveBackupInfo();
-        } catch (IOException ignored) {}
     }
 
     /*public void rollbackTo(RollbackBackup backup) {}*/
