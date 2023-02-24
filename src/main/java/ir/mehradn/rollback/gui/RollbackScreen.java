@@ -41,7 +41,7 @@ public class RollbackScreen extends Screen {
             boolean b = backupManager.createNormalBackup(this.levelSummary);
             callback.accept(!b);
         }).dimensions(this.width / 2 + 4, this.height - 52, 150, 20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("selectWorld.edit.backupFolder"),
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.screen.openFolder"),
                 (button) -> Util.getOperatingSystem().open(this.client.getLevelStorage().getBackupsDirectory().toFile())
         ).dimensions(this.width / 2 - 154, this.height - 28, 150, 20).build());
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CANCEL,
