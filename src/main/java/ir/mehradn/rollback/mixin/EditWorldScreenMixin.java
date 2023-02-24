@@ -47,7 +47,7 @@ public abstract class EditWorldScreenMixin extends Screen {
             this.callback.accept(false);
         }).dimensions(buttonPosition1[0], buttonPosition1[1], buttonPosition1[2], buttonPosition1[3]).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.recreate"), (button) -> {
+        this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.recreateButton"), (button) -> {
             PublicStatics.recreateWorld = this.storageSession.getLevelSummary();
             PublicStatics.rollbackWorld = null;
             this.callback.accept(false);

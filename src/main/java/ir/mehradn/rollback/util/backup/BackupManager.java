@@ -101,7 +101,7 @@ public class BackupManager {
         boolean bl = server.saveAll(true, false, true);
         if (!bl) {
             MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
-                    Text.translatable("rollback.command.backupNow.failed"),
+                    Text.translatable("rollback.createBackup.failed"),
                     Text.translatable("commands.save.failed")
             ));
             return false;
@@ -110,7 +110,7 @@ public class BackupManager {
         try {
             session.createBackup();
         } catch (IOException e) {
-            showErrorToast("rollback.command.backupNow.failed", e);
+            showErrorToast("rollback.createBackup.failed", e);
             return false;
         }
 
@@ -119,7 +119,7 @@ public class BackupManager {
         try {
             Files.move(path1, path2);
         } catch (IOException e) {
-            showErrorToast("rollback.command.backupNow.failed", e);
+            showErrorToast("rollback.createBackup.failed", e);
             return false;
         }
 
@@ -132,7 +132,7 @@ public class BackupManager {
                 ((GameRendererAccessor) renderer).InvokeUpdateWorldIcon(finalPath);
             });
         } catch (IOException e) {
-            showErrorToast("rollback.command.backupNow.failed", e);
+            showErrorToast("rollback.createBackup.failed", e);
             return false;
         }
 
@@ -146,7 +146,7 @@ public class BackupManager {
         try {
             saveBackupInfo();
         } catch (IOException e) {
-            showErrorToast("rollback.command.backupNow.failed", e);
+            showErrorToast("rollback.createBackup.failed", e);
             return false;
         }
 
@@ -169,7 +169,7 @@ public class BackupManager {
             Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.iconPath.toString()));
             Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.backupPath.toString()));
         } catch (IOException e) {
-            showErrorToast("rollback.command.backupDelete.failed", e);
+            showErrorToast("rollback.deleteBackup.failed", e);
             return false;
         }
 
@@ -179,7 +179,7 @@ public class BackupManager {
             saveBackupInfo();
         } catch (IOException e) {
             backupInfo.add(worldName, oldArray);
-            showErrorToast("rollback.command.backupDelete.failed", e);
+            showErrorToast("rollback.deleteBackup.failed", e);
             return false;
         }
 

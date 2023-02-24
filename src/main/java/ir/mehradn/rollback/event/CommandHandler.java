@@ -51,9 +51,9 @@ public class CommandHandler {
         BackupManager backupManager = ((MinecraftServerExpanded) server).getBackupManager();
 
         if (!backupManager.createRollbackBackup(server))
-            throw new SimpleCommandExceptionType(Text.translatable("rollback.command.backupNow.failed")).create();
+            throw new SimpleCommandExceptionType(Text.translatable("rollback.createBackup.failed")).create();
 
-        context.getSource().sendFeedback(Text.translatable("rollback.command.backupNow.success"), true);
+        context.getSource().sendFeedback(Text.translatable("rollback.createBackup.success"), true);
         return 1;
     }
 
@@ -69,9 +69,9 @@ public class CommandHandler {
         String worldName = session.getLevelSummary().getName();
 
         if (!backupManager.deleteBackup(worldName, index))
-            throw new SimpleCommandExceptionType(Text.translatable("rollback.command.backupDelete.failed")).create();
+            throw new SimpleCommandExceptionType(Text.translatable("rollback.deleteBackup.failed")).create();
 
-        context.getSource().sendFeedback(Text.translatable("rollback.command.backupDelete.success"), true);
+        context.getSource().sendFeedback(Text.translatable("rollback.deleteBackup.success"), true);
         return 1;
     }
 
@@ -86,8 +86,8 @@ public class CommandHandler {
             RollbackBackup backup = backups.get(backups.size()-i);
             MutableText part1, part2, part3;
             part1 = Text.literal(String.format("    #%-2d    ", i));
-            part2 = Text.translatable("rollback.command.list.created", backup.getDateAsString());
-            part3 = Text.translatable("rollback.command.list.day", backup.daysPlayed);
+            part2 = Text.translatable("rollback.created", backup.getDateAsString()).append(Text.literal("    "));
+            part3 = Text.translatable("rollback.day", backup.daysPlayed);
             context.getSource().sendMessage(part1.append(part2.append(part3)));
         }
 

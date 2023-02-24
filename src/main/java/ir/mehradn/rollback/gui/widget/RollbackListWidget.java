@@ -95,8 +95,8 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
         }
 
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            Text title = Text.translatable("rollback.screen.day", backup.daysPlayed);
-            Text created = Text.translatable("rollback.screen.created", backup.getDateAsString());
+            Text title = Text.translatable("rollback.day", backup.daysPlayed);
+            Text created = Text.translatable("rollback.created", backup.getDateAsString());
             this.client.textRenderer.draw(matrices, title, (float)(x + 32 + 3), (float)(y + 1), 0xFFFFFF);
             this.client.textRenderer.draw(matrices, created, (float)(x + 32 + 3), (float)(y + this.client.textRenderer.fontHeight + 3), 0x808080);
 
