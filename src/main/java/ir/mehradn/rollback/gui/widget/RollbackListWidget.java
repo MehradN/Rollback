@@ -34,7 +34,8 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
     private final LevelSummary summary;
     private boolean addedEntries = false;
 
-    public RollbackListWidget(RollbackScreen screen, BackupManager backupManager, LevelSummary levelSummary, MinecraftClient minecraftClient, int width, int height, int top, int bottom, int itemHeight) {
+    public RollbackListWidget(RollbackScreen screen, BackupManager backupManager, LevelSummary levelSummary, MinecraftClient minecraftClient,
+                              int width, int height, int top, int bottom, int itemHeight) {
         super(minecraftClient, width, height, top, bottom, itemHeight);
         this.screen = screen;
         this.backupManager = backupManager;
@@ -42,18 +43,18 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
     }
 
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        if (!addedEntries)
+        if (!this.addedEntries)
             addEntries();
         super.render(matrices, mouseX, mouseY, delta);
     }
 
     private void addEntries() {
-        this.clearEntries();
-        List<RollbackBackup> backups = backupManager.getRollbacksFor(summary.getName());
+        clearEntries();
+        List<RollbackBackup> backups = this.backupManager.getRollbacksFor(this.summary.getName());
         for (int i = 1; i <= backups.size(); i++)
-            this.addEntry(new RollbackEntry(i, backups.get(backups.size()-i)));
+            addEntry(new RollbackEntry(i, backups.get(backups.size() - i)));
         this.screen.narrateScreenIfNarrationEnabled(true);
-        addedEntries = true;
+        this.addedEntries = true;
     }
 
     protected int getScrollbarPositionX() {
@@ -70,7 +71,7 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
     }
 
     public Optional<RollbackEntry> getSelectedAsOptional() {
-        RollbackEntry entry = this.getSelectedOrNull();
+        RollbackEntry entry = getSelectedOrNull();
         if (entry != null)
             return Optional.of(entry);
         return Optional.empty();
@@ -96,17 +97,17 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
 
         public Text getNarration() {
             return Text.translatable("rollback.narrator.selectRollback",
-                    backupNumber,
-                    backup.getDateAsString(),
-                    backup.daysPlayed
+                this.backupNumber,
+                this.backup.getDateAsString(),
+                this.backup.daysPlayed
             );
         }
 
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            Text title = Text.translatable("rollback.day", backup.daysPlayed);
-            Text created = Text.translatable("rollback.created", backup.getDateAsString());
-            this.client.textRenderer.draw(matrices, title, (float)(x + 32 + 3), (float)(y + 1), 0xFFFFFF);
-            this.client.textRenderer.draw(matrices, created, (float)(x + 32 + 3), (float)(y + this.client.textRenderer.fontHeight + 3), 0x808080);
+            Text title = Text.translatable("rollback.day", this.backup.daysPlayed);
+            Text created = Text.translatable("rollback.created", this.backup.getDateAsString());
+            this.client.textRenderer.draw(matrices, title, x + 35, y + 1, 0xFFFFFF);
+            this.client.textRenderer.draw(matrices, created, x + 35, y + this.client.textRenderer.fontHeight + 3, 0x808080);
 
             RenderSystem.setShader(GameRenderer::getPositionTexProgram);
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -129,19 +130,19 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             RollbackListWidget.this.setSelected(this);
             if (mouseX - RollbackListWidget.this.getRowLeft() <= 32) {
-                this.play();
+                play();
                 return true;
             }
             return false;
         }
 
         public NativeImageBackedTexture getIconTexture() {
-            if (backup.iconPath == null) {
+            if (this.backup.iconPath == null) {
                 this.client.getTextureManager().destroyTexture(this.iconLocation);
                 return null;
             }
 
-            Path path = Path.of(RollbackListWidget.this.backupManager.rollbackDirectory.toString(), backup.iconPath.toString());
+            Path path = RollbackListWidget.this.backupManager.rollbackDirectory.resolve(this.backup.iconPath);
             if (!Files.isRegularFile(path)) {
                 this.client.getTextureManager().destroyTexture(this.iconLocation);
                 return null;
@@ -162,40 +163,40 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
 
         public void play() {
             this.client.setScreen(new ConfirmScreen(
-                    (confirmed) -> {
-                        if (RollbackListWidget.this.backupManager.rollbackTo(this.backup)) {
-                            PublicStatics.playWorld = RollbackListWidget.this.summary;
-                            PublicStatics.rollbackWorld = null;
-                            PublicStatics.recreateWorld = null;
-                        }
-                        RollbackListWidget.this.screen.closeAndReload();
-                    },
-                    Text.translatable("rollback.screen.rollbackQuestion"),
-                    Text.translatable("rollback.screen.rollbackWarning"),
-                    Text.translatable("rollback.button"),
-                    Text.translatable("rollback.screen.cancel")
+                (confirmed) -> {
+                    if (RollbackListWidget.this.backupManager.rollbackTo(this.backup)) {
+                        PublicStatics.playWorld = RollbackListWidget.this.summary;
+                        PublicStatics.rollbackWorld = null;
+                        PublicStatics.recreateWorld = null;
+                    }
+                    RollbackListWidget.this.screen.closeAndReload();
+                },
+                Text.translatable("rollback.screen.rollbackQuestion"),
+                Text.translatable("rollback.screen.rollbackWarning"),
+                Text.translatable("rollback.button"),
+                Text.translatable("rollback.screen.cancel")
             ));
         }
 
         public void delete() {
             this.client.setScreen(new ConfirmScreen(
-                    (confirmed) -> {
-                        if (confirmed) {
-                            RollbackListWidget.this.backupManager.deleteBackup(backup.worldName, backupNumber);
-                            RollbackListWidget.this.addedEntries = false;
-                        }
-                        this.client.setScreen(RollbackListWidget.this.screen);
-                    },
-                    Text.translatable("rollback.screen.deleteQuestion"),
-                    Text.empty(),
-                    Text.translatable("rollback.screen.delete"),
-                    Text.translatable("rollback.screen.cancel")
+                (confirmed) -> {
+                    if (confirmed) {
+                        RollbackListWidget.this.backupManager.deleteBackup(this.backup.worldName, this.backupNumber);
+                        RollbackListWidget.this.addedEntries = false;
+                    }
+                    this.client.setScreen(RollbackListWidget.this.screen);
+                },
+                Text.translatable("rollback.screen.deleteQuestion"),
+                Text.empty(),
+                Text.translatable("rollback.screen.delete"),
+                Text.translatable("rollback.screen.cancel")
             ));
         }
 
         public void close() {
             if (this.icon != null)
-                icon.close();
+                this.icon.close();
         }
     }
 }

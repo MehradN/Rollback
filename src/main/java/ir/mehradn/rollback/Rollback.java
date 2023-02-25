@@ -1,6 +1,6 @@
 package ir.mehradn.rollback;
 
-import ir.mehradn.rollback.event.CommandHandler;
+import ir.mehradn.rollback.event.RollbackCommand;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
@@ -11,6 +11,6 @@ public class Rollback implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		CommandHandler.register();
+		RollbackCommand.register();
 	}
 }

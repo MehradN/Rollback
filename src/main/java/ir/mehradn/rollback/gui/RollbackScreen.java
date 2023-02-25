@@ -8,7 +8,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import net.minecraft.world.level.storage.LevelSummary;
@@ -31,27 +30,37 @@ public class RollbackScreen extends Screen {
     }
 
     protected void init() {
-        this.rollbackList = new RollbackListWidget(this, this.backupManager, this.levelSummary, this.client,
-                this.width, this.height, 22, this.height - 64, 36);
-        this.addSelectableChild(this.rollbackList);
+        this.rollbackList = new RollbackListWidget(
+            this, this.backupManager, this.levelSummary, this.client,
+            this.width, this.height, 22, this.height - 64, 36
+        );
+        addSelectableChild(this.rollbackList);
 
-        this.rollbackButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.screen.rollbackButton"),
-                (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.RollbackEntry::play)
+        this.rollbackButton = addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.rollbackButton"),
+            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.RollbackEntry::play)
         ).dimensions(this.width / 2 - 154, this.height - 52, 150, 20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.screen.manualBackup"), (button) -> {
-            boolean b = backupManager.createNormalBackup(this.levelSummary);
-            callback.accept(!b);
-        }).dimensions(this.width / 2 + 4, this.height - 52, 150, 20).build());
-        this.deleteButton = this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.screen.delete"),
-                (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.RollbackEntry::delete)
+        addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.manualBackup"),
+            (button) -> {
+                boolean b = this.backupManager.createNormalBackup(this.levelSummary);
+                this.callback.accept(!b);
+            }
+        ).dimensions(this.width / 2 + 4, this.height - 52, 150, 20).build());
+        this.deleteButton = addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.delete"),
+            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.RollbackEntry::delete)
         ).dimensions(this.width / 2 - 154, this.height - 28, 72, 20).build());
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.screen.openFolder"),
-                (button) -> Util.getOperatingSystem().open(this.client.getLevelStorage().getBackupsDirectory().toFile())
+        addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.openFolder"),
+            (button) -> Util.getOperatingSystem().open(this.client.getLevelStorage().getBackupsDirectory().toFile())
         ).dimensions(this.width / 2 - 76, this.height - 28, 150, 20).build());
-        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CANCEL,
-                (button) -> this.callback.accept(false)
+        addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.cancel"),
+            (button) -> this.callback.accept(false)
         ).dimensions(this.width / 2 + 82, this.height - 28, 72, 20).build());
-        this.rollbackSelected(false);
+
+        rollbackSelected(false);
     }
 
     public void closeAndReload() {
@@ -59,7 +68,7 @@ public class RollbackScreen extends Screen {
     }
 
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
+        renderBackground(matrices);
         this.rollbackList.render(matrices, mouseX, mouseY, delta);
         drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 16777215);
         super.render(matrices, mouseX, mouseY, delta);

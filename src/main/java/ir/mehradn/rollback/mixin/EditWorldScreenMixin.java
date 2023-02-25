@@ -17,11 +17,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EditWorldScreen.class)
 public abstract class EditWorldScreenMixin extends Screen {
-    @Shadow @Final private BooleanConsumer callback;
-    @Shadow @Final private LevelStorage.Session storageSession;
+    @Shadow @Final
+    private BooleanConsumer callback;
+    @Shadow @Final
+    private LevelStorage.Session storageSession;
 
-    private int[] buttonPosition1;
-    private int[] buttonPosition2;
+    private int[] buttonPos1;
+    private int[] buttonPos2;
 
     protected EditWorldScreenMixin(Text title) {
         super(title);
@@ -29,30 +31,36 @@ public abstract class EditWorldScreenMixin extends Screen {
 
     @ModifyArg(method = "init", index = 1, at = @At(value = "INVOKE", ordinal = 2, target = "Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;dimensions(IIII)Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;"))
     private int hideButton1(int x, int y, int width, int height) {
-        buttonPosition1 = new int[]{x, y, width, height};
+        this.buttonPos1 = new int[]{x, y, width, height};
         return -99999;
     }
 
     @ModifyArg(method = "init", index = 1, at = @At(value = "INVOKE", ordinal = 3, target = "Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;dimensions(IIII)Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;"))
     private int hideButton2(int x, int y, int width, int height) {
-        buttonPosition2 = new int[]{x, y, width, height};
+        this.buttonPos2 = new int[]{x, y, width, height};
         return -99999;
     }
 
     @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/client/gui/screen/world/EditWorldScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
     private void addButtons(CallbackInfo ci) {
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.button"), (button) -> {
-            PublicStatics.playWorld = null;
-            PublicStatics.recreateWorld = null;
-            PublicStatics.rollbackWorld = this.storageSession.getLevelSummary();
-            this.callback.accept(false);
-        }).dimensions(buttonPosition1[0], buttonPosition1[1], buttonPosition1[2], buttonPosition1[3]).build());
+        addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.editWorld.button"),
+            (button) -> {
+                PublicStatics.playWorld = null;
+                PublicStatics.recreateWorld = null;
+                PublicStatics.rollbackWorld = this.storageSession.getLevelSummary();
+                this.callback.accept(false);
+            }
+        ).dimensions(this.buttonPos1[0], this.buttonPos1[1], this.buttonPos1[2], this.buttonPos1[3]).build());
 
-        this.addDrawableChild(ButtonWidget.builder(Text.translatable("rollback.editWorld.recreateButton"), (button) -> {
-            PublicStatics.playWorld = null;
-            PublicStatics.recreateWorld = this.storageSession.getLevelSummary();
-            PublicStatics.rollbackWorld = null;
-            this.callback.accept(false);
-        }).dimensions(buttonPosition2[0], buttonPosition2[1], buttonPosition2[2], buttonPosition2[3]).build());
+        addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.editWorld.recreateButton"),
+            (button) -> {
+                PublicStatics.playWorld = null;
+                PublicStatics.recreateWorld = this.storageSession.getLevelSummary();
+                PublicStatics.rollbackWorld = null;
+                this.callback.accept(false);
+            }
+        ).dimensions(this.buttonPos2[0], this.buttonPos2[1], this.buttonPos2[2], this.buttonPos2[3]).build());
     }
 }

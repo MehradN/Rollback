@@ -34,13 +34,13 @@ public class BackupManager {
     private final Path backupInfoFile;
 
     public BackupManager() {
-        rollbackDirectory = Path.of(MinecraftClient.getInstance().getLevelStorage().getBackupsDirectory().toString(), "rollbacks");
-        iconsDirectory = Path.of(rollbackDirectory.toString(), "icons");
-        backupInfoFile = Path.of(rollbackDirectory.toString(), "rollbacks.json");
+        this.rollbackDirectory = MinecraftClient.getInstance().getLevelStorage().getBackupsDirectory().resolve("rollbacks");
+        this.iconsDirectory = this.rollbackDirectory.resolve("icons");
+        this.backupInfoFile = this.rollbackDirectory.resolve("rollbacks.json");
         try {
-            this.loadBackupInfo();
+            loadBackupInfo();
         } catch (FileNotFoundException e) {
-            backupInfo = new JsonObject();
+            this.backupInfo = new JsonObject();
             try {
                 saveBackupInfo();
             } catch (IOException ex) {
@@ -50,23 +50,24 @@ public class BackupManager {
     }
 
     private void loadBackupInfo() throws FileNotFoundException {
-        backupInfo = JsonParser.parseReader(new FileReader(backupInfoFile.toFile())).getAsJsonObject();
+        this.backupInfo = JsonParser.parseReader(new FileReader(this.backupInfoFile.toFile())).getAsJsonObject();
     }
 
     private void saveBackupInfo() throws IOException {
-        Files.createDirectories(rollbackDirectory);
-        Files.createDirectories(iconsDirectory);
-        FileWriter writer = new FileWriter(backupInfoFile.toFile());
+        Files.createDirectories(this.rollbackDirectory);
+        Files.createDirectories(this.iconsDirectory);
+        FileWriter writer = new FileWriter(this.backupInfoFile.toFile());
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        gson.toJson(backupInfo, writer);
+        gson.toJson(this.backupInfo, writer);
         writer.close();
     }
 
     private void showErrorToast(String title, IOException e) {
-        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+        MinecraftClient.getInstance().getToastManager().add(
+            new SystemToast(SystemToast.Type.WORLD_BACKUP,
                 Text.translatable(title),
                 Text.literal(e.getMessage())
-        ));
+            ));
     }
 
     private int getMaxBackupCount() {
@@ -77,10 +78,11 @@ public class BackupManager {
         long l;
         try (LevelStorage.Session session = MinecraftClient.getInstance().getLevelStorage().createSession(summary.getName())) {
             l = session.createBackup();
-            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+            MinecraftClient.getInstance().getToastManager().add(
+                new SystemToast(SystemToast.Type.WORLD_BACKUP,
                     Text.translatable("selectWorld.edit.backupCreated", session.getDirectoryName()),
                     Text.translatable("selectWorld.edit.backupSize", MathHelper.ceil((double)l / 1048576.0))
-            ));
+                ));
             return true;
         } catch (IOException e) {
             showErrorToast("selectWorld.edit.backupFailed", e);
@@ -89,7 +91,7 @@ public class BackupManager {
     }
 
     public boolean createRollbackBackup(MinecraftServer server) {
-        LevelStorage.Session session = ((MinecraftServerExpanded) server).getSession();
+        LevelStorage.Session session = ((MinecraftServerExpanded)server).getSession();
         String worldName = session.getLevelSummary().getName();
         if (!this.backupInfo.has(worldName))
             this.backupInfo.add(worldName, new JsonArray());
@@ -100,9 +102,10 @@ public class BackupManager {
 
         boolean bl = server.saveAll(true, false, true);
         if (!bl) {
-            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
-                    Text.translatable("rollback.createBackup.failed"),
-                    Text.translatable("commands.save.failed")
+            MinecraftClient.getInstance().getToastManager().add(new SystemToast(
+                SystemToast.Type.WORLD_BACKUP,
+                Text.translatable("rollback.createBackup.failed"),
+                Text.translatable("commands.save.failed")
             ));
             return false;
         }
@@ -114,8 +117,8 @@ public class BackupManager {
             return false;
         }
 
-        Path path1 = ((LevelStorageSessionExpanded) session).getLatestBackupPath();
-        Path path2 = Path.of(rollbackDirectory.toString(), path1.getFileName().toString());
+        Path path1 = ((LevelStorageSessionExpanded)session).getLatestBackupPath();
+        Path path2 = this.rollbackDirectory.resolve(path1.getFileName());
         try {
             Files.move(path1, path2);
         } catch (IOException e) {
@@ -125,21 +128,21 @@ public class BackupManager {
 
         Path path3;
         try {
-            path3 = iconsDirectory.resolve(PathUtil.getNextUniqueName(iconsDirectory, session.getDirectoryName(), ".png"));
+            path3 = this.iconsDirectory.resolve(PathUtil.getNextUniqueName(this.iconsDirectory, session.getDirectoryName(), ".png"));
             Path finalPath = path3;
             MinecraftClient.getInstance().execute(() -> {
-                GameRenderer renderer =  MinecraftClient.getInstance().gameRenderer;
-                ((GameRendererAccessor) renderer).InvokeUpdateWorldIcon(finalPath);
+                GameRenderer renderer = MinecraftClient.getInstance().gameRenderer;
+                ((GameRendererAccessor)renderer).InvokeUpdateWorldIcon(finalPath);
             });
         } catch (IOException e) {
             showErrorToast("rollback.createBackup.failed", e);
             return false;
         }
 
-        int daysPlayed = (int) (MinecraftClient.getInstance().world.getTimeOfDay() / 24000);
+        int daysPlayed = (int)(MinecraftClient.getInstance().world.getTimeOfDay() / 24000);
 
-        path2 = rollbackDirectory.relativize(path2);
-        path3 = rollbackDirectory.relativize(path3);
+        path2 = this.rollbackDirectory.relativize(path2);
+        path3 = this.rollbackDirectory.relativize(path3);
         RollbackBackup backup = new RollbackBackup(worldName, path2, path3, LocalDateTime.now(), daysPlayed);
         array.add(backup.toObject());
 
@@ -154,10 +157,10 @@ public class BackupManager {
     }
 
     public boolean deleteBackup(String worldName, int index) {
-        if (!backupInfo.has(worldName))
+        if (!this.backupInfo.has(worldName))
             return true;
 
-        JsonArray array = backupInfo.getAsJsonArray(worldName);
+        JsonArray array = this.backupInfo.getAsJsonArray(worldName);
         if (index == -1)
             index += array.size();
         if (array.size() <= index)
@@ -166,8 +169,8 @@ public class BackupManager {
         RollbackBackup backup = new RollbackBackup(worldName, array.get(index).getAsJsonObject());
 
         try {
-            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.iconPath.toString()));
-            Files.deleteIfExists(Path.of(rollbackDirectory.toString(), backup.backupPath.toString()));
+            Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
+            Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
         } catch (IOException e) {
             showErrorToast("rollback.deleteBackup.failed", e);
             return false;
@@ -178,7 +181,7 @@ public class BackupManager {
         try {
             saveBackupInfo();
         } catch (IOException e) {
-            backupInfo.add(worldName, oldArray);
+            this.backupInfo.add(worldName, oldArray);
             showErrorToast("rollback.deleteBackup.failed", e);
             return false;
         }
@@ -188,10 +191,10 @@ public class BackupManager {
 
     public List<RollbackBackup> getRollbacksFor(String worldName) {
         ArrayList<RollbackBackup> list = new ArrayList<>();
-        if (!backupInfo.has(worldName))
+        if (!this.backupInfo.has(worldName))
             return list;
 
-        JsonArray array = backupInfo.getAsJsonArray(worldName);
+        JsonArray array = this.backupInfo.getAsJsonArray(worldName);
         for (JsonElement elm : array)
             list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
         return list;
@@ -206,13 +209,13 @@ public class BackupManager {
             return false;
         }
 
-        Path source = Path.of(rollbackDirectory.toString(), backup.backupPath.toString());
+        Path source = this.rollbackDirectory.resolve(backup.backupPath.toString());
         Path dest = client.getLevelStorage().getSavesDirectory();
         try (ZipFile zip = new ZipFile(source.toFile())) {
             Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                Path path = Path.of(dest.toString(), entry.getName());
+                Path path = dest.resolve(entry.getName());
                 if (entry.isDirectory())
                     Files.createDirectories(path);
                 else {

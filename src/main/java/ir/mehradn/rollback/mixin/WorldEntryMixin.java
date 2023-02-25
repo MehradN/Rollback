@@ -12,21 +12,23 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(WorldListWidget.WorldEntry.class)
 public abstract class WorldEntryMixin extends WorldListWidget.Entry implements AutoCloseable, WorldEntryExpanded {
-    @Shadow @Final WorldListWidget field_19135;
+    @Shadow @Final
+    WorldListWidget field_19135;
+    @Shadow @Final
+    private MinecraftClient client;
+    @Shadow @Final
+    private LevelSummary level;
+    @Shadow @Final
+    private SelectWorldScreen screen;
 
-    @Shadow @Final private MinecraftClient client;
-
-    @Shadow @Final private LevelSummary level;
-
-    @Shadow @Final private SelectWorldScreen screen;
-
-    @Shadow protected abstract void openReadingWorldScreen();
+    @Shadow
+    protected abstract void openReadingWorldScreen();
 
     public void rollback() {
-        this.openReadingWorldScreen();
+        openReadingWorldScreen();
         this.client.setScreen(new RollbackScreen(this.level, (reload) -> {
             if (reload)
-                ((WorldListWidgetAccessor)field_19135).InvokeLoad();
+                ((WorldListWidgetAccessor)this.field_19135).InvokeLoad();
             this.client.setScreen(this.screen);
         }));
     }

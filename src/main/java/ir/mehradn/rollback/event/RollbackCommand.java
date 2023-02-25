@@ -17,24 +17,24 @@ import net.minecraft.world.level.storage.LevelStorage;
 
 import java.util.List;
 
-public class CommandHandler {
+public class RollbackCommand {
     public static void register() {
         CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> {
             if (environment.integrated)
                 dispatcher.register(CommandManager.literal("rollback")
-                        .requires(CommandHandler::hasAccessToCommand)
-                        .then(CommandManager.literal("backup")
-                                .then(CommandManager.literal("now")
-                                        .executes(CommandHandler::backupNow))
-                                .then(CommandManager.literal("delete")
-                                        .then(CommandManager.literal("oldest")
-                                                .executes((context) -> deleteBackup(context, 0)))
-                                        .then(CommandManager.literal("latest")
-                                                .executes((context) -> deleteBackup(context, 1)))
-                                        .then(CommandManager.argument("number", IntegerArgumentType.integer(1, getMaxBackupCount()))
-                                                .executes((context) -> deleteBackup(context, 2)))))
-                        .then(CommandManager.literal("list")
-                                .executes(CommandHandler::listBackups)));
+                    .requires(RollbackCommand::hasAccessToCommand)
+                    .then(CommandManager.literal("backup")
+                        .then(CommandManager.literal("now")
+                            .executes(RollbackCommand::backupNow))
+                        .then(CommandManager.literal("delete")
+                            .then(CommandManager.literal("oldest")
+                                .executes((context) -> deleteBackup(context, 0)))
+                            .then(CommandManager.literal("latest")
+                                .executes((context) -> deleteBackup(context, 1)))
+                            .then(CommandManager.argument("number", IntegerArgumentType.integer(1, getMaxBackupCount()))
+                                .executes((context) -> deleteBackup(context, 2)))))
+                    .then(CommandManager.literal("list")
+                        .executes(RollbackCommand::listBackups)));
         }));
     }
 
@@ -48,27 +48,32 @@ public class CommandHandler {
 
     public static int backupNow(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         MinecraftServer server = context.getSource().getServer();
-        BackupManager backupManager = ((MinecraftServerExpanded) server).getBackupManager();
+        BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
 
-        if (!backupManager.createRollbackBackup(server))
+        boolean f = backupManager.createRollbackBackup(server);
+        if (!f)
             throw new SimpleCommandExceptionType(Text.translatable("rollback.createBackup.failed")).create();
 
         context.getSource().sendFeedback(Text.translatable("rollback.createBackup.success"), true);
         return 1;
     }
 
-    public static int deleteBackup(CommandContext<ServerCommandSource> context, int index) throws CommandSyntaxException {
-        if (index == 1)
-            index = -1;
-        else if (index == 2)
-            index = IntegerArgumentType.getInteger(context, "number")-1;
-
+    public static int deleteBackup(CommandContext<ServerCommandSource> context, int position) throws CommandSyntaxException {
         MinecraftServer server = context.getSource().getServer();
-        BackupManager backupManager = ((MinecraftServerExpanded) server).getBackupManager();
-        LevelStorage.Session session = ((MinecraftServerExpanded) server).getSession();
+        BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
+        LevelStorage.Session session = ((MinecraftServerExpanded)server).getSession();
         String worldName = session.getLevelSummary().getName();
 
-        if (!backupManager.deleteBackup(worldName, index))
+        int index;
+        if (position == 0)
+            index = 0;
+        else if (position == 1)
+            index = -1;
+        else
+            index = IntegerArgumentType.getInteger(context, "number") - 1;
+
+        boolean f = backupManager.deleteBackup(worldName, index);
+        if (!f)
             throw new SimpleCommandExceptionType(Text.translatable("rollback.deleteBackup.failed")).create();
 
         context.getSource().sendFeedback(Text.translatable("rollback.deleteBackup.success"), true);
@@ -77,13 +82,13 @@ public class CommandHandler {
 
     public static int listBackups(CommandContext<ServerCommandSource> context) {
         MinecraftServer server = context.getSource().getServer();
-        BackupManager backupManager = ((MinecraftServerExpanded) server).getBackupManager();
-        String worldName = ((MinecraftServerExpanded) server).getSession().getLevelSummary().getName();
+        BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
+        String worldName = ((MinecraftServerExpanded)server).getSession().getLevelSummary().getName();
         List<RollbackBackup> backups = backupManager.getRollbacksFor(worldName);
 
         context.getSource().sendMessage(Text.translatable("rollback.command.list.title"));
         for (int i = 1; i <= backups.size(); i++) {
-            RollbackBackup backup = backups.get(backups.size()-i);
+            RollbackBackup backup = backups.get(backups.size() - i);
             MutableText part1, part2, part3;
             part1 = Text.literal(String.format("    #%-2d    ", i));
             part2 = Text.translatable("rollback.created", backup.getDateAsString()).append(Text.literal("    "));
