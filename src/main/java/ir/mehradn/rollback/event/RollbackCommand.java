@@ -12,6 +12,7 @@ import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -48,7 +49,16 @@ public final class RollbackCommand {
         return ((RollbackConfig.commandAccess() == RollbackConfig.CommandAccess.ALWAYS) || source.hasPermissionLevel(4));
     }
 
+    private static void checkIsServerHost(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        Text user1 = MinecraftClient.getInstance().player.getName();
+        Text user2 = context.getSource().getPlayer().getName();
+        if (!user1.equals(user2))
+            throw new SimpleCommandExceptionType(Text.translatable("rollback.command.unavailable")).create();
+    }
+
     public static int backupNow(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        checkIsServerHost(context);
+
         Rollback.LOGGER.info("Executing the \"backup new\" command...");
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
@@ -62,6 +72,8 @@ public final class RollbackCommand {
     }
 
     public static int deleteBackup(CommandContext<ServerCommandSource> context, int position) throws CommandSyntaxException {
+        checkIsServerHost(context);
+
         Rollback.LOGGER.info("Executing the \"backup delete\" command...");
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
@@ -83,11 +95,18 @@ public final class RollbackCommand {
         return 1;
     }
 
-    public static int listBackups(CommandContext<ServerCommandSource> context) {
+    public static int listBackups(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        checkIsServerHost(context);
+
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
         String worldName = ((MinecraftServerExpanded)server).getSession().getLevelSummary().getName();
         List<RollbackBackup> backups = backupManager.getRollbacksFor(worldName);
+
+        if (backups.isEmpty()) {
+            context.getSource().sendMessage(Text.translatable("rollback.command.list.noBackups"));
+            return 1;
+        }
 
         context.getSource().sendMessage(Text.translatable("rollback.command.list.title"));
         for (int i = 1; i <= backups.size(); i++) {
@@ -98,7 +117,6 @@ public final class RollbackCommand {
             part3 = Text.translatable("rollback.day", backup.daysPlayed);
             context.getSource().sendMessage(part1.append(part2.append(part3)));
         }
-
         return 1;
     }
 }

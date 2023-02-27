@@ -19,6 +19,8 @@
   "rollback.screen.rollbackWarning": "Any not backed up progress will be lost!",
   "rollback.narrator.selectRollback": "Selected backup %d, created: %s, day: %d",
   "rollback.command.list.title": "Backups:",
+  "rollback.command.list.noBackups": "There are no backups available for this world.",
+  "rollback.command.unavailable": "This command is only available to server host.",
   "rollback.midnightconfig.title": "Rollback Config Menu",
   "rollback.midnightconfig.backupsPerWorld": "Maximum Backups Per World:",
   "rollback.midnightconfig.backupFrequency": "Automated Backup Frequency:",
