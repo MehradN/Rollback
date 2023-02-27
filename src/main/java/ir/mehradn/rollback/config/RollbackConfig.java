@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.config;
 
 import eu.midnightdust.lib.config.MidnightConfig;
+import net.minecraft.world.GameMode;
 
 public class RollbackConfig extends MidnightConfig {
     public enum BackupFrequency {
@@ -11,14 +12,17 @@ public class RollbackConfig extends MidnightConfig {
         TEN_MINUTES,
         FIVE_MINUTES
     }
+
     public enum BackupMode {
         IN_GAME_DAY,
         REAL_TIME
     }
+
     public enum CommandAccess {
         ON_CHEATS,
         ALWAYS
     }
+
     public enum AllowedWorldTypes {
         NONE,
         SURVIVAL,
@@ -42,15 +46,28 @@ public class RollbackConfig extends MidnightConfig {
     }
 
     public static BackupMode getBackupMode() {
-        return (backupFrequency.ordinal() < 4 ? BackupMode.IN_GAME_DAY : BackupMode.REAL_TIME);
+        return (backupFrequency.ordinal() < 3 ? BackupMode.IN_GAME_DAY : BackupMode.REAL_TIME);
     }
 
     public static int getBackupTicks() {
-        return 24000 / (backupFrequency.ordinal() % 4 + 1);
+        int t = backupFrequency.ordinal() % 3;
+        if (t == 0)
+            return 24000;
+        if (t == 1)
+            return 12000;
+        return 6000;
     }
 
-    public static AllowedWorldTypes getAllowedWorldTypes() {
-        return allowedWorldTypes;
+    public static boolean isAllowedWorldType(GameMode gameMode) {
+        AllowedWorldTypes worldType;
+        if (gameMode == GameMode.SURVIVAL)
+            worldType = AllowedWorldTypes.SURVIVAL;
+        else if (gameMode == GameMode.ADVENTURE)
+            worldType = AllowedWorldTypes.ADVENTURE;
+        else
+            worldType = AllowedWorldTypes.ALL_TYPES;
+
+        return (worldType.ordinal() <= allowedWorldTypes.ordinal());
     }
 
     public static CommandAccess getCommandAccess() {
