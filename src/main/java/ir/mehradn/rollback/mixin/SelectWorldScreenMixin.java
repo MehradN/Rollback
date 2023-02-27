@@ -1,5 +1,6 @@
 package ir.mehradn.rollback.mixin;
 
+import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.mixin.PublicStatics;
 import ir.mehradn.rollback.util.mixin.WorldEntryExpanded;
 import net.minecraft.client.gui.screen.Screen;
@@ -32,16 +33,21 @@ public abstract class SelectWorldScreenMixin extends Screen {
 
     @ModifyArg(method = "init", index = 1, at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;dimensions(IIII)Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;"))
     private int hideButton(int x, int y, int width, int height) {
-        this.buttonPos = new int[]{x, y, width, height};
-        return -99999;
+        if (RollbackConfig.getReplaceReCreateButton()) {
+            this.buttonPos = new int[]{x, y, width, height};
+            return -99999;
+        }
+        return y;
     }
 
     @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 5, target = "Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;dimensions(IIII)Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;"))
     private void addButton(CallbackInfo ci) {
-        this.rollbackButton = addDrawableChild(ButtonWidget.builder(
-            Text.translatable("rollback.button"),
-            (button) -> this.levelList.getSelectedAsOptional().ifPresent((worldEntry) -> ((WorldEntryExpanded)(Object)worldEntry).rollback())
-        ).dimensions(this.buttonPos[0], this.buttonPos[1], this.buttonPos[2], this.buttonPos[3]).build());
+        if (RollbackConfig.getReplaceReCreateButton()) {
+            this.rollbackButton = addDrawableChild(ButtonWidget.builder(
+                Text.translatable("rollback.button"),
+                (button) -> this.levelList.getSelectedAsOptional().ifPresent((worldEntry) -> ((WorldEntryExpanded)(Object)worldEntry).rollback())
+            ).dimensions(this.buttonPos[0], this.buttonPos[1], this.buttonPos[2], this.buttonPos[3]).build());
+        }
     }
 
     @Inject(method = "init", at = @At("RETURN"))

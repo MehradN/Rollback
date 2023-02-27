@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
@@ -31,7 +32,7 @@ public class RollbackCommand {
                                 .executes((context) -> deleteBackup(context, 0)))
                             .then(CommandManager.literal("latest")
                                 .executes((context) -> deleteBackup(context, 1)))
-                            .then(CommandManager.argument("number", IntegerArgumentType.integer(1, getMaxBackupCount()))
+                            .then(CommandManager.argument("number", IntegerArgumentType.integer(1, RollbackConfig.getMaxBackups()))
                                 .executes((context) -> deleteBackup(context, 2)))))
                     .then(CommandManager.literal("list")
                         .executes(RollbackCommand::listBackups)));
@@ -39,11 +40,9 @@ public class RollbackCommand {
     }
 
     public static boolean hasAccessToCommand(ServerCommandSource source) {
-        return true;
-    }
-
-    public static int getMaxBackupCount() {
-        return 5;
+        if (RollbackConfig.getCommandAccess() == RollbackConfig.CommandAccess.ALWAYS)
+            return true;
+        return source.hasPermissionLevel(4);
     }
 
     public static int backupNow(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {

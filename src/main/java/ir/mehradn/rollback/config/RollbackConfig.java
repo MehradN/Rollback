@@ -26,7 +26,7 @@ public class RollbackConfig extends MidnightConfig {
         ALL_TYPES
     }
 
-    @Entry(min = 1, max = 10)
+    @Entry(min = 1, max = 10, isSlider = true)
     public static int backupsPerWorld = 5;
     @Entry
     public static BackupFrequency backupFrequency = BackupFrequency.ONE_PER_DAY;

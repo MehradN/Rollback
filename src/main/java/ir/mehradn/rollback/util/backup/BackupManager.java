@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.util.backup;
 
 import com.google.gson.*;
+import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.mixin.GameRendererAccessor;
 import ir.mehradn.rollback.util.mixin.LevelStorageSessionExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
@@ -70,10 +71,6 @@ public class BackupManager {
             ));
     }
 
-    private int getMaxBackupCount() {
-        return 5;
-    }
-
     public boolean createNormalBackup(LevelSummary summary) {
         long l;
         try (LevelStorage.Session session = MinecraftClient.getInstance().getLevelStorage().createSession(summary.getName())) {
@@ -97,7 +94,7 @@ public class BackupManager {
             this.backupInfo.add(worldName, new JsonArray());
         JsonArray array = this.backupInfo.getAsJsonArray(worldName);
 
-        while (array.size() >= getMaxBackupCount())
+        while (array.size() >= RollbackConfig.getMaxBackups())
             deleteBackup(worldName, 0);
 
         boolean bl = server.saveAll(true, false, true);
