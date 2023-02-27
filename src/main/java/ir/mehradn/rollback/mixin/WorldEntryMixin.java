@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.mixin;
 
 import ir.mehradn.rollback.gui.RollbackScreen;
+import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.mixin.WorldEntryExpanded;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
@@ -9,6 +10,9 @@ import net.minecraft.world.level.storage.LevelSummary;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WorldListWidget.WorldEntry.class)
 public abstract class WorldEntryMixin extends WorldListWidget.Entry implements AutoCloseable, WorldEntryExpanded {
@@ -31,5 +35,11 @@ public abstract class WorldEntryMixin extends WorldListWidget.Entry implements A
                 ((WorldListWidgetAccessor)this.field_19135).InvokeLoad();
             this.client.setScreen(this.screen);
         }));
+    }
+
+    @Inject(method = "delete", at = @At("RETURN"))
+    private void deleteBackups(CallbackInfo ci) {
+        BackupManager backupManager = new BackupManager();
+        backupManager.deleteWorld(this.level.getName());
     }
 }

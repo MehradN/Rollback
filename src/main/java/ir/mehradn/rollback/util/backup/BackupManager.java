@@ -90,6 +90,7 @@ public class BackupManager {
     public boolean createRollbackBackup(MinecraftServer server) {
         LevelStorage.Session session = ((MinecraftServerExpanded)server).getSession();
         String worldName = session.getLevelSummary().getName();
+        LocalDateTime now = LocalDateTime.now();
         if (!this.backupInfo.has(worldName))
             this.backupInfo.add(worldName, new JsonArray());
         JsonArray array = this.backupInfo.getAsJsonArray(worldName);
@@ -115,8 +116,13 @@ public class BackupManager {
         }
 
         Path path1 = ((LevelStorageSessionExpanded)session).getLatestBackupPath();
-        Path path2 = this.rollbackDirectory.resolve(path1.getFileName());
+        Path path2;
         try {
+            path2 = this.rollbackDirectory.resolve(PathUtil.getNextUniqueName(
+                this.rollbackDirectory,
+                now.format(RollbackBackup.TIME_FORMATTER) + "_" + worldName,
+                ".zip"
+            ));
             Files.move(path1, path2);
         } catch (IOException e) {
             showErrorToast("rollback.createBackup.failed", e);
@@ -230,4 +236,74 @@ public class BackupManager {
 
         return true;
     }
+
+    public void deleteWorld(String worldName) {
+        if (!this.backupInfo.has(worldName))
+            return;
+
+        while(this.backupInfo.getAsJsonArray(worldName).size() > 0)
+            deleteBackup(worldName, 0);
+        this.backupInfo.remove(worldName);
+
+        try {
+            this.saveBackupInfo();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*public void cleanUp() {
+        List<String> worldNames;
+        try {
+            LevelStorage storage = MinecraftClient.getInstance().getLevelStorage();
+            LevelStorage.LevelList levelList = storage.getLevelList();
+            List<LevelSummary> summaries = storage.loadSummaries(levelList).get();
+            worldNames = summaries.stream().map(LevelSummary::getName).toList();
+        } catch (Exception e) {
+            return;
+        }
+
+        for (String world : this.backupInfo.keySet())
+            if (!worldNames.contains(world))
+                this.backupInfo.remove(world);
+
+        List<Path> providedBackups;
+        List<Path> providedIcons;
+        try (Stream<Path> stream1 = Files.list(this.rollbackDirectory);
+             Stream<Path> stream2 = Files.list(this.iconsDirectory)) {
+            providedBackups = stream1.filter((path) -> !(Files.isDirectory(path)) || path.getFileName().toString().equals("rollbacks.json")).toList();
+            providedIcons = stream2.toList();
+        } catch (IOException e) {
+            return;
+        }
+
+        ArrayList<String> expectedBackups = new ArrayList<>();
+        ArrayList<String> expectedIcons = new ArrayList<>();
+        for (String world : this.backupInfo.keySet()) {
+            JsonArray backups = this.backupInfo.getAsJsonArray(world);
+            for (JsonElement backup : backups) {
+                String file = backup.getAsJsonObject().get("backup_file").getAsString();
+                if (providedBackups.contains(Path.of(file))) {
+                    expectedBackups.add(file);
+                    expectedIcons.add(backup.getAsJsonObject().get("icon_file").getAsString());
+                } else
+                    backups.remove(backup);
+            }
+        }
+
+        for (Path path : providedBackups) {
+            if (!expectedBackups.contains(path.getFileName().toString())) {
+                try {
+                    Files.deleteIfExists(this.rollbackDirectory.resolve(path));
+                } catch (IOException ignored) {}
+            }
+        }
+        for (Path path : providedIcons) {
+            if (!expectedIcons.contains(path.getFileName().toString())) {
+                try {
+                    Files.deleteIfExists(this.iconsDirectory.resolve(path));
+                } catch (IOException ignored) {}
+            }
+        }
+    }*/
 }
