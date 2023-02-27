@@ -1,7 +1,7 @@
-package ir.mehradn.rollback.gui.widget;
+package ir.mehradn.rollback.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import ir.mehradn.rollback.gui.RollbackScreen;
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
 import ir.mehradn.rollback.util.mixin.PublicStatics;
@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
-public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackListWidget.RollbackEntry> {
+public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackListWidget.RollbackEntry> {
     private final RollbackScreen screen;
     private final BackupManager backupManager;
     private final LevelSummary summary;
-    private boolean addedEntries = false;
+    private boolean shouldReloadEntries;
 
     public RollbackListWidget(RollbackScreen screen, BackupManager backupManager, LevelSummary levelSummary, MinecraftClient minecraftClient,
                               int width, int height, int top, int bottom, int itemHeight) {
@@ -40,21 +40,22 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
         this.screen = screen;
         this.backupManager = backupManager;
         this.summary = levelSummary;
+        this.shouldReloadEntries = true;
     }
 
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        if (!this.addedEntries)
-            addEntries();
+        if (this.shouldReloadEntries)
+            reloadEntries();
         super.render(matrices, mouseX, mouseY, delta);
     }
 
-    private void addEntries() {
+    private void reloadEntries() {
         clearEntries();
         List<RollbackBackup> backups = this.backupManager.getRollbacksFor(this.summary.getName());
         for (int i = 1; i <= backups.size(); i++)
             addEntry(new RollbackEntry(i, backups.get(backups.size() - i)));
         this.screen.narrateScreenIfNarrationEnabled(true);
-        this.addedEntries = true;
+        this.shouldReloadEntries = false;
     }
 
     protected int getScrollbarPositionX() {
@@ -67,7 +68,7 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
 
     public void setSelected(RollbackEntry entry) {
         super.setSelected(entry);
-        this.screen.rollbackSelected(entry != null);
+        this.screen.setEntrySelected(entry != null);
     }
 
     public Optional<RollbackEntry> getSelectedAsOptional() {
@@ -103,7 +104,8 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
             );
         }
 
-        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+        public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight,
+                           int mouseX, int mouseY, boolean hovered, float tickDelta) {
             Text title = Text.translatable("rollback.day", this.backup.daysPlayed);
             Text created = Text.translatable("rollback.created", this.backup.getDateAsString());
             this.client.textRenderer.draw(matrices, title, x + 35, y + 1, 0xFFFFFF);
@@ -122,8 +124,8 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
                 RenderSystem.setShader(GameRenderer::getPositionTexProgram);
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-                int j = ((mouseX - x) < 32 ? 32 : 0);
-                DrawableHelper.drawTexture(matrices, x, y, 0.0f, j, 32, 32, 256, 256);
+                int v = ((mouseX - x) < 32 ? 32 : 0);
+                DrawableHelper.drawTexture(matrices, x, y, 0.0f, v, 32, 32, 256, 256);
             }
         }
 
@@ -148,6 +150,7 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
                 return null;
             }
 
+            Rollback.LOGGER.debug("Loading the icon for backup #{}...", this.backupNumber);
             try (InputStream inputStream = Files.newInputStream(path)) {
                 NativeImage image = NativeImage.read(inputStream);
                 Validate.validState(image.getWidth() == 64, "Must be 64 pixels wide");
@@ -157,7 +160,9 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
                 this.client.getTextureManager().registerTexture(this.iconLocation, texture);
                 return texture;
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Rollback.LOGGER.error("Failed to load the icon for backup #{}!", this.backupNumber, e);
+                this.client.getTextureManager().destroyTexture(this.iconLocation);
+                return null;
             }
         }
 
@@ -165,14 +170,15 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
             this.client.setScreen(new ConfirmScreen(
                 (confirmed) -> {
                     if (confirmed) {
-                        if (RollbackListWidget.this.backupManager.rollbackTo(this.backup)) {
+                        Rollback.LOGGER.info("Rolling back to backup #{}...", this.backupNumber);
+                        boolean f = RollbackListWidget.this.backupManager.rollbackTo(this.backup);
+                        if (f) {
                             PublicStatics.playWorld = RollbackListWidget.this.summary;
                             PublicStatics.rollbackWorld = null;
                             PublicStatics.recreateWorld = null;
                         }
                         RollbackListWidget.this.screen.closeAndReload();
-                    }
-                    else
+                    } else
                         this.client.setScreen(RollbackListWidget.this.screen);
                 },
                 Text.translatable("rollback.screen.rollbackQuestion"),
@@ -186,8 +192,9 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
             this.client.setScreen(new ConfirmScreen(
                 (confirmed) -> {
                     if (confirmed) {
+                        Rollback.LOGGER.info("Deleting the backup #{}...", this.backupNumber);
                         RollbackListWidget.this.backupManager.deleteBackup(this.backup.worldName, this.backupNumber);
-                        RollbackListWidget.this.addedEntries = false;
+                        RollbackListWidget.this.shouldReloadEntries = true;
                     }
                     this.client.setScreen(RollbackListWidget.this.screen);
                 },

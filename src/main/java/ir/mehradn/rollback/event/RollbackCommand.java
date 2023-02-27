@@ -4,10 +4,13 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
@@ -18,21 +21,23 @@ import net.minecraft.world.level.storage.LevelStorage;
 
 import java.util.List;
 
-public class RollbackCommand {
+@Environment(EnvType.CLIENT)
+public final class RollbackCommand {
     public static void register() {
         CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> {
+            Rollback.LOGGER.debug("Registering the rollback command...");
             if (environment.integrated)
                 dispatcher.register(CommandManager.literal("rollback")
                     .requires(RollbackCommand::hasAccessToCommand)
                     .then(CommandManager.literal("backup")
-                        .then(CommandManager.literal("now")
+                        .then(CommandManager.literal("new")
                             .executes(RollbackCommand::backupNow))
                         .then(CommandManager.literal("delete")
                             .then(CommandManager.literal("oldest")
                                 .executes((context) -> deleteBackup(context, 0)))
                             .then(CommandManager.literal("latest")
                                 .executes((context) -> deleteBackup(context, 1)))
-                            .then(CommandManager.argument("number", IntegerArgumentType.integer(1, RollbackConfig.getMaxBackups()))
+                            .then(CommandManager.argument("number", IntegerArgumentType.integer(1, RollbackConfig.getMaxBackupsPerWorld()))
                                 .executes((context) -> deleteBackup(context, 2)))))
                     .then(CommandManager.literal("list")
                         .executes(RollbackCommand::listBackups)));
@@ -40,12 +45,11 @@ public class RollbackCommand {
     }
 
     public static boolean hasAccessToCommand(ServerCommandSource source) {
-        if (RollbackConfig.getCommandAccess() == RollbackConfig.CommandAccess.ALWAYS)
-            return true;
-        return source.hasPermissionLevel(4);
+        return ((RollbackConfig.commandAccess() == RollbackConfig.CommandAccess.ALWAYS) || source.hasPermissionLevel(4));
     }
 
     public static int backupNow(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        Rollback.LOGGER.info("Executing the \"backup new\" command...");
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
 
@@ -58,18 +62,18 @@ public class RollbackCommand {
     }
 
     public static int deleteBackup(CommandContext<ServerCommandSource> context, int position) throws CommandSyntaxException {
+        Rollback.LOGGER.info("Executing the \"backup delete\" command...");
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
         LevelStorage.Session session = ((MinecraftServerExpanded)server).getSession();
         String worldName = session.getLevelSummary().getName();
 
         int index;
-        if (position == 0)
-            index = 0;
-        else if (position == 1)
-            index = -1;
-        else
-            index = IntegerArgumentType.getInteger(context, "number") - 1;
+        switch (position) {
+            case 0 -> index = 0;
+            case -1 -> index = -1;
+            default -> index = IntegerArgumentType.getInteger(context, "number") - 1;
+        }
 
         boolean f = backupManager.deleteBackup(worldName, index);
         if (!f)

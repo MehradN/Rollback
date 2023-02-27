@@ -2,6 +2,8 @@ package ir.mehradn.rollback.mixin;
 
 import ir.mehradn.rollback.util.mixin.PublicStatics;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.EditWorldScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -15,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@Environment(EnvType.CLIENT)
 @Mixin(EditWorldScreen.class)
 public abstract class EditWorldScreenMixin extends Screen {
     @Shadow @Final

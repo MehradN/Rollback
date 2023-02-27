@@ -1,6 +1,8 @@
 package ir.mehradn.rollback.util.backup;
 
 import com.google.gson.JsonObject;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import java.nio.file.Path;
 import java.text.DateFormat;
@@ -13,6 +15,7 @@ import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
 import java.util.Date;
 
+@Environment(EnvType.CLIENT)
 public class RollbackBackup {
     public static final DateTimeFormatter TIME_FORMATTER = new DateTimeFormatterBuilder()
         .appendValue(ChronoField.YEAR, 4, 10, SignStyle.EXCEEDS_PAD).appendLiteral('-')

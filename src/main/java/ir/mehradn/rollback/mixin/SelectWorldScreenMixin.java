@@ -3,6 +3,8 @@ package ir.mehradn.rollback.mixin;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.mixin.PublicStatics;
 import ir.mehradn.rollback.util.mixin.WorldEntryExpanded;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
 import net.minecraft.client.gui.screen.world.WorldListWidget;
@@ -15,14 +17,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+@Environment(EnvType.CLIENT)
 @Mixin(SelectWorldScreen.class)
 public abstract class SelectWorldScreenMixin extends Screen {
     @Shadow
-    private ButtonWidget recreateButton;
-    @Shadow
     private WorldListWidget levelList;
-    @Shadow
-    private ButtonWidget selectButton;
 
     private ButtonWidget rollbackButton;
     private int[] buttonPos;
@@ -33,16 +32,16 @@ public abstract class SelectWorldScreenMixin extends Screen {
 
     @ModifyArg(method = "init", index = 1, at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;dimensions(IIII)Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;"))
     private int hideButton(int x, int y, int width, int height) {
-        if (RollbackConfig.getReplaceReCreateButton()) {
-            this.buttonPos = new int[]{x, y, width, height};
+        this.buttonPos = new int[]{x, y, width, height};
+        if (RollbackConfig.replaceReCreateButton())
             return -99999;
-        }
+        this.buttonPos[1] = -99999;
         return y;
     }
 
     @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 5, target = "Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;dimensions(IIII)Lnet/minecraft/client/gui/widget/ButtonWidget$Builder;"))
     private void addButton(CallbackInfo ci) {
-        if (RollbackConfig.getReplaceReCreateButton()) {
+        if (RollbackConfig.replaceReCreateButton()) {
             this.rollbackButton = addDrawableChild(ButtonWidget.builder(
                 Text.translatable("rollback.button"),
                 (button) -> this.levelList.getSelectedAsOptional().ifPresent((worldEntry) -> ((WorldEntryExpanded)(Object)worldEntry).rollback())
@@ -54,18 +53,15 @@ public abstract class SelectWorldScreenMixin extends Screen {
     private void changeScreen(CallbackInfo ci) {
         if (PublicStatics.playWorld != null) {
             try (WorldListWidget.WorldEntry world = this.levelList.new WorldEntry(this.levelList, PublicStatics.playWorld)) {
-                this.levelList.setSelected(world);
-                this.selectButton.onPress();
+                world.play();
             }
         } else if (PublicStatics.recreateWorld != null) {
             try (WorldListWidget.WorldEntry world = this.levelList.new WorldEntry(this.levelList, PublicStatics.recreateWorld)) {
-                this.levelList.setSelected(world);
-                this.recreateButton.onPress();
+                world.recreate();
             }
         } else if (PublicStatics.rollbackWorld != null) {
             try (WorldListWidget.WorldEntry world = this.levelList.new WorldEntry(this.levelList, PublicStatics.rollbackWorld)) {
-                this.levelList.setSelected(world);
-                this.rollbackButton.onPress();
+                ((WorldEntryExpanded)(Object)world).rollback();
             }
         }
         PublicStatics.playWorld = null;
