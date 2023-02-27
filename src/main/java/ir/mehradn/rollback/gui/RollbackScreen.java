@@ -1,5 +1,7 @@
 package ir.mehradn.rollback.gui;
 
+import eu.midnightdust.lib.config.MidnightConfig;
+import eu.midnightdust.lib.util.screen.TexturedOverlayButtonWidget;
 import ir.mehradn.rollback.gui.widget.RollbackListWidget;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
@@ -9,15 +11,18 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.world.level.storage.LevelSummary;
 
 
 @Environment(EnvType.CLIENT)
 public class RollbackScreen extends Screen {
+    private static final Identifier MIDNIGHTLIB_ICON_TEXTURE = new Identifier("midnightlib","textures/gui/midnightlib_button.png");
     private final BooleanConsumer callback;
     private final LevelSummary levelSummary;
     private final BackupManager backupManager;
+    private final Screen configScreen;
     private RollbackListWidget rollbackList;
     private ButtonWidget rollbackButton;
     private ButtonWidget deleteButton;
@@ -27,6 +32,7 @@ public class RollbackScreen extends Screen {
         this.callback = callback;
         this.levelSummary = summary;
         this.backupManager = new BackupManager();
+        this.configScreen = MidnightConfig.getScreen(this, "rollback");
     }
 
     protected void init() {
@@ -59,6 +65,12 @@ public class RollbackScreen extends Screen {
             Text.translatable("rollback.screen.cancel"),
             (button) -> this.callback.accept(false)
         ).dimensions(this.width / 2 + 82, this.height - 28, 72, 20).build());
+
+        this.addDrawableChild(new TexturedOverlayButtonWidget(
+            this.width - 22, 1, 20, 20, 0, 0, 20,
+            MIDNIGHTLIB_ICON_TEXTURE, 32, 64,
+            (button) -> this.client.setScreen(this.configScreen)
+        ));
 
         rollbackSelected(false);
     }

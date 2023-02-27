@@ -164,12 +164,16 @@ public class RollbackListWidget extends AlwaysSelectedEntryListWidget<RollbackLi
         public void play() {
             this.client.setScreen(new ConfirmScreen(
                 (confirmed) -> {
-                    if (RollbackListWidget.this.backupManager.rollbackTo(this.backup)) {
-                        PublicStatics.playWorld = RollbackListWidget.this.summary;
-                        PublicStatics.rollbackWorld = null;
-                        PublicStatics.recreateWorld = null;
+                    if (confirmed) {
+                        if (RollbackListWidget.this.backupManager.rollbackTo(this.backup)) {
+                            PublicStatics.playWorld = RollbackListWidget.this.summary;
+                            PublicStatics.rollbackWorld = null;
+                            PublicStatics.recreateWorld = null;
+                        }
+                        RollbackListWidget.this.screen.closeAndReload();
                     }
-                    RollbackListWidget.this.screen.closeAndReload();
+                    else
+                        this.client.setScreen(RollbackListWidget.this.screen);
                 },
                 Text.translatable("rollback.screen.rollbackQuestion"),
                 Text.translatable("rollback.screen.rollbackWarning"),

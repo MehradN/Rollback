@@ -3,7 +3,7 @@
 	"id": "rollback",
 	"version": "${version}",
 	"name": "Rollback",
-	"description": "This mod will allow you to rollback your single-player worlds up to 4 in-game days.",
+	"description": "This mod will take automatic backups of your single player world and will allow you to rollback to them using the gui.",
 	"authors": [
 		"Mehrad Nayyeri"
 	],
@@ -15,7 +15,7 @@
 	"icon": "assets/rollback/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [
+		"client": [
           "ir.mehradn.rollback.Rollback"
 		]
 	},
@@ -26,9 +26,7 @@
 		"fabricloader": ">=0.14.14",
 		"minecraft": "~1.19.3",
 		"java": ">=17",
-		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
+		"fabric-api": ">=0.74.0+1.19.3",
+        "midnightlib": ">=1.1.0-fabric"
 	}
 }
