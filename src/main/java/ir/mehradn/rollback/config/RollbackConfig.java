@@ -71,7 +71,9 @@ public final class RollbackConfig {
         return _RollbackConfig.replaceReCreateButton;
     }
 
-    protected static final class _RollbackConfig extends MidnightConfig {
+    // DO NOT USE OUTSIDE OF THIS CLASS
+    // I am forced to keep it public.
+    public static final class _RollbackConfig extends MidnightConfig {
         public enum _BackupFrequency {
             ONE_PER_DAY,
             TWO_PER_DAY,
