@@ -41,11 +41,11 @@ public class RollbackScreen extends Screen {
 
         this.rollbackButton = addDrawableChild(ButtonWidget.builder(
             Text.translatable("rollback.screen.rollbackButton"),
-            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.RollbackEntry::play)
+            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.Entry::play)
         ).dimensions(this.width / 2 - 154, this.height - 52, 140, 20).build());
         this.deleteButton = addDrawableChild(ButtonWidget.builder(
             Text.translatable("rollback.screen.delete"),
-            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.RollbackEntry::delete)
+            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.Entry::delete)
         ).dimensions(this.width / 2 - 10, this.height - 52, 80, 20).build());
         addDrawableChild(ButtonWidget.builder(
             Text.translatable("rollback.screen.cancel"),
@@ -71,7 +71,7 @@ public class RollbackScreen extends Screen {
             (button) -> this.client.setScreen(MidnightConfig.getScreen(this, "rollback"))
         ));
 
-        setEntrySelected(false);
+        setEntrySelected(false, false);
     }
 
     public void closeAndReload() {
@@ -85,13 +85,13 @@ public class RollbackScreen extends Screen {
         super.render(matrices, mouseX, mouseY, delta);
     }
 
-    public void setEntrySelected(boolean entrySelected) {
-        this.rollbackButton.active = entrySelected;
-        this.deleteButton.active = entrySelected;
+    public void setEntrySelected(boolean playActive, boolean deleteActice) {
+        this.rollbackButton.active = playActive;
+        this.deleteButton.active = deleteActice;
     }
 
     public void removed() {
         if (this.rollbackList != null)
-            this.rollbackList.children().forEach(RollbackListWidget.RollbackEntry::close);
+            this.rollbackList.children().forEach(RollbackListWidget.Entry::close);
     }
 }
