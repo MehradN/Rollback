@@ -31,7 +31,7 @@ public final class RollbackCommand {
                 dispatcher.register(CommandManager.literal("rollback")
                     .requires(RollbackCommand::hasAccessToCommand)
                     .then(CommandManager.literal("backup")
-                        .then(CommandManager.literal("new")
+                        .then(CommandManager.literal("now")
                             .executes(RollbackCommand::backupNow))
                         .then(CommandManager.literal("delete")
                             .then(CommandManager.literal("oldest")
