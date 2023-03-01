@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.SignStyle;
@@ -61,7 +61,7 @@ public class RollbackBackup {
     }
 
     public String getDateAsString() {
-        Date date = Date.from(this.backupTime.toInstant(ZoneOffset.UTC));
+        Date date = Date.from(this.backupTime.atZone(ZoneId.systemDefault()).toInstant());
         return DATE_FORMAT.format(date);
     }
 }
