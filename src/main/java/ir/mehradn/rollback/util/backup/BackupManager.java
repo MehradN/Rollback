@@ -62,13 +62,13 @@ public class BackupManager {
             gson.toJson(this.metadata, writer);
             writer.close();
         } catch (IOException e) {
-            Rollback.LOGGER.error("Failed to save the metadata file!");
+            Rollback.LOGGER.error("Failed to save the metadata file!", e);
             throw new RuntimeException(e);
         }
     }
 
-    private void showError(String title, String info) {
-        Rollback.LOGGER.error(info);
+    private void showError(String title, String info, Throwable exception) {
+        Rollback.LOGGER.error(info, exception);
         MinecraftClient.getInstance().getToastManager().add(new SystemToast(
             SystemToast.Type.WORLD_BACKUP,
             Text.translatable(title),
@@ -87,7 +87,7 @@ public class BackupManager {
                 ));
             return true;
         } catch (IOException e) {
-            showError("selectWorld.edit.backupFailed", "Failed to create a backup of world!");
+            showError("selectWorld.edit.backupFailed", "Failed to create a backup of world!", e);
             return false;
         }
     }
@@ -107,7 +107,7 @@ public class BackupManager {
         Rollback.LOGGER.debug("Saving the world...");
         boolean f = server.saveAll(true, true, true);
         if (!f) {
-            showError("rollback.createBackup.failed", "Failed to create a backup of world!");
+            showError("rollback.createBackup.failed", "Failed to create a backup of world!", null);
             return false;
         }
 
@@ -115,7 +115,7 @@ public class BackupManager {
         try {
             session.createBackup();
         } catch (IOException e) {
-            showError("rollback.createBackup.failed", "Failed to create a backup of world!");
+            showError("rollback.createBackup.failed", "Failed to create a backup of world!", e);
             return false;
         }
 
@@ -130,7 +130,7 @@ public class BackupManager {
             ));
             Files.move(path1, path2);
         } catch (IOException e) {
-            showError("rollback.createBackup.failed", "Failed to move the backup file!");
+            showError("rollback.createBackup.failed", "Failed to move the backup file!", e);
             return false;
         }
 
@@ -144,7 +144,7 @@ public class BackupManager {
                 ((GameRendererAccessor)renderer).InvokeUpdateWorldIcon(finalPath);
             });
         } catch (IOException e) {
-            showError("rollback.createBackup.failed", "Failed to make an icon for the backup!");
+            showError("rollback.createBackup.failed", "Failed to make an icon for the backup!", e);
             return false;
         }
 
@@ -178,7 +178,7 @@ public class BackupManager {
             Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
             Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
         } catch (IOException e) {
-            showError("rollback.deleteBackup.failed", "Failed to delete the files!");
+            showError("rollback.deleteBackup.failed", "Failed to delete the files!", e);
             return false;
         }
 
@@ -207,7 +207,7 @@ public class BackupManager {
         try (LevelStorage.Session session = client.getLevelStorage().createSession(backup.worldName)) {
             session.deleteSessionLock();
         } catch (IOException e) {
-            showError("rollback.rollback.failed", "Failed to delete the current save!");
+            showError("rollback.rollback.failed", "Failed to delete the current save!", e);
             return false;
         }
 
@@ -230,7 +230,7 @@ public class BackupManager {
                 }
             }
         } catch (IOException e) {
-            showError("rollback.rollback.failed", "Failed to extract the backup to save directory!");
+            showError("rollback.rollback.failed", "Failed to extract the backup to save directory!", e);
             return false;
         }
 
