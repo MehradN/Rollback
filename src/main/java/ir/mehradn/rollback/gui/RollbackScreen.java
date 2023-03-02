@@ -1,7 +1,6 @@
 package ir.mehradn.rollback.gui;
 
 import eu.midnightdust.lib.config.MidnightConfig;
-import eu.midnightdust.lib.util.screen.TexturedOverlayButtonWidget;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
@@ -9,15 +8,14 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.CyclingButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.world.level.storage.LevelSummary;
 
 @Environment(EnvType.CLIENT)
 public class RollbackScreen extends Screen {
-    private static final Identifier MIDNIGHTLIB_ICON_TEXTURE = new Identifier("midnightlib", "textures/gui/midnightlib_button.png");
     private final BooleanConsumer callback;
     private final LevelSummary levelSummary;
     private final BackupManager backupManager;
@@ -35,23 +33,14 @@ public class RollbackScreen extends Screen {
     protected void init() {
         this.rollbackList = new RollbackListWidget(
             this, this.backupManager, this.levelSummary, this.client,
-            this.width, this.height, 22, this.height - 64, 36
+            this.width, this.height, 22, this.height - 84, 36
         );
         addSelectableChild(this.rollbackList);
 
         this.rollbackButton = addDrawableChild(ButtonWidget.builder(
             Text.translatable("rollback.screen.rollbackButton"),
             (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.Entry::play)
-        ).dimensions(this.width / 2 - 154, this.height - 52, 140, 20).build());
-        this.deleteButton = addDrawableChild(ButtonWidget.builder(
-            Text.translatable("rollback.screen.delete"),
-            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.Entry::delete)
-        ).dimensions(this.width / 2 - 10, this.height - 52, 80, 20).build());
-        addDrawableChild(ButtonWidget.builder(
-            Text.translatable("rollback.screen.cancel"),
-            (button) -> this.callback.accept(false)
-        ).dimensions(this.width / 2 + 74, this.height - 52, 80, 20).build());
-
+        ).dimensions(this.width / 2 - 154, this.height - 76, 150, 20).build());
         addDrawableChild(ButtonWidget.builder(
             Text.translatable("rollback.screen.manualBackup"),
             (button) -> {
@@ -59,17 +48,31 @@ public class RollbackScreen extends Screen {
                 boolean b = this.backupManager.createNormalBackup(this.levelSummary);
                 this.callback.accept(!b);
             }
-        ).dimensions(this.width / 2 - 154, this.height - 28, 140, 20).build());
+        ).dimensions(this.width / 2 + 4, this.height - 76, 150, 20).build());
+
+        boolean automatedEnabled = this.backupManager.getAutomated(this.levelSummary.getName());
+        addDrawableChild(CyclingButtonWidget.onOffBuilder(automatedEnabled).build(
+            this.width / 2 - 154, this.height - 52, 150, 20,
+            Text.translatable("rollback.screen.automatedOption"),
+            (button, enabled) -> this.backupManager.setAutomated(this.levelSummary.getName(), enabled)
+        ));
         addDrawableChild(ButtonWidget.builder(
             Text.translatable("rollback.screen.openFolder"),
             (button) -> Util.getOperatingSystem().open(this.client.getLevelStorage().getBackupsDirectory().toFile())
-        ).dimensions(this.width / 2 - 10, this.height - 28, 140, 20).build());
+        ).dimensions(this.width / 2 + 4, this.height - 52, 150, 20).build());
 
-        this.addDrawableChild(new TexturedOverlayButtonWidget(
-            this.width / 2 + 134, this.height - 28, 20, 20, 0, 0, 20,
-            MIDNIGHTLIB_ICON_TEXTURE, 32, 64,
+        this.deleteButton = addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.delete"),
+            (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.Entry::delete)
+        ).dimensions(this.width / 2 - 154, this.height - 28, 100, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.options"),
             (button) -> this.client.setScreen(MidnightConfig.getScreen(this, "rollback"))
-        ));
+        ).dimensions(this.width / 2 - 50, this.height - 28, 100, 20).build());
+        addDrawableChild(ButtonWidget.builder(
+            Text.translatable("rollback.screen.cancel"),
+            (button) -> this.callback.accept(false)
+        ).dimensions(this.width / 2 + 54, this.height - 28, 100, 20).build());
 
         setEntrySelected(false, false);
     }
@@ -85,9 +88,9 @@ public class RollbackScreen extends Screen {
         super.render(matrices, mouseX, mouseY, delta);
     }
 
-    public void setEntrySelected(boolean playActive, boolean deleteActice) {
+    public void setEntrySelected(boolean playActive, boolean deleteActive) {
         this.rollbackButton.active = playActive;
-        this.deleteButton.active = deleteActice;
+        this.deleteButton.active = deleteActive;
     }
 
     public void removed() {

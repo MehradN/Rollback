@@ -1,17 +1,18 @@
 {
-	"required": true,
-	"package": "ir.mehradn.rollback.mixin",
-	"compatibilityLevel": "JAVA_17",
-	"client": [
-		"EditWorldScreenMixin",
-		"SelectWorldScreenMixin",
-		"WorldEntryMixin",
-		"WorldListWidgetAccessor",
-		"LevelStorageSessionMixin",
-		"MinecraftServerMixin",
-		"GameRendererAccessor"
-	],
-	"injectors": {
-		"defaultRequire": 1
+  "required": true,
+  "package": "ir.mehradn.rollback.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "CreateWorldScreenMixin",
+    "EditWorldScreenMixin",
+    "GameRendererAccessor",
+    "LevelStorageSessionMixin",
+    "MinecraftServerMixin",
+    "SelectWorldScreenMixin",
+    "WorldEntryMixin",
+    "WorldListWidgetAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
 	}
 }

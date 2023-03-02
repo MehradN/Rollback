@@ -9,7 +9,6 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 
 @Environment(EnvType.CLIENT)
@@ -37,11 +36,12 @@ public final class AutomatedBackup {
     private static boolean shouldCreateBackup(MinecraftServer server) {
         int serverTick = server.getTicks();
         int worldTick = (int)server.getWorld(World.OVERWORLD).getTimeOfDay();
-        GameMode gameMode = ((MinecraftServerExpanded)server).getSession().getLevelSummary().getGameMode();
+        BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
+        String worldName = ((MinecraftServerExpanded)server).getSession().getLevelSummary().getName();
 
-        if (!RollbackConfig.isAllowedWorldType(gameMode))
+        if (!backupManager.getAutomated(worldName))
             return false;
-        else if (RollbackConfig.backupMode() == RollbackConfig.BackupMode.REAL_TIME)
+        if (RollbackConfig.backupMode() == RollbackConfig.BackupMode.REAL_TIME)
             return (serverTick - latestBackup) >= (RollbackConfig.ticksPerBackup() + 20);
         else
             return (

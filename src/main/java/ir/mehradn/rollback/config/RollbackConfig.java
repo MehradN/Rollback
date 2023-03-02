@@ -3,7 +3,6 @@ package ir.mehradn.rollback.config;
 import eu.midnightdust.lib.config.MidnightConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.world.GameMode;
 
 @Environment(EnvType.CLIENT)
 public final class RollbackConfig {
@@ -42,23 +41,6 @@ public final class RollbackConfig {
         return 24000;
     }
 
-    public static boolean isAllowedWorldType(GameMode gameMode) {
-        int x, y;
-        switch (gameMode) {
-            case SURVIVAL -> x = 1;
-            case ADVENTURE -> x = 2;
-            default -> x = 3;
-        }
-        switch (_RollbackConfig.allowedWorldTypes) {
-            case NONE -> y = 0;
-            case SURVIVAL -> y = 1;
-            case ADVENTURE -> y = 2;
-            case ALL_TYPES -> y = 3;
-            default -> y = 4;
-        }
-        return x <= y;
-    }
-
     public static CommandAccess commandAccess() {
         switch (_RollbackConfig.commandAccess) {
             case ON_CHEATS -> {return CommandAccess.ON_CHEATS;}
@@ -69,6 +51,10 @@ public final class RollbackConfig {
 
     public static boolean replaceReCreateButton() {
         return _RollbackConfig.replaceReCreateButton;
+    }
+
+    public static boolean replaceGameRulesButton() {
+        return _RollbackConfig.replaceGameRulesButton;
     }
 
     // DO NOT USE OUTSIDE OF THIS CLASS
@@ -88,22 +74,15 @@ public final class RollbackConfig {
             ALWAYS
         }
 
-        public enum _AllowedWorldTypes {
-            NONE,
-            SURVIVAL,
-            ADVENTURE,
-            ALL_TYPES
-        }
-
         @Entry(min = 1, max = 10, isSlider = true)
         public static int backupsPerWorld = 5;
         @Entry
         public static _BackupFrequency backupFrequency = _BackupFrequency.ONE_PER_DAY;
         @Entry
-        public static _AllowedWorldTypes allowedWorldTypes = _AllowedWorldTypes.SURVIVAL;
-        @Entry
         public static _CommandAccess commandAccess = _CommandAccess.ON_CHEATS;
         @Entry
         public static boolean replaceReCreateButton = true;
+        @Entry
+        public static boolean replaceGameRulesButton = true;
     }
 }

@@ -92,6 +92,7 @@ public class BackupManager {
 
     public void setAutomated(String worldName, boolean enabled) {
         getWorldObject(worldName).addProperty("automated", enabled);
+        saveMetadata();
     }
 
     public boolean getAutomated(String worldName) {
