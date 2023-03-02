@@ -4,7 +4,8 @@ This Minecraft mod will take automatic backups of your single-player world and w
 
 ### Screenshots
 ![Rollback Screen](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/RollbackScreen.png)
-![Config Screen (Powered by Midnightlib)](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/ConfigScreen.png)
+
+Check out the [Gallery](https://github.com/MehradN/Rollback/tree/master/screenshots) for more screenshots and explanations about navigating and using the mod.
 
 ### Automated Backup Frequency: What's the difference between "X Per Day" and "X Minutes"?
 The "X Per Day" is based on the daylight cycle. For example, the "2 Per Day" option will take backups only at 6:00 and 18:00 (in-game time). However, this means that a backup can be skipped by beds and commands. The mod has a cap on the minimum amount of real-time that should've passed since the last backup (which is 10/X minutes) so useless backups won't be created.
