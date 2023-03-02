@@ -50,11 +50,17 @@ public class BackupManager {
 
     private void loadMetadata() throws FileNotFoundException {
         this.metadata = JsonParser.parseReader(new FileReader(this.metadataFilePath.toFile())).getAsJsonObject();
+        if (MetadataUpdater.getVersion(this.metadata).isLessThan(0, 3)) {
+            MetadataUpdater updater = new MetadataUpdater(this.metadata);
+            this.metadata = updater.update();
+            saveMetadata();
+        }
     }
 
     private void saveMetadata() {
         Rollback.LOGGER.info("Saving metadata file...");
         try {
+            this.metadata.addProperty("version", "0.3");
             Files.createDirectories(this.rollbackDirectory);
             Files.createDirectories(this.iconsDirectory);
             FileWriter writer = new FileWriter(this.metadataFilePath.toFile());
@@ -65,6 +71,32 @@ public class BackupManager {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);
             throw new RuntimeException(e);
         }
+    }
+
+    private JsonObject getWorldObject(String worldName) {
+        if (!this.metadata.has("worlds"))
+            this.metadata.add("worlds", new JsonObject());
+        JsonObject worldsData = this.metadata.getAsJsonObject("worlds");
+
+        if (!worldsData.has(worldName))
+            worldsData.add(worldName, new JsonObject());
+        JsonObject worldObject = worldsData.getAsJsonObject(worldName);
+
+        if (!worldObject.has("automated"))
+            worldObject.addProperty("automated", false);
+        if (!worldObject.has("backups"))
+            worldObject.add("backups", new JsonArray());
+
+        return worldObject;
+    }
+
+    public void setAutomated(String worldName, boolean enabled) {
+        getWorldObject(worldName).addProperty("automated", enabled);
+    }
+
+    public boolean getAutomated(String worldName) {
+        JsonObject worldObject = getWorldObject(worldName);
+        return worldObject.get("automated").getAsBoolean();
     }
 
     private void showError(String title, String info, Throwable exception) {
@@ -97,9 +129,8 @@ public class BackupManager {
         LevelStorage.Session session = ((MinecraftServerExpanded)server).getSession();
         String worldName = session.getLevelSummary().getName();
         LocalDateTime now = LocalDateTime.now();
-        if (!this.metadata.has(worldName))
-            this.metadata.add(worldName, new JsonArray());
-        JsonArray array = this.metadata.getAsJsonArray(worldName);
+        JsonObject worldObject = getWorldObject(worldName);
+        JsonArray array = worldObject.getAsJsonArray("backups");
 
         while (array.size() >= RollbackConfig.getMaxBackupsPerWorld())
             deleteBackup(worldName, 0);
@@ -161,11 +192,8 @@ public class BackupManager {
     }
 
     public boolean deleteBackup(String worldName, int index) {
-        if (!this.metadata.has(worldName))
-            return true;
-
         Rollback.LOGGER.info("Deleting the backup #{}...", index);
-        JsonArray array = this.metadata.getAsJsonArray(worldName);
+        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
         if (index < 0)
             index += array.size();
         if (index >= array.size())
@@ -190,10 +218,7 @@ public class BackupManager {
 
     public List<RollbackBackup> getRollbacksFor(String worldName) {
         ArrayList<RollbackBackup> list = new ArrayList<>();
-        if (!this.metadata.has(worldName))
-            return list;
-
-        JsonArray array = this.metadata.getAsJsonArray(worldName);
+        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
         for (JsonElement elm : array)
             list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
         return list;
@@ -239,14 +264,13 @@ public class BackupManager {
 
     public void deleteAllBackupsFor(String worldName) {
         Rollback.LOGGER.info("Deleting all the backups for world \"{}\"...", worldName);
-        if (!this.metadata.has(worldName))
-            return;
 
-        while (this.metadata.getAsJsonArray(worldName).size() > 0)
+        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
+        while (array.size() > 0)
             deleteBackup(worldName, 0);
-        this.metadata.remove(worldName);
+        this.metadata.getAsJsonObject("worlds").remove(worldName);
 
-        this.saveMetadata();
+        saveMetadata();
     }
 
     /*
