@@ -135,6 +135,7 @@ public class BackupManager {
 
         while (array.size() >= RollbackConfig.getMaxBackupsPerWorld())
             deleteBackup(worldName, 0);
+        deleteNonexistentIcons(worldName);
 
         Rollback.LOGGER.debug("Saving the world...");
         boolean f = server.saveAll(true, true, true);
@@ -205,8 +206,9 @@ public class BackupManager {
 
         Rollback.LOGGER.debug("Deleting the files...");
         try {
-            Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
             Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
+            if (backup.iconPath != null)
+                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
         } catch (IOException e) {
             showError("rollback.deleteBackup.failed", "Failed to delete the files!", e);
             return false;
@@ -273,6 +275,18 @@ public class BackupManager {
         this.metadata.getAsJsonObject("worlds").remove(worldName);
 
         saveMetadata();
+    }
+
+    private void deleteNonexistentIcons(String worldName) {
+        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
+        for (JsonElement elm : array) {
+            JsonObject obj = elm.getAsJsonObject();
+            if (!obj.has("icon_file"))
+                continue;
+            String iconPath = obj.get("icon_file").getAsString();
+            if (!Files.isRegularFile(this.rollbackDirectory.resolve(iconPath)))
+                obj.remove("icon_file");
+        }
     }
 
     /*
