@@ -48,13 +48,6 @@ public final class RollbackCommand {
         return ((RollbackConfig.commandAccess() == RollbackConfig.CommandAccess.ALWAYS) || source.hasPermissionLevel(4));
     }
 
-    private static void checkIsServerHost(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
-        Text user1 = MinecraftClient.getInstance().player.getName();
-        Text user2 = context.getSource().getPlayer().getName();
-        if (!user1.equals(user2))
-            throw new SimpleCommandExceptionType(Text.translatable("rollback.command.unavailable")).create();
-    }
-
     public static int backupNow(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         checkIsServerHost(context);
 
@@ -117,5 +110,12 @@ public final class RollbackCommand {
             context.getSource().sendMessage(part1.append(part2.append(part3)));
         }
         return 1;
+    }
+
+    private static void checkIsServerHost(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        Text user1 = MinecraftClient.getInstance().player.getName();
+        Text user2 = context.getSource().getPlayer().getName();
+        if (!user1.equals(user2))
+            throw new SimpleCommandExceptionType(Text.translatable("rollback.command.unavailable")).create();
     }
 }

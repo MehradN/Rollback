@@ -15,13 +15,13 @@ import java.nio.file.Path;
 public abstract class LevelStorageSessionMixin implements AutoCloseable, LevelStorageSessionExpanded {
     private Path latestBackupPath;
 
+    public Path getLatestBackupPath() {
+        return this.latestBackupPath;
+    }
+
     @ModifyArg(method = "createBackup", at = @At(value = "INVOKE", ordinal = 0, target = "Ljava/nio/file/Files;size(Ljava/nio/file/Path;)J"))
     private Path grabBackupPath(Path path) {
         this.latestBackupPath = path;
         return path;
-    }
-
-    public Path getLatestBackupPath() {
-        return this.latestBackupPath;
     }
 }

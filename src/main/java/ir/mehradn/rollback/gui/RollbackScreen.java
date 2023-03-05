@@ -30,6 +30,27 @@ public class RollbackScreen extends Screen {
         this.backupManager = new BackupManager();
     }
 
+    public void closeAndReload() {
+        this.callback.accept(true);
+    }
+
+    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+        renderBackground(matrices);
+        this.rollbackList.render(matrices, mouseX, mouseY, delta);
+        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
+        super.render(matrices, mouseX, mouseY, delta);
+    }
+
+    public void setEntrySelected(boolean playActive, boolean deleteActive) {
+        this.rollbackButton.active = playActive;
+        this.deleteButton.active = deleteActive;
+    }
+
+    public void removed() {
+        if (this.rollbackList != null)
+            this.rollbackList.children().forEach(RollbackListWidget.Entry::close);
+    }
+
     protected void init() {
         this.rollbackList = new RollbackListWidget(
             this, this.backupManager, this.levelSummary, this.client,
@@ -75,26 +96,5 @@ public class RollbackScreen extends Screen {
         ).dimensions(this.width / 2 + 54, this.height - 28, 100, 20).build());
 
         setEntrySelected(false, false);
-    }
-
-    public void closeAndReload() {
-        this.callback.accept(true);
-    }
-
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
-        this.rollbackList.render(matrices, mouseX, mouseY, delta);
-        drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 8, 0xFFFFFF);
-        super.render(matrices, mouseX, mouseY, delta);
-    }
-
-    public void setEntrySelected(boolean playActive, boolean deleteActive) {
-        this.rollbackButton.active = playActive;
-        this.deleteButton.active = deleteActive;
-    }
-
-    public void removed() {
-        if (this.rollbackList != null)
-            this.rollbackList.children().forEach(RollbackListWidget.Entry::close);
     }
 }

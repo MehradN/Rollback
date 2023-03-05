@@ -20,8 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Environment(EnvType.CLIENT)
 @Mixin(SelectWorldScreen.class)
 public abstract class SelectWorldScreenMixin extends Screen {
-    @Shadow
-    private WorldListWidget levelList;
+    @Shadow private WorldListWidget levelList;
 
     private ButtonWidget rollbackButton;
     private int[] buttonPos;

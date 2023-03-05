@@ -30,10 +30,10 @@ import java.util.zip.ZipFile;
 
 @Environment(EnvType.CLIENT)
 public class BackupManager {
-    private JsonObject metadata;
     public final Path rollbackDirectory;
     public final Path iconsDirectory;
     private final Path metadataFilePath;
+    private JsonObject metadata;
 
     public BackupManager() {
         this.rollbackDirectory = MinecraftClient.getInstance().getLevelStorage().getBackupsDirectory().resolve("rollbacks");
@@ -48,58 +48,14 @@ public class BackupManager {
         }
     }
 
-    private void loadMetadata() throws FileNotFoundException {
-        this.metadata = JsonParser.parseReader(new FileReader(this.metadataFilePath.toFile())).getAsJsonObject();
-        if (MetadataUpdater.getVersion(this.metadata).isLessThan(0, 3)) {
-            MetadataUpdater updater = new MetadataUpdater(this.metadata);
-            this.metadata = updater.update();
-            saveMetadata();
-        }
-    }
-
-    private void saveMetadata() {
-        Rollback.LOGGER.info("Saving metadata file...");
-        try {
-            this.metadata.addProperty("version", "0.3");
-            Files.createDirectories(this.rollbackDirectory);
-            Files.createDirectories(this.iconsDirectory);
-            FileWriter writer = new FileWriter(this.metadataFilePath.toFile());
-            Gson gson = new GsonBuilder()/*.setPrettyPrinting()*/.create();
-            gson.toJson(this.metadata, writer);
-            writer.close();
-        } catch (IOException e) {
-            Rollback.LOGGER.error("Failed to save the metadata file!", e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private JsonObject getWorldObject(String worldName) {
-        if (!this.metadata.has("worlds"))
-            this.metadata.add("worlds", new JsonObject());
-        JsonObject worldsData = this.metadata.getAsJsonObject("worlds");
-
-        if (!worldsData.has(worldName))
-            worldsData.add(worldName, new JsonObject());
-        JsonObject worldObject = worldsData.getAsJsonObject(worldName);
-
-        if (!worldObject.has("automated"))
-            worldObject.addProperty("automated", false);
-        if (!worldObject.has("prompted"))
-            worldObject.addProperty("prompted", false);
-        if (!worldObject.has("backups"))
-            worldObject.add("backups", new JsonArray());
-
-        return worldObject;
+    public boolean getAutomated(String worldName) {
+        JsonObject worldObject = getWorldObject(worldName);
+        return worldObject.get("automated").getAsBoolean();
     }
 
     public void setAutomated(String worldName, boolean enabled) {
         getWorldObject(worldName).addProperty("automated", enabled);
         saveMetadata();
-    }
-
-    public boolean getAutomated(String worldName) {
-        JsonObject worldObject = getWorldObject(worldName);
-        return worldObject.get("automated").getAsBoolean();
     }
 
     public boolean getPrompted(String worldName) {
@@ -119,13 +75,12 @@ public class BackupManager {
         saveMetadata();
     }
 
-    private void showError(String title, String info, Throwable exception) {
-        Rollback.LOGGER.error(info, exception);
-        MinecraftClient.getInstance().getToastManager().add(new SystemToast(
-            SystemToast.Type.WORLD_BACKUP,
-            Text.translatable(title),
-            Text.literal(info)
-        ));
+    public List<RollbackBackup> getRollbacksFor(String worldName) {
+        ArrayList<RollbackBackup> list = new ArrayList<>();
+        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
+        for (JsonElement elm : array)
+            list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
+        return list;
     }
 
     public boolean createNormalBackup(LevelSummary summary) {
@@ -239,14 +194,6 @@ public class BackupManager {
         return true;
     }
 
-    public List<RollbackBackup> getRollbacksFor(String worldName) {
-        ArrayList<RollbackBackup> list = new ArrayList<>();
-        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
-        for (JsonElement elm : array)
-            list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
-        return list;
-    }
-
     public boolean rollbackTo(RollbackBackup backup) {
         Rollback.LOGGER.info("Rolling back to backup \"{}\"...", backup.backupPath.toString());
         MinecraftClient client = MinecraftClient.getInstance();
@@ -296,6 +243,59 @@ public class BackupManager {
         saveMetadata();
     }
 
+    private JsonObject getWorldObject(String worldName) {
+        if (!this.metadata.has("worlds"))
+            this.metadata.add("worlds", new JsonObject());
+        JsonObject worldsData = this.metadata.getAsJsonObject("worlds");
+
+        if (!worldsData.has(worldName))
+            worldsData.add(worldName, new JsonObject());
+        JsonObject worldObject = worldsData.getAsJsonObject(worldName);
+
+        if (!worldObject.has("automated"))
+            worldObject.addProperty("automated", false);
+        if (!worldObject.has("prompted"))
+            worldObject.addProperty("prompted", false);
+        if (!worldObject.has("backups"))
+            worldObject.add("backups", new JsonArray());
+
+        return worldObject;
+    }
+
+    private void loadMetadata() throws FileNotFoundException {
+        this.metadata = JsonParser.parseReader(new FileReader(this.metadataFilePath.toFile())).getAsJsonObject();
+        if (MetadataUpdater.getVersion(this.metadata).isLessThan(0, 3)) {
+            MetadataUpdater updater = new MetadataUpdater(this.metadata);
+            this.metadata = updater.update();
+            saveMetadata();
+        }
+    }
+
+    private void saveMetadata() {
+        Rollback.LOGGER.info("Saving metadata file...");
+        try {
+            this.metadata.addProperty("version", "0.3");
+            Files.createDirectories(this.rollbackDirectory);
+            Files.createDirectories(this.iconsDirectory);
+            FileWriter writer = new FileWriter(this.metadataFilePath.toFile());
+            Gson gson = new GsonBuilder()/*.setPrettyPrinting()*/.create();
+            gson.toJson(this.metadata, writer);
+            writer.close();
+        } catch (IOException e) {
+            Rollback.LOGGER.error("Failed to save the metadata file!", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void showError(String title, String info, Throwable exception) {
+        Rollback.LOGGER.error(info, exception);
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(
+            SystemToast.Type.WORLD_BACKUP,
+            Text.translatable(title),
+            Text.literal(info)
+        ));
+    }
+
     private void deleteNonexistentIcons(String worldName) {
         JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
         for (JsonElement elm : array) {
@@ -307,61 +307,4 @@ public class BackupManager {
                 obj.remove("icon_file");
         }
     }
-
-    /*
-    public void cleanUp() {
-         List<String> worldNames;
-         try {
-             LevelStorage storage = MinecraftClient.getInstance().getLevelStorage();
-             LevelStorage.LevelList levelList = storage.getLevelList();
-             List<LevelSummary> summaries = storage.loadSummaries(levelList).get();
-             worldNames = summaries.stream().map(LevelSummary::getName).toList();
-         } catch (Exception e) {
-             return;
-         }
-
-         for (String world : this.backupInfo.keySet())
-             if (!worldNames.contains(world))
-                 this.backupInfo.remove(world);
-
-         List<Path> providedBackups;
-         List<Path> providedIcons;
-         try (Stream<Path> stream1 = Files.list(this.rollbackDirectory);
-              Stream<Path> stream2 = Files.list(this.iconsDirectory)) {
-             providedBackups = stream1.filter((path) -> !(Files.isDirectory(path)) || path.getFileName().toString().equals("rollbacks.json")).toList();
-             providedIcons = stream2.toList();
-         } catch (IOException e) {
-             return;
-         }
-
-         ArrayList<String> expectedBackups = new ArrayList<>();
-         ArrayList<String> expectedIcons = new ArrayList<>();
-         for (String world : this.backupInfo.keySet()) {
-             JsonArray backups = this.backupInfo.getAsJsonArray(world);
-             for (JsonElement backup : backups) {
-                 String file = backup.getAsJsonObject().get("backup_file").getAsString();
-                 if (providedBackups.contains(Path.of(file))) {
-                     expectedBackups.add(file);
-                     expectedIcons.add(backup.getAsJsonObject().get("icon_file").getAsString());
-                 } else
-                     backups.remove(backup);
-             }
-         }
-
-         for (Path path : providedBackups) {
-             if (!expectedBackups.contains(path.getFileName().toString())) {
-                 try {
-                     Files.deleteIfExists(this.rollbackDirectory.resolve(path));
-                 } catch (IOException ignored) {}
-             }
-         }
-         for (Path path : providedIcons) {
-             if (!expectedIcons.contains(path.getFileName().toString())) {
-                 try {
-                     Files.deleteIfExists(this.iconsDirectory.resolve(path));
-                 } catch (IOException ignored) {}
-             }
-         }
-     }
-    */
 }

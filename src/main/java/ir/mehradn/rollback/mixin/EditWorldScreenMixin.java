@@ -20,10 +20,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Environment(EnvType.CLIENT)
 @Mixin(EditWorldScreen.class)
 public abstract class EditWorldScreenMixin extends Screen {
-    @Shadow @Final
-    private BooleanConsumer callback;
-    @Shadow @Final
-    private LevelStorage.Session storageSession;
+    @Shadow @Final private BooleanConsumer callback;
+    @Shadow @Final private LevelStorage.Session storageSession;
 
     private int[] buttonPos1;
     private int[] buttonPos2;

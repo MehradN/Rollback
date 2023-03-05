@@ -6,16 +6,6 @@ import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
 public final class RollbackConfig {
-    public enum BackupMode {
-        IN_GAME_DAY,
-        REAL_TIME
-    }
-
-    public enum CommandAccess {
-        ON_CHEATS,
-        ALWAYS
-    }
-
     public static void register() {
         MidnightConfig.init("rollback", _RollbackConfig.class);
     }
@@ -55,6 +45,16 @@ public final class RollbackConfig {
 
     public static boolean replaceGameRulesButton() {
         return _RollbackConfig.replaceGameRulesButton;
+    }
+
+    public enum BackupMode {
+        IN_GAME_DAY,
+        REAL_TIME
+    }
+
+    public enum CommandAccess {
+        ON_CHEATS,
+        ALWAYS
     }
 
     // DO NOT USE OUTSIDE OF THIS CLASS

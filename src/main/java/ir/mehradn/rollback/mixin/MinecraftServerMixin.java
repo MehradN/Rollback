@@ -19,18 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Environment(EnvType.CLIENT)
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements CommandOutput, AutoCloseable, MinecraftServerExpanded {
-    @Shadow @Final
-    protected LevelStorage.Session session;
+    @Shadow @Final protected LevelStorage.Session session;
 
     private BackupManager backupManager;
 
     public MinecraftServerMixin(String string) {
         super(string);
-    }
-
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void addBackupManager(CallbackInfo ci) {
-        this.backupManager = new BackupManager();
     }
 
     public LevelStorage.Session getSession() {
@@ -39,5 +33,10 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 
     public BackupManager getBackupManager() {
         return this.backupManager;
+    }
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void addBackupManager(CallbackInfo ci) {
+        this.backupManager = new BackupManager();
     }
 }

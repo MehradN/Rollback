@@ -29,10 +29,7 @@ import java.util.Optional;
 @Environment(EnvType.CLIENT)
 @Mixin(CreateWorldScreen.class)
 public abstract class CreateWorldScreenMixin extends Screen {
-    @Shadow
-    private ButtonWidget gameRulesButton;
-
-    @Shadow protected abstract void startServer(LevelProperties.SpecialProperty specialProperty, CombinedDynamicRegistries<ServerDynamicRegistryType> combinedDynamicRegistries, Lifecycle lifecycle);
+    @Shadow private ButtonWidget gameRulesButton;
 
     private CyclingButtonWidget<Boolean> automatedButton;
     private int[] buttonPos;
@@ -42,6 +39,8 @@ public abstract class CreateWorldScreenMixin extends Screen {
     protected CreateWorldScreenMixin(Text title) {
         super(title);
     }
+
+    @Shadow protected abstract void startServer(LevelProperties.SpecialProperty specialProperty, CombinedDynamicRegistries<ServerDynamicRegistryType> combinedDynamicRegistries, Lifecycle lifecycle);
 
     @ModifyArg(method = "init", index = 0, at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/client/gui/screen/world/CreateWorldScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
     private Element changeButton(Element element) {

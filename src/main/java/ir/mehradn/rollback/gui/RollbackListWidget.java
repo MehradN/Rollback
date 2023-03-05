@@ -52,22 +52,6 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
         super.render(matrices, mouseX, mouseY, delta);
     }
 
-    private void reloadEntries() {
-        clearEntries();
-        addEntry(this.currentSaveEntry);
-
-        List<RollbackBackup> backups = this.backupManager.getRollbacksFor(this.summary.getName());
-        for (int i = 1; i <= backups.size(); i++)
-            addEntry(new RollbackEntry(i, backups.get(backups.size() - i)));
-
-        this.screen.narrateScreenIfNarrationEnabled(true);
-        this.shouldReloadEntries = false;
-    }
-
-    protected int getScrollbarPositionX() {
-        return super.getScrollbarPositionX() + 20;
-    }
-
     public int getRowWidth() {
         return super.getRowWidth() + 50;
     }
@@ -84,6 +68,22 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
         return Optional.empty();
     }
 
+    protected int getScrollbarPositionX() {
+        return super.getScrollbarPositionX() + 20;
+    }
+
+    private void reloadEntries() {
+        clearEntries();
+        addEntry(this.currentSaveEntry);
+
+        List<RollbackBackup> backups = this.backupManager.getRollbacksFor(this.summary.getName());
+        for (int i = 1; i <= backups.size(); i++)
+            addEntry(new RollbackEntry(i, backups.get(backups.size() - i)));
+
+        this.screen.narrateScreenIfNarrationEnabled(true);
+        this.shouldReloadEntries = false;
+    }
+
     @Environment(EnvType.CLIENT)
     public abstract class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> implements AutoCloseable {
         protected static final Identifier UNKNOWN_SERVER_LOCATION = new Identifier("textures/misc/unknown_server.png");
@@ -95,6 +95,24 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
         public Entry() {
             this.client = RollbackListWidget.this.client;
         }
+
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            RollbackListWidget.this.setSelected(this);
+            if (mouseX - RollbackListWidget.this.getRowLeft() <= 32) {
+                play();
+                return true;
+            }
+            return false;
+        }
+
+        public void close() {
+            if (this.icon != null)
+                this.icon.close();
+        }
+
+        public abstract void play();
+
+        public abstract void delete();
 
         protected void render(Text title, Text info,
                               MatrixStack matrices, int y, int x, int mouseX, boolean hovered) {
@@ -118,24 +136,6 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
                 DrawableHelper.drawTexture(matrices, x, y, 0.0f, v, 32, 32, 256, 256);
             }
         }
-
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            RollbackListWidget.this.setSelected(this);
-            if (mouseX - RollbackListWidget.this.getRowLeft() <= 32) {
-                play();
-                return true;
-            }
-            return false;
-        }
-
-        public void close() {
-            if (this.icon != null)
-                this.icon.close();
-        }
-
-        public abstract void play();
-
-        public abstract void delete();
     }
 
     @Environment(EnvType.CLIENT)
@@ -167,6 +167,15 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
             );
         }
 
+        public void play() {
+            PublicStatics.playWorld = RollbackListWidget.this.summary;
+            PublicStatics.rollbackWorld = null;
+            PublicStatics.recreateWorld = null;
+            RollbackListWidget.this.screen.closeAndReload();
+        }
+
+        public void delete() {}
+
         private NativeImageBackedTexture getIconTexture() {
             Path path = this.summary.getIconPath();
             if (!Files.isRegularFile(path)) {
@@ -189,15 +198,6 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
                 return null;
             }
         }
-
-        public void play() {
-            PublicStatics.playWorld = RollbackListWidget.this.summary;
-            PublicStatics.rollbackWorld = null;
-            PublicStatics.recreateWorld = null;
-            RollbackListWidget.this.screen.closeAndReload();
-        }
-
-        public void delete() {}
     }
 
     @Environment(EnvType.CLIENT)
@@ -229,34 +229,6 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
                 Text.translatable("rollback.created", this.backup.getDateAsString()),
                 matrices, y, x, mouseX, hovered
             );
-        }
-
-        private NativeImageBackedTexture getIconTexture() {
-            if (this.backup.iconPath == null) {
-                this.client.getTextureManager().destroyTexture(this.iconLocation);
-                return null;
-            }
-
-            Path path = RollbackListWidget.this.backupManager.rollbackDirectory.resolve(this.backup.iconPath);
-            if (!Files.isRegularFile(path)) {
-                this.client.getTextureManager().destroyTexture(this.iconLocation);
-                return null;
-            }
-
-            Rollback.LOGGER.debug("Loading the icon for backup #{}...", this.backupNumber);
-            try (InputStream inputStream = Files.newInputStream(path)) {
-                NativeImage image = NativeImage.read(inputStream);
-                Validate.validState(image.getWidth() == 64, "Must be 64 pixels wide");
-                Validate.validState(image.getHeight() == 64, "Must be 64 pixels high");
-
-                NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
-                this.client.getTextureManager().registerTexture(this.iconLocation, texture);
-                return texture;
-            } catch (IOException e) {
-                Rollback.LOGGER.error("Failed to load the icon for backup #{}!", this.backupNumber, e);
-                this.client.getTextureManager().destroyTexture(this.iconLocation);
-                return null;
-            }
         }
 
         public void play() {
@@ -296,6 +268,34 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
                 Text.translatable("rollback.screen.delete"),
                 Text.translatable("rollback.screen.cancel")
             ));
+        }
+
+        private NativeImageBackedTexture getIconTexture() {
+            if (this.backup.iconPath == null) {
+                this.client.getTextureManager().destroyTexture(this.iconLocation);
+                return null;
+            }
+
+            Path path = RollbackListWidget.this.backupManager.rollbackDirectory.resolve(this.backup.iconPath);
+            if (!Files.isRegularFile(path)) {
+                this.client.getTextureManager().destroyTexture(this.iconLocation);
+                return null;
+            }
+
+            Rollback.LOGGER.debug("Loading the icon for backup #{}...", this.backupNumber);
+            try (InputStream inputStream = Files.newInputStream(path)) {
+                NativeImage image = NativeImage.read(inputStream);
+                Validate.validState(image.getWidth() == 64, "Must be 64 pixels wide");
+                Validate.validState(image.getHeight() == 64, "Must be 64 pixels high");
+
+                NativeImageBackedTexture texture = new NativeImageBackedTexture(image);
+                this.client.getTextureManager().registerTexture(this.iconLocation, texture);
+                return texture;
+            } catch (IOException e) {
+                Rollback.LOGGER.error("Failed to load the icon for backup #{}!", this.backupNumber, e);
+                this.client.getTextureManager().destroyTexture(this.iconLocation);
+                return null;
+            }
         }
     }
 }

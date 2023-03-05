@@ -22,19 +22,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Environment(EnvType.CLIENT)
 @Mixin(WorldListWidget.WorldEntry.class)
 public abstract class WorldEntryMixin extends WorldListWidget.Entry implements AutoCloseable, WorldEntryExpanded {
-    @Shadow @Final
-    WorldListWidget field_19135; // WorldListWidget.this
-    @Shadow @Final
-    private MinecraftClient client;
-    @Shadow @Final
-    private LevelSummary level;
-    @Shadow @Final
-    private SelectWorldScreen screen;
+    @Shadow @Final WorldListWidget field_19135; // WorldListWidget.this
+    @Shadow @Final private MinecraftClient client;
+    @Shadow @Final private LevelSummary level;
+    @Shadow @Final private SelectWorldScreen screen;
 
-    @Shadow
-    protected abstract void openReadingWorldScreen();
-    @Shadow
-    protected abstract void start();
+    @Shadow protected abstract void openReadingWorldScreen();
+
+    @Shadow protected abstract void start();
 
     public void rollback() {
         Rollback.LOGGER.debug("Opening rollback screen...");

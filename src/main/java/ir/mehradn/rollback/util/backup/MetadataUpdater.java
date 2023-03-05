@@ -2,7 +2,10 @@ package ir.mehradn.rollback.util.backup;
 
 import com.google.gson.JsonObject;
 import ir.mehradn.rollback.Rollback;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
+@Environment(EnvType.CLIENT)
 public class MetadataUpdater {
     private final JsonObject metadata;
 
@@ -25,7 +28,7 @@ public class MetadataUpdater {
         return this.metadata;
     }
 
-    public void V0_3() {
+    private void V0_3() {
         Rollback.LOGGER.info("Updating to V0.3...");
         JsonObject worldsData = new JsonObject();
         for (String key : this.metadata.keySet()) {
@@ -39,6 +42,7 @@ public class MetadataUpdater {
         this.metadata.add("worlds", worldsData);
     }
 
+    @Environment(EnvType.CLIENT)
     public static final class Version {
         private final int major;
         private final int minor;
