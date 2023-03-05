@@ -7,8 +7,10 @@ import ir.mehradn.rollback.util.mixin.WorldEntryExpanded;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
 import net.minecraft.client.gui.screen.world.WorldListWidget;
+import net.minecraft.text.Text;
 import net.minecraft.world.level.storage.LevelSummary;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,6 +33,8 @@ public abstract class WorldEntryMixin extends WorldListWidget.Entry implements A
 
     @Shadow
     protected abstract void openReadingWorldScreen();
+    @Shadow
+    protected abstract void start();
 
     public void rollback() {
         Rollback.LOGGER.debug("Opening rollback screen...");
@@ -46,5 +50,26 @@ public abstract class WorldEntryMixin extends WorldListWidget.Entry implements A
     private void deleteBackups(CallbackInfo ci) {
         BackupManager backupManager = new BackupManager();
         backupManager.deleteAllBackupsFor(this.level.getName());
+    }
+
+    @Inject(method = "start", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screen/world/WorldListWidget$WorldEntry;openReadingWorldScreen()V"))
+    private void promptFeature(CallbackInfo ci) {
+        this.openReadingWorldScreen();
+        BackupManager backupManager = new BackupManager();
+        String worldName = this.level.getName();
+
+        if (!backupManager.getPrompted(worldName)) {
+            this.client.setScreen(new ConfirmScreen(
+                (confirmed) -> {
+                    backupManager.setPromptAnswer(worldName, confirmed);
+                    this.start();
+                },
+                Text.translatable("rollback.screen.enableAutomatedQuestion"),
+                Text.empty(),
+                Text.translatable("rollback.screen.yes"),
+                Text.translatable("rollback.screen.no")
+            ));
+            ci.cancel();
+        }
     }
 }

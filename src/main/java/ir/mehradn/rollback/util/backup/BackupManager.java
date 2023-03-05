@@ -84,6 +84,8 @@ public class BackupManager {
 
         if (!worldObject.has("automated"))
             worldObject.addProperty("automated", false);
+        if (!worldObject.has("prompted"))
+            worldObject.addProperty("prompted", false);
         if (!worldObject.has("backups"))
             worldObject.add("backups", new JsonArray());
 
@@ -98,6 +100,23 @@ public class BackupManager {
     public boolean getAutomated(String worldName) {
         JsonObject worldObject = getWorldObject(worldName);
         return worldObject.get("automated").getAsBoolean();
+    }
+
+    public boolean getPrompted(String worldName) {
+        JsonObject worldObject = getWorldObject(worldName);
+        return (worldObject.get("automated").getAsBoolean() || worldObject.get("prompted").getAsBoolean());
+    }
+
+    public void setPrompted(String worldName) {
+        getWorldObject(worldName).addProperty("prompted", true);
+        saveMetadata();
+    }
+
+    public void setPromptAnswer(String worldName, boolean automated) {
+        JsonObject worldObject = getWorldObject(worldName);
+        worldObject.addProperty("automated", automated);
+        worldObject.addProperty("prompted", true);
+        saveMetadata();
     }
 
     private void showError(String title, String info, Throwable exception) {

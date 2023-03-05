@@ -1,15 +1,20 @@
 package ir.mehradn.rollback.mixin;
 
+import com.mojang.serialization.Lifecycle;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.CreateWorldScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.CyclingButtonWidget;
+import net.minecraft.registry.CombinedDynamicRegistries;
+import net.minecraft.registry.ServerDynamicRegistryType;
 import net.minecraft.text.Text;
+import net.minecraft.world.level.LevelProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,8 +32,12 @@ public abstract class CreateWorldScreenMixin extends Screen {
     @Shadow
     private ButtonWidget gameRulesButton;
 
+    @Shadow protected abstract void startServer(LevelProperties.SpecialProperty specialProperty, CombinedDynamicRegistries<ServerDynamicRegistryType> combinedDynamicRegistries, Lifecycle lifecycle);
+
     private CyclingButtonWidget<Boolean> automatedButton;
     private int[] buttonPos;
+    private boolean promptEnabled = true;
+    private boolean enablePrompted = false;
 
     protected CreateWorldScreenMixin(Text title) {
         super(title);
@@ -67,6 +76,33 @@ public abstract class CreateWorldScreenMixin extends Screen {
         this.automatedButton.visible = f;
     }
 
+    @Inject(method = "startServer", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screen/world/CreateWorldScreen;showMessage(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)V"))
+    private void promptFeature(LevelProperties.SpecialProperty specialProperty,
+                               CombinedDynamicRegistries<ServerDynamicRegistryType> combinedDynamicRegistries,
+                               Lifecycle lifecycle,
+                               CallbackInfo ci) {
+        if (!this.promptEnabled) {
+            this.promptEnabled = true;
+            return;
+        }
+        if (!this.automatedButton.getValue()) {
+            this.client.setScreen(new ConfirmScreen(
+                (confirmed) -> {
+                    this.automatedButton.setValue(confirmed);
+                    this.promptEnabled = false;
+                    this.enablePrompted = true;
+                    this.startServer(specialProperty, combinedDynamicRegistries, lifecycle);
+                },
+                Text.translatable("rollback.screen.enableAutomatedQuestion"),
+                Text.empty(),
+                Text.translatable("rollback.screen.yes"),
+                Text.translatable("rollback.screen.no")
+            ));
+            ci.cancel();
+        }
+        this.enablePrompted = false;
+    }
+
     @Inject(method = "createSession", at = @At("RETURN"))
     private void saveOption(CallbackInfoReturnable<Optional<LevelStorage.Session>> ci) {
         if (ci.getReturnValue().isEmpty())
@@ -74,5 +110,9 @@ public abstract class CreateWorldScreenMixin extends Screen {
         String worldName = ci.getReturnValue().get().getDirectoryName();
         BackupManager backupManager = new BackupManager();
         backupManager.setAutomated(worldName, this.automatedButton.getValue());
+        if (this.enablePrompted) {
+            backupManager.setPrompted(worldName);
+            this.enablePrompted = false;
+        }
     }
 }
