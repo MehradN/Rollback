@@ -195,10 +195,11 @@ public class BackupManager {
     public boolean deleteBackup(String worldName, int index) {
         Rollback.LOGGER.info("Deleting the backup #{}...", index);
         JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
+
+        if (array.size() <= index || index < -array.size())
+            return true;
         if (index < 0)
             index += array.size();
-        if (index >= array.size())
-            return true;
 
         RollbackBackup backup = new RollbackBackup(worldName, array.get(index).getAsJsonObject());
 

@@ -84,7 +84,7 @@ public final class RollbackCommand {
         switch (position) {
             case 0 -> index = 0;
             case -1 -> index = -1;
-            default -> index = IntegerArgumentType.getInteger(context, "number") - 1;
+            default -> index = -IntegerArgumentType.getInteger(context, "number");
         }
 
         boolean f = backupManager.deleteBackup(worldName, index);
