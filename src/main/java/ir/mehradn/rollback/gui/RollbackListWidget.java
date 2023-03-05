@@ -286,7 +286,7 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
                 (confirmed) -> {
                     if (confirmed) {
                         Rollback.LOGGER.info("Deleting the backup #{}...", this.backupNumber);
-                        RollbackListWidget.this.backupManager.deleteBackup(this.backup.worldName, this.backupNumber);
+                        RollbackListWidget.this.backupManager.deleteBackup(this.backup.worldName, -this.backupNumber);
                         RollbackListWidget.this.shouldReloadEntries = true;
                     }
                     this.client.setScreen(RollbackListWidget.this.screen);
