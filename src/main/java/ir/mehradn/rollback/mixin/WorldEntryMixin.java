@@ -61,8 +61,8 @@ public abstract class WorldEntryMixin extends WorldListWidget.Entry implements A
                 },
                 Text.translatable("rollback.screen.enableAutomatedQuestion"),
                 Text.empty(),
-                Text.translatable("rollback.screen.yes"),
-                Text.translatable("rollback.screen.no")
+                Text.translatable("gui.yes"),
+                Text.translatable("gui.no")
             ));
             ci.cancel();
         }

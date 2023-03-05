@@ -249,7 +249,7 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
                 Text.translatable("rollback.screen.rollbackQuestion"),
                 Text.translatable("rollback.screen.rollbackWarning"),
                 Text.translatable("rollback.button"),
-                Text.translatable("rollback.screen.cancel")
+                Text.translatable("gui.cancel")
             ));
         }
 
@@ -265,8 +265,8 @@ public final class RollbackListWidget extends AlwaysSelectedEntryListWidget<Roll
                 },
                 Text.translatable("rollback.screen.deleteQuestion"),
                 Text.empty(),
-                Text.translatable("rollback.screen.delete"),
-                Text.translatable("rollback.screen.cancel")
+                Text.translatable("selectWorld.deleteButton"),
+                Text.translatable("gui.cancel")
             ));
         }
 

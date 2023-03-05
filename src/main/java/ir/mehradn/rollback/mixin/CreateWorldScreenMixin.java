@@ -94,8 +94,8 @@ public abstract class CreateWorldScreenMixin extends Screen {
                 },
                 Text.translatable("rollback.screen.enableAutomatedQuestion"),
                 Text.empty(),
-                Text.translatable("rollback.screen.yes"),
-                Text.translatable("rollback.screen.no")
+                Text.translatable("gui.yes"),
+                Text.translatable("gui.no")
             ));
             ci.cancel();
         }

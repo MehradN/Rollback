@@ -78,20 +78,20 @@ public class RollbackScreen extends Screen {
             (button, enabled) -> this.backupManager.setAutomated(this.levelSummary.getName(), enabled)
         ));
         addDrawableChild(ButtonWidget.builder(
-            Text.translatable("rollback.screen.openFolder"),
+            Text.translatable("selectWorld.edit.backupFolder"),
             (button) -> Util.getOperatingSystem().open(this.client.getLevelStorage().getBackupsDirectory().toFile())
         ).dimensions(this.width / 2 + 4, this.height - 52, 150, 20).build());
 
         this.deleteButton = addDrawableChild(ButtonWidget.builder(
-            Text.translatable("rollback.screen.delete"),
+            Text.translatable("selectWorld.deleteButton"),
             (button) -> this.rollbackList.getSelectedAsOptional().ifPresent(RollbackListWidget.Entry::delete)
         ).dimensions(this.width / 2 - 154, this.height - 28, 100, 20).build());
         this.addDrawableChild(ButtonWidget.builder(
-            Text.translatable("rollback.screen.options"),
+            Text.translatable("menu.options"),
             (button) -> this.client.setScreen(MidnightConfig.getScreen(this, "rollback"))
         ).dimensions(this.width / 2 - 50, this.height - 28, 100, 20).build());
         addDrawableChild(ButtonWidget.builder(
-            Text.translatable("rollback.screen.cancel"),
+            Text.translatable("gui.cancel"),
             (button) -> this.callback.accept(false)
         ).dimensions(this.width / 2 + 54, this.height - 28, 100, 20).build());
 
