@@ -83,7 +83,7 @@ public final class RollbackCommand {
         int index;
         switch (position) {
             case 0 -> index = 0;
-            case -1 -> index = -1;
+            case 1 -> index = -1;
             default -> index = -IntegerArgumentType.getInteger(context, "number");
         }
 
