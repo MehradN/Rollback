@@ -15,8 +15,8 @@ The "X Minutes" however is a strict timing. It will take a backup exactly every 
 ### Command
 #### /rollback list
 Will show a simple list of all the backups available for this world.
-#### /rollback backup now
+#### /rollback create
 Creates an automated backup
-#### /rollback backup delete
+#### /rollback delete
 Takes an index and deletes that backup. This version of this command requires a restart every time you change the "Maximum Backups Per World" option, to work properly. <br>
 It can also take the "latest" and "oldest" which will delete the latest/oldest backup.
