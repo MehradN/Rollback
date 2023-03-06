@@ -37,7 +37,7 @@ public final class RollbackCommand {
                             .executes((context) -> deleteBackup(context, 0)))
                         .then(CommandManager.literal("latest")
                             .executes((context) -> deleteBackup(context, 1)))
-                        .then(CommandManager.argument("number", IntegerArgumentType.integer(1, RollbackConfig.getMaxBackupsPerWorld()))
+                        .then(CommandManager.argument("number", IntegerArgumentType.integer(1, RollbackConfig.maxBackupsPerWorld()))
                             .executes((context) -> deleteBackup(context, 2))))
                     .then(CommandManager.literal("list")
                         .executes(RollbackCommand::listBackups)));
@@ -55,7 +55,7 @@ public final class RollbackCommand {
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
 
-        boolean f = backupManager.createRollbackBackup(server);
+        boolean f = backupManager.createRollbackBackup(server, false);
         if (!f)
             throw new SimpleCommandExceptionType(Text.translatable("rollback.createBackup.failed")).create();
 

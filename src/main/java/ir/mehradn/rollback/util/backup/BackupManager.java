@@ -17,6 +17,7 @@ import net.minecraft.util.PathUtil;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.level.storage.LevelStorage;
 import net.minecraft.world.level.storage.LevelSummary;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -75,6 +76,29 @@ public class BackupManager {
         saveMetadata();
     }
 
+    public Triple<Integer, Integer, Integer> getTimerInformation(String worldName) {
+        JsonObject worldObject = getWorldObject(worldName);
+        int daysPassed = worldObject.get("days_passed").getAsInt();
+        int sinceDay = worldObject.get("since_day").getAsInt();
+        int sinceBackup = worldObject.get("since_backup").getAsInt();
+        return Triple.of(daysPassed, sinceDay, sinceBackup);
+    }
+
+    public void setTimerInformation(String worldName, int daysPassed, int sinceBackup) {
+        JsonObject worldObject = getWorldObject(worldName);
+        worldObject.addProperty("days_passed", daysPassed);
+        worldObject.addProperty("since_backup", sinceBackup);
+        saveMetadata();
+    }
+
+    public void setTimerInformation(String worldName, int daysPassed, int sinceDay, int sinceBackup) {
+        JsonObject worldObject = getWorldObject(worldName);
+        worldObject.addProperty("days_passed", daysPassed);
+        worldObject.addProperty("since_day", sinceDay);
+        worldObject.addProperty("since_backup", sinceBackup);
+        saveMetadata();
+    }
+
     public List<RollbackBackup> getRollbacksFor(String worldName) {
         ArrayList<RollbackBackup> list = new ArrayList<>();
         JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
@@ -99,7 +123,7 @@ public class BackupManager {
         }
     }
 
-    public boolean createRollbackBackup(MinecraftServer server) {
+    public boolean createRollbackBackup(MinecraftServer server, boolean automated) {
         Rollback.LOGGER.info("Creating a rollback backup...");
         LevelStorage.Session session = ((MinecraftServerExpanded)server).getSession();
         String worldName = session.getLevelSummary().getName();
@@ -107,7 +131,7 @@ public class BackupManager {
         JsonObject worldObject = getWorldObject(worldName);
         JsonArray array = worldObject.getAsJsonArray("backups");
 
-        while (array.size() >= RollbackConfig.getMaxBackupsPerWorld())
+        while (array.size() >= RollbackConfig.maxBackupsPerWorld())
             deleteBackup(worldName, 0);
         deleteNonexistentIcons(worldName);
 
@@ -162,6 +186,11 @@ public class BackupManager {
         path3 = this.rollbackDirectory.relativize(path3);
         RollbackBackup backup = new RollbackBackup(worldName, path2, path3, LocalDateTime.now(), daysPlayed);
         array.add(backup.toObject());
+        if (automated) {
+            worldObject.addProperty("days_passed", 0);
+            worldObject.addProperty("since_day", 0);
+            worldObject.addProperty("since_backup", 0);
+        }
         saveMetadata();
 
         return true;
@@ -256,6 +285,12 @@ public class BackupManager {
             worldObject.addProperty("automated", false);
         if (!worldObject.has("prompted"))
             worldObject.addProperty("prompted", false);
+        if (!worldObject.has("days_passed"))
+            worldObject.addProperty("days_passed", 0);
+        if (!worldObject.has("since_day"))
+            worldObject.addProperty("since_day", 0);
+        if (!worldObject.has("since_backup"))
+            worldObject.addProperty("since_backup", 0);
         if (!worldObject.has("backups"))
             worldObject.add("backups", new JsonArray());
 
