@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.mixin;
 
 import ir.mehradn.rollback.Rollback;
+import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.gui.RollbackScreen;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.mixin.WorldEntryExpanded;
@@ -49,6 +50,9 @@ public abstract class WorldEntryMixin extends WorldListWidget.Entry implements A
 
     @Inject(method = "start", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screen/world/WorldListWidget$WorldEntry;openReadingWorldScreen()V"))
     private void promptFeature(CallbackInfo ci) {
+        if (RollbackConfig.promptDisabled())
+            return;
+
         this.openReadingWorldScreen();
         BackupManager backupManager = new BackupManager();
         String worldName = this.level.getName();

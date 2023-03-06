@@ -80,6 +80,10 @@ public abstract class CreateWorldScreenMixin extends Screen {
                                CombinedDynamicRegistries<ServerDynamicRegistryType> combinedDynamicRegistries,
                                Lifecycle lifecycle,
                                CallbackInfo ci) {
+        if (RollbackConfig.promptDisabled()) {
+            this.enablePrompted = false;
+            return;
+        }
         if (!this.promptEnabled) {
             this.promptEnabled = true;
             return;

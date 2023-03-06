@@ -46,6 +46,10 @@ public final class RollbackConfig {
         return _RollbackConfig.replaceGameRulesButton;
     }
 
+    public static boolean promptDisabled() {
+        return !_RollbackConfig.promptEnabled;
+    }
+
     public enum TimerMode {
         DAYLIGHT_CYCLE,
         IN_GAME_TIME
@@ -81,5 +85,7 @@ public final class RollbackConfig {
         public static boolean replaceReCreateButton = true;
         @Entry
         public static boolean replaceGameRulesButton = true;
+        @Entry
+        public static boolean promptEnabled = true;
     }
 }
