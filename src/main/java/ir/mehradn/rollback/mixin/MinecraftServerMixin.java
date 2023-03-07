@@ -4,11 +4,11 @@ import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.commands.CommandSource;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.ServerTask;
-import net.minecraft.server.command.CommandOutput;
-import net.minecraft.util.thread.ReentrantThreadExecutor;
-import net.minecraft.world.level.storage.LevelStorage;
+import net.minecraft.server.TickTask;
+import net.minecraft.util.thread.ReentrantBlockableEventLoop;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,8 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements CommandOutput, AutoCloseable, MinecraftServerExpanded {
-    @Shadow @Final protected LevelStorage.Session session;
+public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<TickTask> implements CommandSource, AutoCloseable, MinecraftServerExpanded {
+    @Shadow @Final protected LevelStorageSource.LevelStorageAccess storageSource;
 
     private BackupManager backupManager;
 
@@ -27,8 +27,8 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
         super(string);
     }
 
-    public LevelStorage.Session getSession() {
-        return this.session;
+    public LevelStorageSource.LevelStorageAccess getLevelAccess() {
+        return this.storageSource;
     }
 
     public BackupManager getBackupManager() {

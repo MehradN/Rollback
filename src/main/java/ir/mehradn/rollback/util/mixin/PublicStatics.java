@@ -6,7 +6,7 @@ import net.minecraft.world.level.storage.LevelSummary;
 
 @Environment(EnvType.CLIENT)
 public class PublicStatics {
-    public static LevelSummary playWorld = null;
+    public static LevelSummary joinWorld = null;
     public static LevelSummary recreateWorld = null;
     public static LevelSummary rollbackWorld = null;
 }

@@ -6,11 +6,11 @@
     "CreateWorldScreenMixin",
     "EditWorldScreenMixin",
     "GameRendererAccessor",
-    "LevelStorageSessionMixin",
+    "LevelStorageAccessMixin",
     "MinecraftServerMixin",
     "SelectWorldScreenMixin",
-    "WorldEntryMixin",
-    "WorldListWidgetAccessor"
+    "WorldListEntryMixin",
+    "WorldSelectionListAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

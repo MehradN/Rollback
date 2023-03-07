@@ -4,18 +4,18 @@ import com.google.gson.*;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.mixin.GameRendererAccessor;
-import ir.mehradn.rollback.util.mixin.LevelStorageSessionExpanded;
+import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.toast.SystemToast;
+import net.minecraft.FileUtil;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.Text;
-import net.minecraft.util.PathUtil;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.level.storage.LevelStorage;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -37,7 +37,7 @@ public class BackupManager {
     private JsonObject metadata;
 
     public BackupManager() {
-        this.rollbackDirectory = MinecraftClient.getInstance().getLevelStorage().getBackupsDirectory().resolve("rollbacks");
+        this.rollbackDirectory = Minecraft.getInstance().getLevelSource().getBackupPath().resolve("rollbacks");
         this.iconsDirectory = this.rollbackDirectory.resolve("icons");
         this.metadataFilePath = this.rollbackDirectory.resolve("rollbacks.json");
         try {
@@ -109,12 +109,13 @@ public class BackupManager {
 
     public boolean createNormalBackup(LevelSummary summary) {
         Rollback.LOGGER.info("Creating a manual backup...");
-        try (LevelStorage.Session session = MinecraftClient.getInstance().getLevelStorage().createSession(summary.getName())) {
-            long size = session.createBackup();
-            MinecraftClient.getInstance().getToastManager().add(
-                new SystemToast(SystemToast.Type.WORLD_BACKUP,
-                    Text.translatable("selectWorld.edit.backupCreated", session.getDirectoryName()),
-                    Text.translatable("selectWorld.edit.backupSize", MathHelper.ceil(size / 1048576.0))
+        Minecraft minecraft = Minecraft.getInstance();
+        try (LevelStorageSource.LevelStorageAccess levelAccess = minecraft.getLevelSource().createAccess(summary.getLevelId())) {
+            long size = levelAccess.makeWorldBackup();
+            minecraft.getToasts().addToast(
+                new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP,
+                    Component.translatable("selectWorld.edit.backupCreated", levelAccess.getLevelId()),
+                    Component.translatable("selectWorld.edit.backupSize", Mth.ceil(size / 1048576.0))
                 ));
             return true;
         } catch (IOException e) {
@@ -125,8 +126,8 @@ public class BackupManager {
 
     public boolean createRollbackBackup(MinecraftServer server, boolean automated) {
         Rollback.LOGGER.info("Creating a rollback backup...");
-        LevelStorage.Session session = ((MinecraftServerExpanded)server).getSession();
-        String worldName = session.getLevelSummary().getName();
+        LevelStorageSource.LevelStorageAccess levelAccess = ((MinecraftServerExpanded)server).getLevelAccess();
+        String worldName = levelAccess.getLevelId();
         LocalDateTime now = LocalDateTime.now();
         JsonObject worldObject = getWorldObject(worldName);
         JsonArray array = worldObject.getAsJsonArray("backups");
@@ -136,7 +137,7 @@ public class BackupManager {
         deleteNonexistentIcons(worldName);
 
         Rollback.LOGGER.debug("Saving the world...");
-        boolean f = server.saveAll(true, true, true);
+        boolean f = server.saveEverything(true, true, true);
         if (!f) {
             showError("rollback.createBackup.failed", "Failed to create a backup of world!", null);
             return false;
@@ -144,17 +145,17 @@ public class BackupManager {
 
         Rollback.LOGGER.debug("Creating a backup...");
         try {
-            session.createBackup();
+            levelAccess.makeWorldBackup();
         } catch (IOException e) {
             showError("rollback.createBackup.failed", "Failed to create a backup of world!", e);
             return false;
         }
 
         Rollback.LOGGER.debug("Moving the backup...");
-        Path path1 = ((LevelStorageSessionExpanded)session).getLatestBackupPath();
+        Path path1 = ((LevelStorageAccessExpanded)levelAccess).getLatestBackupPath();
         Path path2;
         try {
-            path2 = this.rollbackDirectory.resolve(PathUtil.getNextUniqueName(
+            path2 = this.rollbackDirectory.resolve(FileUtil.findAvailableName(
                 this.rollbackDirectory,
                 now.format(RollbackBackup.TIME_FORMATTER) + "_" + worldName,
                 ".zip"
@@ -168,18 +169,19 @@ public class BackupManager {
         Rollback.LOGGER.debug("Creating an icon...");
         Path path3;
         try {
-            path3 = this.iconsDirectory.resolve(PathUtil.getNextUniqueName(this.iconsDirectory, session.getDirectoryName(), ".png"));
+            path3 = this.iconsDirectory.resolve(FileUtil.findAvailableName(this.iconsDirectory, levelAccess.getLevelId(), ".png"));
             Path finalPath = path3;
-            MinecraftClient.getInstance().execute(() -> {
-                GameRenderer renderer = MinecraftClient.getInstance().gameRenderer;
-                ((GameRendererAccessor)renderer).InvokeUpdateWorldIcon(finalPath);
+            Minecraft minecraft = Minecraft.getInstance();
+            minecraft.execute(() -> {
+                GameRenderer renderer = minecraft.gameRenderer;
+                ((GameRendererAccessor)renderer).InvokeTakeAutoScreenshot(finalPath);
             });
         } catch (IOException e) {
             showError("rollback.createBackup.failed", "Failed to make an icon for the backup!", e);
             return false;
         }
 
-        int daysPlayed = (int)(MinecraftClient.getInstance().world.getTimeOfDay() / 24000);
+        int daysPlayed = (int)(Minecraft.getInstance().level.getDayTime() / 24000);
 
         Rollback.LOGGER.debug("Adding the metadata...");
         path2 = this.rollbackDirectory.relativize(path2);
@@ -225,11 +227,11 @@ public class BackupManager {
 
     public boolean rollbackTo(RollbackBackup backup) {
         Rollback.LOGGER.info("Rolling back to backup \"{}\"...", backup.backupPath.toString());
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
         Rollback.LOGGER.debug("Deleting the current save...");
-        try (LevelStorage.Session session = client.getLevelStorage().createSession(backup.worldName)) {
-            session.deleteSessionLock();
+        try (LevelStorageSource.LevelStorageAccess levelAccess = client.getLevelSource().createAccess(backup.worldName)) {
+            levelAccess.deleteLevel();
         } catch (IOException e) {
             showError("rollback.rollback.failed", "Failed to delete the current save!", e);
             return false;
@@ -237,7 +239,7 @@ public class BackupManager {
 
         Rollback.LOGGER.debug("Extracting the backup to save directory...");
         Path source = this.rollbackDirectory.resolve(backup.backupPath.toString());
-        Path dest = client.getLevelStorage().getSavesDirectory();
+        Path dest = client.getLevelSource().getBaseDir();
         try (ZipFile zip = new ZipFile(source.toFile())) {
             Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
@@ -324,10 +326,10 @@ public class BackupManager {
 
     private void showError(String title, String info, Throwable exception) {
         Rollback.LOGGER.error(info, exception);
-        MinecraftClient.getInstance().getToastManager().add(new SystemToast(
-            SystemToast.Type.WORLD_BACKUP,
-            Text.translatable(title),
-            Text.literal(info)
+        Minecraft.getInstance().getToasts().addToast(new SystemToast(
+            SystemToast.SystemToastIds.WORLD_BACKUP,
+            Component.translatable(title),
+            Component.literal(info)
         ));
     }
 

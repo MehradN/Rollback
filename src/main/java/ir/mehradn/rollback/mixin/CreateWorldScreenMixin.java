@@ -5,17 +5,17 @@ import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.ConfirmScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.world.CreateWorldScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.registry.CombinedDynamicRegistries;
-import net.minecraft.registry.ServerDynamicRegistryType;
-import net.minecraft.text.Text;
-import net.minecraft.world.level.LevelProperties;
-import net.minecraft.world.level.storage.LevelStorage;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.core.LayeredRegistryAccess;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.RegistryLayer;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.world.level.storage.PrimaryLevelData;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,37 +29,37 @@ import java.util.Optional;
 @Environment(EnvType.CLIENT)
 @Mixin(CreateWorldScreen.class)
 public abstract class CreateWorldScreenMixin extends Screen {
-    @Shadow private ButtonWidget gameRulesButton;
+    @Shadow private Button gameRulesButton;
 
-    private CyclingButtonWidget<Boolean> automatedButton;
+    private CycleButton<Boolean> automatedButton;
     private int[] buttonPos;
     private boolean promptEnabled = true;
     private boolean enablePrompted = false;
 
-    protected CreateWorldScreenMixin(Text title) {
-        super(title);
+    protected CreateWorldScreenMixin(Component component) {
+        super(component);
     }
 
-    @Shadow protected abstract void startServer(LevelProperties.SpecialProperty specialProperty, CombinedDynamicRegistries<ServerDynamicRegistryType> combinedDynamicRegistries, Lifecycle lifecycle);
+    @Shadow protected abstract void createNewWorld(PrimaryLevelData.SpecialWorldProperty specialWorldProperty, LayeredRegistryAccess<RegistryLayer> layeredRegistryAccess, Lifecycle worldGenSettingsLifecycle);
 
-    @ModifyArg(method = "init", index = 0, at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/client/gui/screen/world/CreateWorldScreen;addDrawableChild(Lnet/minecraft/client/gui/Element;)Lnet/minecraft/client/gui/Element;"))
-    private Element changeButton(Element element) {
-        ButtonWidget button = (ButtonWidget)element;
+    @ModifyArg(method = "init", index = 0, at = @At(value = "INVOKE", ordinal = 4, target = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;addRenderableWidget(Lnet/minecraft/client/gui/components/events/GuiEventListener;)Lnet/minecraft/client/gui/components/events/GuiEventListener;"))
+    private GuiEventListener changeButton(GuiEventListener widget) {
+        Button button = (Button)widget;
 
         if (RollbackConfig.replaceGameRulesButton()) {
             this.buttonPos = new int[]{button.getX(), button.getY()};
-            button.setPos(this.width / 2 + 5, 151);
+            button.setPosition(this.width / 2 + 5, 151);
         } else {
             this.buttonPos = new int[]{this.width / 2 + 5, 151};
         }
         return button;
     }
 
-    @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screen/world/MoreOptionsDialog;init(Lnet/minecraft/client/gui/screen/world/CreateWorldScreen;Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/font/TextRenderer;)V"))
+    @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screens/worldselection/WorldGenSettingsComponent;init(Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/Font;)V"))
     private void addMyButton(CallbackInfo ci) {
-        this.automatedButton = addDrawableChild(CyclingButtonWidget.onOffBuilder(false).build(
+        this.automatedButton = addRenderableWidget(CycleButton.onOffBuilder(false).create(
             this.buttonPos[0], this.buttonPos[1], 150, 20,
-            Text.translatable("rollback.screen.automatedOption")
+            Component.translatable("rollback.screen.automatedOption")
         ));
 
         if (RollbackConfig.replaceGameRulesButton())
@@ -68,17 +68,17 @@ public abstract class CreateWorldScreenMixin extends Screen {
             this.automatedButton.visible = false;
     }
 
-    @Inject(method = "setMoreOptionsOpen(Z)V", at = @At("RETURN"))
+    @Inject(method = "setWorldGenSettingsVisible", at = @At("RETURN"))
     private void toggleButtons(boolean moreOptionsOpen, CallbackInfo ci) {
         boolean f = RollbackConfig.replaceGameRulesButton() ^ moreOptionsOpen;
         this.gameRulesButton.visible = !f;
         this.automatedButton.visible = f;
     }
 
-    @Inject(method = "startServer", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screen/world/CreateWorldScreen;showMessage(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/text/Text;)V"))
-    private void promptFeature(LevelProperties.SpecialProperty specialProperty,
-                               CombinedDynamicRegistries<ServerDynamicRegistryType> combinedDynamicRegistries,
-                               Lifecycle lifecycle,
+    @Inject(method = "createNewWorld", cancellable = true, at = @At("HEAD"))
+    private void promptFeature(PrimaryLevelData.SpecialWorldProperty specialWorldProperty,
+                               LayeredRegistryAccess<RegistryLayer> layeredRegistryAccess,
+                               Lifecycle worldGenSettingsLifecycle,
                                CallbackInfo ci) {
         if (RollbackConfig.promptDisabled()) {
             this.enablePrompted = false;
@@ -89,28 +89,28 @@ public abstract class CreateWorldScreenMixin extends Screen {
             return;
         }
         if (!this.automatedButton.getValue()) {
-            this.client.setScreen(new ConfirmScreen(
+            this.minecraft.setScreen(new ConfirmScreen(
                 (confirmed) -> {
                     this.automatedButton.setValue(confirmed);
                     this.promptEnabled = false;
                     this.enablePrompted = true;
-                    this.startServer(specialProperty, combinedDynamicRegistries, lifecycle);
+                    this.createNewWorld(specialWorldProperty, layeredRegistryAccess, worldGenSettingsLifecycle);
                 },
-                Text.translatable("rollback.screen.enableAutomatedQuestion"),
-                Text.empty(),
-                Text.translatable("gui.yes"),
-                Text.translatable("gui.no")
+                Component.translatable("rollback.screen.enableAutomatedQuestion"),
+                Component.empty(),
+                Component.translatable("gui.yes"),
+                Component.translatable("gui.no")
             ));
             ci.cancel();
         }
         this.enablePrompted = false;
     }
 
-    @Inject(method = "createSession", at = @At("RETURN"))
-    private void saveOption(CallbackInfoReturnable<Optional<LevelStorage.Session>> ci) {
+    @Inject(method = "createNewWorldDirectory", at = @At("RETURN"))
+    private void saveOption(CallbackInfoReturnable<Optional<LevelStorageSource.LevelStorageAccess>> ci) {
         if (ci.getReturnValue().isEmpty())
             return;
-        String worldName = ci.getReturnValue().get().getDirectoryName();
+        String worldName = ci.getReturnValue().get().getLevelId();
         BackupManager backupManager = new BackupManager();
         backupManager.setAutomated(worldName, this.automatedButton.getValue());
         if (this.enablePrompted) {

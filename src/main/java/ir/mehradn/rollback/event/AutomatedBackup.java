@@ -9,7 +9,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.tuple.Triple;
 
 @Environment(EnvType.CLIENT)
@@ -28,23 +28,23 @@ public final class AutomatedBackup {
     public static void onServerStarted(MinecraftServer server) {
         Rollback.LOGGER.info("Reading the timer information...");
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
-        String worldName = ((MinecraftServerExpanded)server).getSession().getLevelSummary().getName();
+        String worldName = ((MinecraftServerExpanded)server).getLevelAccess().getLevelId();
         Triple<Integer, Integer, Integer> info = backupManager.getTimerInformation(worldName);
 
-        latestUpdate = server.getTicks();
+        latestUpdate = server.getTickCount();
         daysPassed = info.getLeft();
         sinceDay = info.getMiddle();
         sinceBackup = info.getRight();
     }
 
     public static void onEndTick(MinecraftServer server) {
-        int serverTick = server.getTicks();
-        int worldTick = (int)server.getWorld(World.OVERWORLD).getTimeOfDay();
+        int serverTick = server.getTickCount();
+        int worldTick = (int)server.getLevel(Level.OVERWORLD).getDayTime();
 
         if (shouldUpdate(serverTick, worldTick)) {
             Rollback.LOGGER.info("Updating the timer information...");
             BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
-            String worldName = ((MinecraftServerExpanded)server).getSession().getLevelSummary().getName();
+            String worldName = ((MinecraftServerExpanded)server).getLevelAccess().getLevelId();
 
             int timePassed = serverTick - latestUpdate;
             latestUpdate = serverTick;
@@ -68,9 +68,9 @@ public final class AutomatedBackup {
     }
 
     public static void onServerStopping(MinecraftServer server) {
-        int serverTick = server.getTicks();
+        int serverTick = server.getTickCount();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
-        String worldName = ((MinecraftServerExpanded)server).getSession().getLevelSummary().getName();
+        String worldName = ((MinecraftServerExpanded)server).getLevelAccess().getLevelId();
 
         int timePassed = serverTick - latestUpdate;
         sinceDay += timePassed;
