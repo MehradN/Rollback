@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import eu.midnightdust.lib.config.MidnightConfig;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.util.backup.BackupManager;
-import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.Util;
@@ -14,24 +14,26 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.LevelSummary;
 
+import java.util.function.Consumer;
+
 @Environment(EnvType.CLIENT)
 public class RollbackScreen extends Screen {
-    private final BooleanConsumer callback;
+    private final Consumer<WorldSelectionListCallbackAction> callback;
     private final LevelSummary levelSummary;
     private final BackupManager backupManager;
     private RollbackSelectionList rollbackList;
     private Button rollbackButton;
     private Button deleteButton;
 
-    public RollbackScreen(LevelSummary summary, BooleanConsumer callback) {
+    public RollbackScreen(LevelSummary summary, Consumer<WorldSelectionListCallbackAction> callback) {
         super(Component.translatable("rollback.screen.title"));
         this.callback = callback;
         this.levelSummary = summary;
         this.backupManager = new BackupManager();
     }
 
-    public void closeAndReload() {
-        this.callback.accept(true);
+    public void doAction(WorldSelectionListCallbackAction action) {
+        this.callback.accept(action);
     }
 
     public void render(PoseStack poseStack, int mouseX, int mouseY, float delta) {
@@ -67,7 +69,8 @@ public class RollbackScreen extends Screen {
             (button) -> {
                 Rollback.LOGGER.info("Creating a manual backup...");
                 boolean b = this.backupManager.createNormalBackup(this.levelSummary);
-                this.callback.accept(!b);
+                if (!b)
+                    this.callback.accept(WorldSelectionListCallbackAction.RELOAD_WORLD_LIST);
             }
         ).bounds(this.width / 2 + 4, this.height - 76, 150, 20).build());
 
@@ -92,7 +95,7 @@ public class RollbackScreen extends Screen {
         ).bounds(this.width / 2 - 50, this.height - 28, 100, 20).build());
         addRenderableWidget(Button.builder(
             Component.translatable("gui.cancel"),
-            (button) -> this.callback.accept(false)
+            (button) -> this.callback.accept(WorldSelectionListCallbackAction.NOTHING)
         ).bounds(this.width / 2 + 54, this.height - 28, 100, 20).build());
 
         setEntrySelected(false, false);

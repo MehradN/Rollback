@@ -6,7 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
-import ir.mehradn.rollback.util.mixin.PublicStatics;
+import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -166,10 +166,7 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
         }
 
         public void playBackup() {
-            PublicStatics.joinWorld = RollbackSelectionList.this.summary;
-            PublicStatics.rollbackWorld = null;
-            PublicStatics.recreateWorld = null;
-            RollbackSelectionList.this.screen.closeAndReload();
+            RollbackSelectionList.this.screen.doAction(WorldSelectionListCallbackAction.JOIN_WORLD);
         }
 
         public void deleteBackup() {}
@@ -235,12 +232,10 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
                     if (confirmed) {
                         Rollback.LOGGER.info("Rolling back to backup #{}...", this.backupNumber);
                         boolean f = RollbackSelectionList.this.backupManager.rollbackTo(this.backup);
-                        if (f) {
-                            PublicStatics.joinWorld = RollbackSelectionList.this.summary;
-                            PublicStatics.rollbackWorld = null;
-                            PublicStatics.recreateWorld = null;
-                        }
-                        RollbackSelectionList.this.screen.closeAndReload();
+                        if (f)
+                            RollbackSelectionList.this.screen.doAction(WorldSelectionListCallbackAction.JOIN_WORLD);
+                        else
+                            RollbackSelectionList.this.screen.doAction(WorldSelectionListCallbackAction.RELOAD_WORLD_LIST);
                     } else
                         this.minecraft.setScreen(RollbackSelectionList.this.screen);
                 },

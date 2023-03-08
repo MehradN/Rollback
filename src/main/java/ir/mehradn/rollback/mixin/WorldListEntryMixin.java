@@ -4,20 +4,26 @@ import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.gui.RollbackScreen;
 import ir.mehradn.rollback.util.backup.BackupManager;
+import ir.mehradn.rollback.util.mixin.EditWorldScreenExpanded;
 import ir.mehradn.rollback.util.mixin.WorldListEntryExpanded;
+import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.worldselection.EditWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
@@ -32,14 +38,39 @@ public abstract class WorldListEntryMixin extends WorldSelectionList.Entry imple
 
     @Shadow protected abstract void loadWorld();
 
+    @Shadow public abstract void joinWorld();
+
+    @Shadow public abstract void recreateWorld();
+
     public void rollbackWorld() {
         Rollback.LOGGER.debug("Opening rollback screen...");
         queueLoadScreen();
-        this.minecraft.setScreen(new RollbackScreen(this.summary, (reload) -> {
-            if (reload)
-                ((WorldSelectionListAccessor)this.field_19135).InvokeReloadWorldList();
-            this.minecraft.setScreen(this.screen);
+        this.minecraft.setScreen(new RollbackScreen(this.summary, (action) -> {
+            switch (action) {
+                case NOTHING -> this.minecraft.setScreen(this.screen);
+                case RELOAD_WORLD_LIST -> {
+                    ((WorldSelectionListAccessor)this.field_19135).InvokeReloadWorldList();
+                    this.minecraft.setScreen(this.screen);
+                }
+                case JOIN_WORLD -> this.joinWorld();
+                case RECREATE_WORLD -> this.recreateWorld();
+                case ROLLBACK_WORLD -> this.rollbackWorld();
+            }
         }));
+    }
+
+    @Redirect(method = "editWorld", at = @At(value = "NEW", target = "net/minecraft/client/gui/screens/worldselection/EditWorldScreen"))
+    public EditWorldScreen improveEditWorldScreen(BooleanConsumer booleanConsumer, LevelStorageSource.LevelStorageAccess levelStorageAccess) {
+        EditWorldScreen screen = new EditWorldScreen(booleanConsumer, levelStorageAccess);
+        ((EditWorldScreenExpanded)screen).setCallbackAction((action) -> {
+            booleanConsumer.accept(action == WorldSelectionListCallbackAction.RELOAD_WORLD_LIST);
+            switch (action) {
+                case JOIN_WORLD -> this.joinWorld();
+                case RECREATE_WORLD -> this.recreateWorld();
+                case ROLLBACK_WORLD -> this.rollbackWorld();
+            }
+        });
+        return screen;
     }
 
     @Inject(method = "deleteWorld", at = @At("RETURN"))
