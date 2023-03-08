@@ -1,11 +1,11 @@
 package ir.mehradn.rollback.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import ir.mehradn.rollback.util.mixin.EditWorldScreenExpanded;
 import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.EditWorldScreen;
 import net.minecraft.client.gui.components.Button;
@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Consumer;
@@ -33,14 +32,16 @@ public abstract class EditWorldScreenMixin extends Screen implements EditWorldSc
         super(component);
     }
 
+    public BooleanConsumer getCallback() {
+        return this.callback;
+    }
+
     public void setCallbackAction(Consumer<WorldSelectionListCallbackAction> consumer) {
         this.callbackActionConsumer = consumer;
     }
 
-    @ModifyArg(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/worldselection/EditWorldScreen;addRenderableWidget(Lnet/minecraft/client/gui/components/events/GuiEventListener;)Lnet/minecraft/client/gui/components/events/GuiEventListener;"))
-    private GuiEventListener hideButtons(GuiEventListener elm) {
-        if (!(elm instanceof Button btn))
-            return elm;
+    @ModifyExpressionValue(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/Button$Builder;build()Lnet/minecraft/client/gui/components/Button;"))
+    private Button hideButtons(Button btn) {
         if (Component.translatable("selectWorld.edit.backup").equals(btn.getMessage())) {
             this.buttonPos1 = new int[]{btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight()};
             btn.setY(-99999);

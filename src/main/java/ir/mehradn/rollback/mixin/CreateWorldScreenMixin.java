@@ -1,5 +1,6 @@
 package ir.mehradn.rollback.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.mojang.serialization.Lifecycle;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import net.fabricmc.api.EnvType;
@@ -17,7 +18,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Optional;
 
@@ -56,12 +56,13 @@ public abstract class CreateWorldScreenMixin extends Screen {
         ci.cancel();
     }
 
-    @Inject(method = "createNewWorldDirectory", at = @At("RETURN"))
-    private void saveOption(CallbackInfoReturnable<Optional<LevelStorageSource.LevelStorageAccess>> ci) {
-        if (ci.getReturnValue().isEmpty())
-            return;
-        String worldName = ci.getReturnValue().get().getLevelId();
-        BackupManager backupManager = new BackupManager();
-        backupManager.setAutomated(worldName, this.promptAnswer);
+    @ModifyReturnValue(method = "createNewWorldDirectory", at = @At("RETURN"))
+    private Optional<LevelStorageSource.LevelStorageAccess> saveOption(Optional<LevelStorageSource.LevelStorageAccess> optional) {
+        if (optional.isPresent()) {
+            String worldName = optional.get().getLevelId();
+            BackupManager backupManager = new BackupManager();
+            backupManager.setAutomated(worldName, this.promptAnswer);
+        }
+        return optional;
     }
 }

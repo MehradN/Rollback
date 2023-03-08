@@ -1,12 +1,13 @@
 package ir.mehradn.rollback.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import java.nio.file.Path;
 
@@ -19,9 +20,9 @@ public abstract class LevelStorageAccessMixin implements AutoCloseable, LevelSto
         return this.latestBackupPath;
     }
 
-    @ModifyArg(method = "makeWorldBackup", at = @At(value = "INVOKE", ordinal = 0, target = "Ljava/nio/file/Files;size(Ljava/nio/file/Path;)J"))
-    private Path grabBackupPath(Path path) {
+    @WrapOperation(method = "makeWorldBackup", at = @At(value = "INVOKE", target = "Ljava/nio/file/Files;size(Ljava/nio/file/Path;)J"))
+    private long grabBackupPath(Path path, Operation<Long> original) {
         this.latestBackupPath = path;
-        return path;
+        return original.call(path);
     }
 }
