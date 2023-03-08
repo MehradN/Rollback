@@ -15,10 +15,3 @@ The "Re-create" button can now be accessed from here.
 
 ![Altered Edit World Screen](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/AlteredEditWorldScreen.png)
 
-## Altered Create New World Screen
-You can enable the mod for new worlds from here. <br>
-The "Game Rules" button has been moved to the more options screen.
-
-![Altered Create New World Screen Part 1](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/AlteredCreateNewWorldScreenPart1.png)
-
-![Altered Create New World Screen Part 2](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/AlteredCreateNewWorldScreenPart2.png)

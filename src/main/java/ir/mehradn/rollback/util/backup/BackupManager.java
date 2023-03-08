@@ -64,11 +64,6 @@ public class BackupManager {
         return (worldObject.get("automated").getAsBoolean() || worldObject.get("prompted").getAsBoolean());
     }
 
-    public void setPrompted(String worldName) {
-        getWorldObject(worldName).addProperty("prompted", true);
-        saveMetadata();
-    }
-
     public void setPromptAnswer(String worldName, boolean automated) {
         JsonObject worldObject = getWorldObject(worldName);
         worldObject.addProperty("automated", automated);
