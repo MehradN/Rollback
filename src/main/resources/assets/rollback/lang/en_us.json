@@ -29,7 +29,6 @@
   "rollback.midnightconfig.timerMode": "Backup Timer Is Based On:",
   "rollback.midnightconfig.commandAccess": "Rollback Command Access:",
   "rollback.midnightconfig.replaceReCreateButton": "Replace Re-Create Button:",
-  "rollback.midnightconfig.replaceGameRulesButton": "Replace GameRules Button:",
   "rollback.midnightconfig.promptEnabled": "Suggest Enabling Automated Backups:",
   "rollback.midnightconfig.enum._TimerMode.DAYLIGHT_CYCLE": "Daylight Cycle",
   "rollback.midnightconfig.enum._TimerMode.IN_GAME_TIME": "In-Game Time",

@@ -42,10 +42,6 @@ public final class RollbackConfig {
         return _RollbackConfig.replaceReCreateButton;
     }
 
-    public static boolean replaceGameRulesButton() {
-        return _RollbackConfig.replaceGameRulesButton;
-    }
-
     public static boolean promptDisabled() {
         return !_RollbackConfig.promptEnabled;
     }
@@ -83,8 +79,6 @@ public final class RollbackConfig {
         public static _CommandAccess commandAccess = _CommandAccess.ON_CHEATS;
         @Entry
         public static boolean replaceReCreateButton = true;
-        @Entry
-        public static boolean replaceGameRulesButton = true;
         @Entry
         public static boolean promptEnabled = true;
     }
