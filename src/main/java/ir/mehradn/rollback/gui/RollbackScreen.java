@@ -54,6 +54,8 @@ public class RollbackScreen extends Screen {
     }
 
     protected void init() {
+        assert this.minecraft != null;
+
         this.rollbackList = new RollbackSelectionList(
             this, this.backupManager, this.levelSummary, this.minecraft,
             this.width, this.height, 22, this.height - 84, 36

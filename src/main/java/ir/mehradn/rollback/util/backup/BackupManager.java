@@ -11,6 +11,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.FileUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -176,7 +177,8 @@ public class BackupManager {
             return false;
         }
 
-        int daysPlayed = (int)(Minecraft.getInstance().level.getDayTime() / 24000);
+        ClientLevel level = Minecraft.getInstance().level;
+        int daysPlayed = (level == null ? -1 : (int)level.getDayTime() / 24000);
 
         Rollback.LOGGER.debug("Adding the metadata...");
         path2 = this.rollbackDirectory.relativize(path2);

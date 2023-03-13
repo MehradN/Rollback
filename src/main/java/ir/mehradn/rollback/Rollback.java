@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 public class Rollback implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("rollback");
 
-    @Override
     public void onInitializeClient() {
         LOGGER.info("Registering MidnightConfig...");
         RollbackConfig.register();

@@ -60,6 +60,10 @@ public class RollbackBackup {
         return obj;
     }
 
+    public String getDaysPlayedAsString() {
+        return (this.daysPlayed == -1 ? "???" : String.valueOf(this.daysPlayed));
+    }
+
     public String getDateAsString() {
         Date date = Date.from(this.backupTime.atZone(ZoneId.systemDefault()).toInstant());
         return DATE_FORMAT.format(date);

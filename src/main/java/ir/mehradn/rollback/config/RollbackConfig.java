@@ -24,16 +24,16 @@ public final class RollbackConfig {
 
     public static TimerMode timerMode() {
         switch (_RollbackConfig.timerMode) {
-            case DAYLIGHT_CYCLE -> {return TimerMode.DAYLIGHT_CYCLE;}
-            case IN_GAME_TIME -> {return TimerMode.IN_GAME_TIME;}
+            case DAYLIGHT_CYCLE -> { return TimerMode.DAYLIGHT_CYCLE; }
+            case IN_GAME_TIME -> { return TimerMode.IN_GAME_TIME; }
         }
         return TimerMode.IN_GAME_TIME;
     }
 
     public static CommandAccess commandAccess() {
         switch (_RollbackConfig.commandAccess) {
-            case ON_CHEATS -> {return CommandAccess.ON_CHEATS;}
-            case ALWAYS -> {return CommandAccess.ALWAYS;}
+            case ON_CHEATS -> { return CommandAccess.ON_CHEATS; }
+            case ALWAYS -> { return CommandAccess.ALWAYS; }
         }
         return CommandAccess.ON_CHEATS;
     }

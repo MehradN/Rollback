@@ -42,6 +42,7 @@ public abstract class CreateWorldScreenMixin extends Screen {
             this.redirectCreateNewWorld = true;
             return;
         }
+        assert this.minecraft != null;
         this.minecraft.setScreen(new ConfirmScreen(
             (confirmed) -> {
                 this.redirectCreateNewWorld = false;

@@ -169,7 +169,7 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
             RollbackSelectionList.this.screen.doAction(WorldSelectionListCallbackAction.JOIN_WORLD);
         }
 
-        public void deleteBackup() {}
+        public void deleteBackup() { }
 
         private DynamicTexture getIconTexture() {
             Path path = this.summary.getIcon();
@@ -213,14 +213,14 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
                 "rollback.narrator.selectRollback",
                 this.backupNumber,
                 this.backup.getDateAsString(),
-                this.backup.daysPlayed
+                this.backup.getDaysPlayedAsString()
             );
         }
 
         public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight,
                            int mouseX, int mouseY, boolean hovered, float tickDelta) {
             super.render(
-                Component.translatable("rollback.day", this.backup.daysPlayed),
+                Component.translatable("rollback.day", this.backup.getDaysPlayedAsString()),
                 Component.translatable("rollback.created", this.backup.getDateAsString()),
                 poseStack, y, x, mouseX, hovered
             );

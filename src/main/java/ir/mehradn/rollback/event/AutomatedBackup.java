@@ -9,6 +9,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -39,7 +40,8 @@ public final class AutomatedBackup {
 
     public static void onEndTick(MinecraftServer server) {
         int serverTick = server.getTickCount();
-        int worldTick = (int)server.getLevel(Level.OVERWORLD).getDayTime();
+        ServerLevel overworld = server.getLevel(Level.OVERWORLD);
+        int worldTick = (overworld == null ? -1 : (int)overworld.getDayTime());
 
         if (shouldUpdate(serverTick, worldTick)) {
             Rollback.LOGGER.info("Updating the timer information...");
@@ -80,6 +82,8 @@ public final class AutomatedBackup {
     }
 
     private static boolean isMorning(int worldTick) {
+        if (worldTick == -1)
+            return false;
         return ((worldTick - 20) % 24000 == 0);
     }
 
@@ -90,8 +94,8 @@ public final class AutomatedBackup {
     private static boolean shouldCreateBackup(int worldTick, BackupManager backupManager, String worldName) {
         if (backupManager.getAutomated(worldName)) {
             switch (RollbackConfig.timerMode()) {
-                case DAYLIGHT_CYCLE -> {return (isMorning(worldTick) && daysPassed >= RollbackConfig.daysPerBackup());}
-                case IN_GAME_TIME -> {return (sinceBackup >= RollbackConfig.ticksPerBackup());}
+                case DAYLIGHT_CYCLE -> { return (isMorning(worldTick) && daysPassed >= RollbackConfig.daysPerBackup()); }
+                case IN_GAME_TIME -> { return (sinceBackup >= RollbackConfig.ticksPerBackup()); }
             }
         }
         return false;
