@@ -15,3 +15,8 @@ The "Re-create" button can now be accessed from here.
 
 ![Altered Edit World Screen](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/AlteredEditWorldScreen.png)
 
+## Altered Create World Screen
+You can enable the mod for new worlds from here.
+
+![Altered Edit World Screen](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/AlteredCreateWorldScreen.png)
+
