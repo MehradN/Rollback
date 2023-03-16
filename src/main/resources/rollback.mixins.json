@@ -6,6 +6,7 @@
     "CreateWorldScreenMixin",
     "EditWorldScreenMixin",
     "GameRendererAccessor",
+    "GameTabMixin",
     "LevelStorageAccessMixin",
     "MinecraftServerMixin",
     "SelectWorldScreenMixin",
