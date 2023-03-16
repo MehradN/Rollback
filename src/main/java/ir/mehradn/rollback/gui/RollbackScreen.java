@@ -7,13 +7,17 @@ import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.FileUtil;
 import net.minecraft.Util;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
@@ -84,7 +88,18 @@ public class RollbackScreen extends Screen {
         ));
         addRenderableWidget(Button.builder(
             Component.translatable("selectWorld.edit.backupFolder"),
-            (button) -> Util.getPlatform().openFile(this.minecraft.getLevelSource().getBackupPath().toFile())
+            (button) -> {
+                LevelStorageSource levelStorageSource = this.minecraft.getLevelSource();
+                Path path = levelStorageSource.getBackupPath();
+
+                try {
+                    FileUtil.createDirectoriesSafe(path);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                Util.getPlatform().openFile(path.toFile());
+            }
         ).bounds(this.width / 2 + 4, this.height - 52, 150, 20).build());
 
         this.deleteButton = addRenderableWidget(Button.builder(

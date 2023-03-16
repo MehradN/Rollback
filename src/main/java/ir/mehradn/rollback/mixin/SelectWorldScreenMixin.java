@@ -40,7 +40,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
         return btn;
     }
 
-    @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screens/worldselection/SelectWorldScreen;updateButtonStatus(Z)V"))
+    @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screens/worldselection/SelectWorldScreen;updateButtonStatus(ZZ)V"))
     private void addButton(CallbackInfo ci) {
         if (RollbackConfig.replaceReCreateButton()) {
             this.rollbackButton = addRenderableWidget(Button.builder(
@@ -51,7 +51,8 @@ public abstract class SelectWorldScreenMixin extends Screen {
     }
 
     @Inject(method = "updateButtonStatus", at = @At("RETURN"))
-    private void onUpdateButtonStatus(boolean active, CallbackInfo ci) {
-        this.rollbackButton.active = active;
+    private void onUpdateButtonStatus(boolean isPlayable, boolean isSelectable , CallbackInfo ci) {
+        if (RollbackConfig.replaceReCreateButton())
+            this.rollbackButton.active = isPlayable;
     }
 }

@@ -26,10 +26,10 @@
 		"rollback.mixins.json"
 	],
 	"depends": {
-		"fabricloader": ">=0.14.14",
-		"minecraft": "~1.19.3",
+		"fabricloader": ">=0.14.17",
+		"minecraft": "~1.19.4",
 		"java": ">=17",
-		"fabric-api": ">=0.74.0+1.19.3",
-        "midnightlib": ">=1.1.0-fabric"
+		"fabric-api": ">=0.76.0+1.19.4",
+        "midnightlib": ">=1.2.1-fabric"
 	}
 }
