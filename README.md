@@ -1,17 +1,16 @@
 # Rollback
-This Minecraft mod will take automatic backups of your single-player world and will allow you to roll back to them using the GUI. <br>
-**Currently at pre-release state**
+This Minecraft mod adds a lot of useful features to the backup system (such as automatic backups and GUI).
+- Rolling back to a backup using in-game GUI
+- Creating backups using commands
+- Automated backups
 
-### Screenshots
 ![Rollback Screen](https://raw.githubusercontent.com/MehradN/Rollback/master/screenshots/RollbackScreen.png)
-
-Check out the [Gallery](https://github.com/MehradN/Rollback/tree/master/screenshots) for more screenshots and explanations about navigating and using the mod.
 
 ### Command
 #### /rollback list
-Will show a simple list of all the backups available for this world.
+Shows a list of the automated backups available for this world.
 #### /rollback create
 Creates an automated backup
-#### /rollback delete
-Takes an index and deletes that backup. This version of this command requires a restart every time you change the "Maximum Backups Per World" option, to work properly. <br>
-It can also take the "latest" and "oldest" which will delete the latest/oldest backup.
+#### /rollback delete *value*
+Takes a value and deletes the corresponding backup. If the value is "latest" or "oldest" the latest/oldest backup gets deleted. If the value is a number, the backup with that index gets deleted.
+

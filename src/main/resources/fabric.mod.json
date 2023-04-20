@@ -3,7 +3,7 @@
   "id": "rollback",
   "version": "${version}",
   "name": "Rollback",
-  "description": "This mod will take automatic backups of your single-player world and will allow you to roll back to them using the GUI.",
+  "description": "This mod adds a lot of features to the backup system, useful for both servers and single-player worlds.",
   "authors": [
     "Mehrad Nayyeri"
   ],

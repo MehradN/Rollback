@@ -4,7 +4,7 @@
   "rollback.button": "Rollback",
   "rollback.createBackup.failed": "Failed to create a rollback backup",
   "rollback.createBackup.success": "Created a rollback backup successfully",
-  "rollback.deleteBackup.failed": "Failed to delete a rollback backup",
+  "rollback.deleteBackup.failed": "Failed to delete the rollback backup",
   "rollback.deleteBackup.success": "Deleted the backup successfully",
   "rollback.editWorld.button": "Backups & Rollback",
   "rollback.editWorld.recreateButton": "Re-Create World",
