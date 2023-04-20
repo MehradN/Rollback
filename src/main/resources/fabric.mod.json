@@ -1,35 +1,36 @@
 {
-	"schemaVersion": 1,
-	"id": "rollback",
-	"version": "${version}",
-	"name": "Rollback",
-	"description": "This mod will take automatic backups of your single-player world and will allow you to roll back to them using the GUI.",
-	"authors": [
-		"Mehrad Nayyeri"
-	],
-	"contact": {
-		"homepage": "https://github.com/MehradN/Rollback",
-		"sources": "https://github.com/MehradN/Rollback"
-	},
-	"license": "GPL-3.0",
-	"icon": "assets/rollback/icon.png",
-	"environment": "client",
-	"entrypoints": {
-		"client": [
-          "ir.mehradn.rollback.Rollback"
-		],
-        "preLaunch": [
-          "ir.mehradn.rollback.RollbackPreLaunch"
-        ]
-	},
-	"mixins": [
-		"rollback.mixins.json"
-	],
-	"depends": {
-		"fabricloader": ">=0.14.17",
-		"minecraft": "~1.19.4",
-		"java": ">=17",
-		"fabric-api": ">=0.76.0+1.19.4",
-        "midnightlib": ">=1.2.1-fabric"
-	}
+  "schemaVersion": 1,
+  "id": "rollback",
+  "version": "${version}",
+  "name": "Rollback",
+  "description": "This mod will take automatic backups of your single-player world and will allow you to roll back to them using the GUI.",
+  "authors": [
+    "Mehrad Nayyeri"
+  ],
+  "contact": {
+    "homepage": "https://github.com/MehradN/Rollback",
+    "sources": "https://github.com/MehradN/Rollback",
+    "issues": "https://github.com/MehradN/Rollback/issues"
+  },
+  "license": "GPL-3.0",
+  "icon": "assets/rollback/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "ir.mehradn.rollback.Rollback"
+    ],
+    "preLaunch": [
+      "ir.mehradn.rollback.RollbackPreLaunch"
+    ]
+  },
+  "mixins": [
+    "rollback.mixins.json"
+  ],
+  "depends": {
+    "java": ">=17",
+    "minecraft": "~1.19.4",
+    "fabricloader": ">=0.14.19",
+    "fabric-api": ">=0.78.0+1.19.4",
+    "midnightlib": ">=1.3.0-fabric"
+  }
 }
