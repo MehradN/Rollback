@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.event;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
@@ -23,6 +24,8 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 
 @Environment(EnvType.CLIENT)
 public final class RollbackCommand {
+    public static final int MAX_NAME_LENGTH = 32;
+
     public static void register() {
         CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> {
             Rollback.LOGGER.debug("Registering the rollback command...");
@@ -30,7 +33,9 @@ public final class RollbackCommand {
                 dispatcher.register(Commands.literal("rollback")
                     .requires(RollbackCommand::hasAccessToCommand)
                     .then(Commands.literal("create")
-                        .executes(RollbackCommand::createBackup))
+                        .then(Commands.argument("name", StringArgumentType.string())
+                            .executes((context) -> createBackup(context, StringArgumentType.getString(context, "name"))))
+                        .executes((context) -> createBackup(context, "")))
                     .then(Commands.literal("delete")
                         .then(Commands.literal("oldest")
                             .executes((context) -> deleteBackup(context, 0)))
@@ -47,7 +52,7 @@ public final class RollbackCommand {
         return ((RollbackConfig.commandAccess() == RollbackConfig.CommandAccess.ALWAYS) || source.hasPermission(4));
     }
 
-    public static int createBackup(CommandContext<CommandSourceStack> context) {
+    public static int createBackup(CommandContext<CommandSourceStack> context, String name) {
         if (isNotServerHost(context))
             return 0;
 
@@ -55,7 +60,14 @@ public final class RollbackCommand {
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
 
-        boolean f = backupManager.createRollbackBackup(server);
+        if (name.isBlank())
+            name = null;
+        if (name != null && name.length() > MAX_NAME_LENGTH) {
+            context.getSource().sendFailure(Component.translatable("rollback.command.create.nameTooLong"));
+            return 0;
+        }
+
+        boolean f = backupManager.createRollbackBackup(server, name);
         if (!f) {
             context.getSource().sendFailure(Component.translatable("rollback.createBackup.failed"));
             return 0;
@@ -109,11 +121,16 @@ public final class RollbackCommand {
         context.getSource().sendSystemMessage(Component.translatable("rollback.command.list.title"));
         for (int i = 1; i <= world.backups.size(); i++) {
             RollbackBackup backup = world.backups.get(world.backups.size() - i);
-            MutableComponent part1, part2, part3;
-            part1 = Component.literal(String.format("    #%-2d    ", i));
-            part2 = Component.translatable("rollback.created", backup.getDateAsString()).append(Component.literal("    "));
-            part3 = Component.translatable("rollback.day", backup.getDaysPlayedAsString());
-            context.getSource().sendSystemMessage(part1.append(part2.append(part3)));
+            MutableComponent text;
+            String index = String.format("%-2d", i);
+            String date = backup.getDateAsString();
+            String day = backup.getDaysPlayedAsString();
+            if (backup.name == null)
+                text = Component.translatable("rollback.command.list.item", index, date, day);
+            else
+                text = Component.translatable("rollback.command.list.itemNamed", index, date, day, backup.name);
+
+            context.getSource().sendSystemMessage(text);
         }
         return 1;
     }

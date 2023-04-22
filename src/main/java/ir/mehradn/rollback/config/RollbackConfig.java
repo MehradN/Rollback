@@ -59,16 +59,6 @@ public final class RollbackConfig {
     // DO NOT USE OUTSIDE OF THIS CLASS
     // I am forced to keep it public.
     public static final class _RollbackConfig extends MidnightConfig {
-        public enum _TimerMode {
-            DAYLIGHT_CYCLE,
-            IN_GAME_TIME
-        }
-
-        public enum _CommandAccess {
-            ON_CHEATS,
-            ALWAYS
-        }
-
         @Entry(min = 1, max = 10, isSlider = true)
         public static int backupsPerWorld = 5;
         @Entry(min = 1, max = 15, isSlider = true)
@@ -81,5 +71,14 @@ public final class RollbackConfig {
         public static boolean replaceReCreateButton = true;
         @Entry
         public static boolean promptEnabled = true;
+
+        public enum _TimerMode {
+            DAYLIGHT_CYCLE,
+            IN_GAME_TIME
+        }
+        public enum _CommandAccess {
+            ON_CHEATS,
+            ALWAYS
+        }
     }
 }

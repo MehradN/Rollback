@@ -17,15 +17,17 @@ public class RollbackBackup {
     @SerializedName("backup_file") public Path backupPath;
     @SerializedName("icon_file") public Path iconPath = null;
     @SerializedName("creation_date") public LocalDateTime creationDate;
-    @SerializedName("days_played") public int daysPlayed;
+    @SerializedName("days_played") public int daysPlayed = -1;
+    @SerializedName("name") public String name = null;
 
     public RollbackBackup() { }
 
-    public RollbackBackup(Path backupPath, Path iconPath, LocalDateTime creationDate, int daysPlayed) {
+    public RollbackBackup(Path backupPath, Path iconPath, LocalDateTime creationDate, int daysPlayed, String name) {
         this.backupPath = backupPath;
         this.iconPath = iconPath;
         this.creationDate = creationDate;
         this.daysPlayed = daysPlayed;
+        this.name = name;
     }
 
     public String getDaysPlayedAsString() {

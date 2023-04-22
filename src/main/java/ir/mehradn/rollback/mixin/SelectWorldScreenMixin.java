@@ -51,7 +51,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
     }
 
     @Inject(method = "updateButtonStatus", at = @At("RETURN"))
-    private void onUpdateButtonStatus(boolean isPlayable, boolean isSelectable , CallbackInfo ci) {
+    private void onUpdateButtonStatus(boolean isPlayable, boolean isSelectable, CallbackInfo ci) {
         if (RollbackConfig.replaceReCreateButton())
             this.rollbackButton.active = isPlayable;
     }

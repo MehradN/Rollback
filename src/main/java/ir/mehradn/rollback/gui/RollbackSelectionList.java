@@ -117,10 +117,11 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
 
         public abstract void deleteBackup();
 
-        protected void render(Component title, Component info,
+        protected void render(Component title, Component info1, Component info2,
                               PoseStack poseStack, int y, int x, int mouseX, boolean hovered) {
             this.minecraft.font.draw(poseStack, title, x + 35, y + 1, 0xFFFFFF);
-            this.minecraft.font.draw(poseStack, info, x + 35, y + this.minecraft.font.lineHeight + 3, 0x808080);
+            this.minecraft.font.draw(poseStack, info1, x + 35, y + this.minecraft.font.lineHeight + 3, 0x808080);
+            this.minecraft.font.draw(poseStack, info2, x + 35, y + 2 * this.minecraft.font.lineHeight + 3, 0x808080);
 
             RenderSystem.setShader(GameRenderer::getPositionTexShader);
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -163,6 +164,7 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
             super.render(
                 Component.translatable("rollback.screen.currentSave"),
                 Component.translatable("rollback.screen.lastPlayed", this.lastPlayed),
+                Component.empty(),
                 poseStack, y, x, mouseX, hovered
             );
         }
@@ -213,21 +215,41 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
         }
 
         public @NotNull Component getNarration() {
-            return Component.translatable(
-                "rollback.narrator.selectRollback",
-                this.backupNumber,
-                this.backup.getDateAsString(),
-                this.backup.getDaysPlayedAsString()
-            );
+            if (this.backup.name == null) {
+                return Component.translatable(
+                    "rollback.narrator.selectRollback",
+                    this.backupNumber,
+                    this.backup.getDateAsString(),
+                    this.backup.getDaysPlayedAsString()
+                );
+            } else {
+                return Component.translatable(
+                    "rollback.narrator.selectNamedRollback",
+                    this.backupNumber,
+                    this.backup.name,
+                    this.backup.getDateAsString(),
+                    this.backup.getDaysPlayedAsString()
+                );
+            }
         }
 
         public void render(PoseStack poseStack, int index, int y, int x, int entryWidth, int entryHeight,
                            int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            super.render(
-                Component.translatable("rollback.day", this.backup.getDaysPlayedAsString()),
-                Component.translatable("rollback.created", this.backup.getDateAsString()),
-                poseStack, y, x, mouseX, hovered
-            );
+            if (this.backup.name == null) {
+                super.render(
+                    Component.translatable("rollback.day", this.backup.getDaysPlayedAsString()),
+                    Component.translatable("rollback.created", this.backup.getDateAsString()),
+                    Component.empty(),
+                    poseStack, y, x, mouseX, hovered
+                );
+            } else {
+                super.render(
+                    Component.literal(this.backup.name),
+                    Component.translatable("rollback.created", this.backup.getDateAsString()),
+                    Component.translatable("rollback.day", this.backup.getDaysPlayedAsString()),
+                    poseStack, y, x, mouseX, hovered
+                );
+            }
         }
 
         public void playBackup() {

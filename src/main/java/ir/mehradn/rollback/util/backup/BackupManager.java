@@ -76,7 +76,7 @@ public class BackupManager {
         }
     }
 
-    public boolean createRollbackBackup(MinecraftServer server) {
+    public boolean createRollbackBackup(MinecraftServer server, String name) {
         Rollback.LOGGER.info("Creating a rollback backup...");
         LevelStorageSource.LevelStorageAccess levelAccess = ((MinecraftServerExpanded)server).getLevelAccess();
         String worldName = levelAccess.getLevelId();
@@ -138,7 +138,7 @@ public class BackupManager {
         Rollback.LOGGER.debug("Adding the metadata...");
         path2 = this.rollbackDirectory.relativize(path2);
         path3 = this.rollbackDirectory.relativize(path3);
-        RollbackBackup backup = new RollbackBackup(path2, path3, LocalDateTime.now(), daysPlayed);
+        RollbackBackup backup = new RollbackBackup(path2, path3, LocalDateTime.now(), daysPlayed, name);
         world.backups.add(backup);
 
         saveMetadata();
