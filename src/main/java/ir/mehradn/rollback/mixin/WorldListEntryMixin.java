@@ -5,6 +5,7 @@ import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.gui.RollbackScreen;
 import ir.mehradn.rollback.util.backup.BackupManager;
+import ir.mehradn.rollback.util.backup.RollbackWorld;
 import ir.mehradn.rollback.util.mixin.EditWorldScreenExpanded;
 import ir.mehradn.rollback.util.mixin.WorldListEntryExpanded;
 import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
@@ -72,7 +73,7 @@ public abstract class WorldListEntryMixin extends WorldSelectionList.Entry imple
 
     @Inject(method = "deleteWorld", at = @At("RETURN"))
     private void deleteBackups(CallbackInfo ci) {
-        BackupManager backupManager = new BackupManager();
+        BackupManager backupManager = BackupManager.loadMetadata();
         backupManager.deleteAllBackupsFor(this.summary.getLevelId());
     }
 
@@ -82,13 +83,15 @@ public abstract class WorldListEntryMixin extends WorldSelectionList.Entry imple
             return;
 
         this.queueLoadScreen();
-        BackupManager backupManager = new BackupManager();
         String worldName = this.summary.getLevelId();
+        BackupManager backupManager = BackupManager.loadMetadata();
+        RollbackWorld rollbackWorld = backupManager.getWorld(worldName);
 
-        if (!backupManager.getPrompted(worldName)) {
+        if (!rollbackWorld.prompted) {
             this.minecraft.setScreen(new ConfirmScreen(
                 (confirmed) -> {
-                    backupManager.setPromptAnswer(worldName, confirmed);
+                    rollbackWorld.setPromptAnswer(confirmed);
+                    backupManager.saveMetadata();
                     this.loadWorld();
                 },
                 Component.translatable("rollback.screen.enableAutomatedQuestion"),

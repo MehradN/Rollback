@@ -22,6 +22,7 @@
   "rollback.narrator.selectCurrentSave": "Current save, last played: %s",
   "rollback.command.list.title": "Backups:",
   "rollback.command.list.noBackups": "There are no backups available for this world",
+  "rollback.command.playerOnly": "This command can only be used by a player",
   "rollback.command.unavailable": "This command is only available to the server host",
   "rollback.midnightconfig.title": "Rollback Options",
   "rollback.midnightconfig.backupsPerWorld": "Maximum Backups Per World:",

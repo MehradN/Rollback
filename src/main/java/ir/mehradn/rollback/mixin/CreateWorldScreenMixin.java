@@ -35,8 +35,9 @@ public abstract class CreateWorldScreenMixin extends Screen implements CreateWor
     private Optional<LevelStorageSource.LevelStorageAccess> saveOption(Optional<LevelStorageSource.LevelStorageAccess> optional) {
         if (optional.isPresent()) {
             String worldName = optional.get().getLevelId();
-            BackupManager backupManager = new BackupManager();
-            backupManager.setAutomated(worldName, getAutomatedBackups());
+            BackupManager backupManager = BackupManager.loadMetadata();
+            backupManager.getWorld(worldName).automatedBackups = getAutomatedBackups();
+            backupManager.saveMetadata();
         }
         return optional;
     }

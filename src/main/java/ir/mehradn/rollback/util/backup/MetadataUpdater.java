@@ -13,16 +13,16 @@ public class MetadataUpdater {
         this.metadata = metadata;
     }
 
-    public static Version getVersion(JsonObject metadata) {
-        if (metadata.has("version") && metadata.get("version").isJsonPrimitive())
-            return new Version(metadata.get("version").getAsString());
+    public Version getVersion() {
+        if (this.metadata.has("version") && this.metadata.get("version").isJsonPrimitive())
+            return Version.fromString(this.metadata.get("version").getAsString());
         else
-            return new Version(0, 1);
+            return Version.DEFAULT_VERSION;
     }
 
     public JsonObject update() {
         Rollback.LOGGER.info("Updating the metadata...");
-        Version version = getVersion(this.metadata);
+        Version version = getVersion();
         if (version.isLessThan(0, 3))
             V0_3();
         return this.metadata;
@@ -44,6 +44,8 @@ public class MetadataUpdater {
 
     @Environment(EnvType.CLIENT)
     public static final class Version {
+        public static final Version LATEST_VERSION = new Version(0, 3);
+        public static final Version DEFAULT_VERSION = new Version(0, 1);
         private final int major;
         private final int minor;
 
@@ -52,14 +54,28 @@ public class MetadataUpdater {
             this.minor = minor;
         }
 
-        public Version(String version) {
-            String[] versionParts = version.split("\\.");
-            this.major = Integer.parseInt(versionParts[0]);
-            this.minor = Integer.parseInt(versionParts[1]);
-        }
-
         public boolean isLessThan(int major, int minor) {
             return (this.major < major || (this.major == major && this.minor < minor));
+        }
+
+        public boolean isLessThan(Version version) {
+            return isLessThan(version.major, version.minor);
+        }
+
+        public boolean isOutdated() {
+            return isLessThan(LATEST_VERSION);
+        }
+
+        public String toString() {
+            return this.major + "." + this.minor;
+        }
+
+        public static Version fromString(String version) {
+            String[] versionParts = version.split("\\.");
+            return new Version(
+                Integer.parseInt(versionParts[0]),
+                Integer.parseInt(versionParts[1])
+            );
         }
     }
 }

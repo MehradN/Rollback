@@ -1,9 +1,16 @@
 package ir.mehradn.rollback.util.backup;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.annotations.SerializedName;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.mixin.GameRendererAccessor;
+import ir.mehradn.rollback.util.gson.LocalDateTimeAdapter;
+import ir.mehradn.rollback.util.gson.MetadataUpdaterVersionAdapter;
+import ir.mehradn.rollback.util.gson.PathAdapter;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.api.EnvType;
@@ -18,89 +25,38 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Environment(EnvType.CLIENT)
 public class BackupManager {
-    public final Path rollbackDirectory;
-    public final Path iconsDirectory;
-    private final Path metadataFilePath;
-    private JsonObject metadata;
+    public transient final Path rollbackDirectory;
+    public transient final Path iconsDirectory;
+    @SerializedName("version") public MetadataUpdater.Version version = MetadataUpdater.Version.LATEST_VERSION;
+    @SerializedName("worlds") public Map<String, RollbackWorld> worlds = new HashMap<>();
+    private static final Gson gson = new GsonBuilder()
+        .registerTypeHierarchyAdapter(Path.class, PathAdapter.INSTANCE)
+        .registerTypeAdapter(LocalDateTime.class, LocalDateTimeAdapter.INSTANCE)
+        .registerTypeAdapter(MetadataUpdater.Version.class, MetadataUpdaterVersionAdapter.INSTANCE)
+        .create();
 
-    public BackupManager() {
+    private BackupManager() {
         this.rollbackDirectory = Minecraft.getInstance().getLevelSource().getBackupPath().resolve("rollbacks");
         this.iconsDirectory = this.rollbackDirectory.resolve("icons");
-        this.metadataFilePath = this.rollbackDirectory.resolve("rollbacks.json");
-        try {
-            loadMetadata();
-        } catch (FileNotFoundException e) {
-            Rollback.LOGGER.warn("Metadata file not found! Creating a new one...");
-            this.metadata = new JsonObject();
-            saveMetadata();
-        }
     }
 
-    public boolean getAutomated(String worldName) {
-        JsonObject worldObject = getWorldObject(worldName);
-        return worldObject.get("automated").getAsBoolean();
-    }
-
-    public void setAutomated(String worldName, boolean enabled) {
-        getWorldObject(worldName).addProperty("automated", enabled);
-        saveMetadata();
-    }
-
-    public boolean getPrompted(String worldName) {
-        JsonObject worldObject = getWorldObject(worldName);
-        return (worldObject.get("automated").getAsBoolean() || worldObject.get("prompted").getAsBoolean());
-    }
-
-    public void setPromptAnswer(String worldName, boolean automated) {
-        JsonObject worldObject = getWorldObject(worldName);
-        worldObject.addProperty("automated", automated);
-        worldObject.addProperty("prompted", true);
-        saveMetadata();
-    }
-
-    public Triple<Integer, Integer, Integer> getTimerInformation(String worldName) {
-        JsonObject worldObject = getWorldObject(worldName);
-        int daysPassed = worldObject.get("days_passed").getAsInt();
-        int sinceDay = worldObject.get("since_day").getAsInt();
-        int sinceBackup = worldObject.get("since_backup").getAsInt();
-        return Triple.of(daysPassed, sinceDay, sinceBackup);
-    }
-
-    public void setTimerInformation(String worldName, int daysPassed, int sinceBackup) {
-        JsonObject worldObject = getWorldObject(worldName);
-        worldObject.addProperty("days_passed", daysPassed);
-        worldObject.addProperty("since_backup", sinceBackup);
-        saveMetadata();
-    }
-
-    public void setTimerInformation(String worldName, int daysPassed, int sinceDay, int sinceBackup) {
-        JsonObject worldObject = getWorldObject(worldName);
-        worldObject.addProperty("days_passed", daysPassed);
-        worldObject.addProperty("since_day", sinceDay);
-        worldObject.addProperty("since_backup", sinceBackup);
-        saveMetadata();
-    }
-
-    public List<RollbackBackup> getRollbacksFor(String worldName) {
-        ArrayList<RollbackBackup> list = new ArrayList<>();
-        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
-        for (JsonElement elm : array)
-            list.add(new RollbackBackup(worldName, elm.getAsJsonObject()));
-        return list;
+    public RollbackWorld getWorld(String worldName) {
+        if (!this.worlds.containsKey(worldName))
+            this.worlds.put(worldName, new RollbackWorld());
+        return this.worlds.get(worldName);
     }
 
     public boolean createNormalBackup(LevelSummary summary) {
@@ -120,17 +76,16 @@ public class BackupManager {
         }
     }
 
-    public boolean createRollbackBackup(MinecraftServer server, boolean automated) {
+    public boolean createRollbackBackup(MinecraftServer server) {
         Rollback.LOGGER.info("Creating a rollback backup...");
         LevelStorageSource.LevelStorageAccess levelAccess = ((MinecraftServerExpanded)server).getLevelAccess();
         String worldName = levelAccess.getLevelId();
         LocalDateTime now = LocalDateTime.now();
-        JsonObject worldObject = getWorldObject(worldName);
-        JsonArray array = worldObject.getAsJsonArray("backups");
+        RollbackWorld world = getWorld(worldName);
 
-        while (array.size() >= RollbackConfig.maxBackupsPerWorld())
+        while (world.backups.size() >= RollbackConfig.maxBackupsPerWorld())
             deleteBackup(worldName, 0);
-        deleteNonexistentIcons(worldName);
+        deleteGhostIcons(worldName);
 
         Rollback.LOGGER.debug("Saving the world...");
         boolean f = server.saveEverything(true, true, true);
@@ -153,7 +108,7 @@ public class BackupManager {
         try {
             path2 = this.rollbackDirectory.resolve(FileUtil.findAvailableName(
                 this.rollbackDirectory,
-                now.format(RollbackBackup.TIME_FORMATTER) + "_" + worldName,
+                now.format(LocalDateTimeAdapter.TIME_FORMATTER) + "_" + worldName,
                 ".zip"
             ));
             Files.move(path1, path2);
@@ -183,28 +138,22 @@ public class BackupManager {
         Rollback.LOGGER.debug("Adding the metadata...");
         path2 = this.rollbackDirectory.relativize(path2);
         path3 = this.rollbackDirectory.relativize(path3);
-        RollbackBackup backup = new RollbackBackup(worldName, path2, path3, LocalDateTime.now(), daysPlayed);
-        array.add(backup.toObject());
-        if (automated) {
-            worldObject.addProperty("days_passed", 0);
-            worldObject.addProperty("since_day", 0);
-            worldObject.addProperty("since_backup", 0);
-        }
-        saveMetadata();
+        RollbackBackup backup = new RollbackBackup(path2, path3, LocalDateTime.now(), daysPlayed);
+        world.backups.add(backup);
 
+        saveMetadata();
         return true;
     }
 
     public boolean deleteBackup(String worldName, int index) {
         Rollback.LOGGER.info("Deleting the backup #{}...", index);
-        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
+        RollbackWorld world = getWorld(worldName);
 
-        if (array.size() <= index || index < -array.size())
+        if (world.backups.size() <= index || index < -world.backups.size())
             return true;
         if (index < 0)
-            index += array.size();
-
-        RollbackBackup backup = new RollbackBackup(worldName, array.get(index).getAsJsonObject());
+            index += world.backups.size();
+        RollbackBackup backup = world.backups.get(index);
 
         Rollback.LOGGER.debug("Deleting the files...");
         try {
@@ -216,18 +165,17 @@ public class BackupManager {
             return false;
         }
 
-        array.remove(index);
+        world.backups.remove(index);
         saveMetadata();
-
         return true;
     }
 
-    public boolean rollbackTo(RollbackBackup backup) {
+    public boolean rollbackTo(String worldName, RollbackBackup backup) {
         Rollback.LOGGER.info("Rolling back to backup \"{}\"...", backup.backupPath.toString());
         Minecraft client = Minecraft.getInstance();
 
         Rollback.LOGGER.debug("Deleting the current save...");
-        try (LevelStorageSource.LevelStorageAccess levelAccess = client.getLevelSource().createAccess(backup.worldName)) {
+        try (LevelStorageSource.LevelStorageAccess levelAccess = client.getLevelSource().createAccess(worldName)) {
             levelAccess.deleteLevel();
         } catch (IOException e) {
             showError("rollback.rollback.failed", "Failed to delete the current save!", e);
@@ -262,59 +210,22 @@ public class BackupManager {
 
     public void deleteAllBackupsFor(String worldName) {
         Rollback.LOGGER.info("Deleting all the backups for world \"{}\"...", worldName);
-
-        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
-        while (array.size() > 0)
+        RollbackWorld world = getWorld(worldName);
+        while (world.backups.size() > 0)
             deleteBackup(worldName, 0);
-        this.metadata.getAsJsonObject("worlds").remove(worldName);
-
+        this.worlds.remove(worldName);
         saveMetadata();
     }
 
-    private JsonObject getWorldObject(String worldName) {
-        if (!this.metadata.has("worlds"))
-            this.metadata.add("worlds", new JsonObject());
-        JsonObject worldsData = this.metadata.getAsJsonObject("worlds");
-
-        if (!worldsData.has(worldName))
-            worldsData.add(worldName, new JsonObject());
-        JsonObject worldObject = worldsData.getAsJsonObject(worldName);
-
-        if (!worldObject.has("automated"))
-            worldObject.addProperty("automated", false);
-        if (!worldObject.has("prompted"))
-            worldObject.addProperty("prompted", false);
-        if (!worldObject.has("days_passed"))
-            worldObject.addProperty("days_passed", 0);
-        if (!worldObject.has("since_day"))
-            worldObject.addProperty("since_day", 0);
-        if (!worldObject.has("since_backup"))
-            worldObject.addProperty("since_backup", 0);
-        if (!worldObject.has("backups"))
-            worldObject.add("backups", new JsonArray());
-
-        return worldObject;
-    }
-
-    private void loadMetadata() throws FileNotFoundException {
-        this.metadata = JsonParser.parseReader(new FileReader(this.metadataFilePath.toFile())).getAsJsonObject();
-        if (MetadataUpdater.getVersion(this.metadata).isLessThan(0, 3)) {
-            MetadataUpdater updater = new MetadataUpdater(this.metadata);
-            this.metadata = updater.update();
-            saveMetadata();
-        }
-    }
-
-    private void saveMetadata() {
+    public void saveMetadata() {
         Rollback.LOGGER.info("Saving metadata file...");
+        Path metadataFilePath = Minecraft.getInstance().getLevelSource().getBackupPath().resolve("rollbacks/rollbacks.json");
         try {
-            this.metadata.addProperty("version", "0.3");
             Files.createDirectories(this.rollbackDirectory);
             Files.createDirectories(this.iconsDirectory);
-            FileWriter writer = new FileWriter(this.metadataFilePath.toFile());
-            Gson gson = new GsonBuilder()/*.setPrettyPrinting()*/.create();
-            gson.toJson(this.metadata, writer);
-            writer.close();
+            try (FileWriter writer = new FileWriter(metadataFilePath.toFile())) {
+                gson.toJson(this, writer);
+            }
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);
             throw new RuntimeException(e);
@@ -330,15 +241,37 @@ public class BackupManager {
         ));
     }
 
-    private void deleteNonexistentIcons(String worldName) {
-        JsonArray array = getWorldObject(worldName).getAsJsonArray("backups");
-        for (JsonElement elm : array) {
-            JsonObject obj = elm.getAsJsonObject();
-            if (!obj.has("icon_file"))
-                continue;
-            String iconPath = obj.get("icon_file").getAsString();
-            if (!Files.isRegularFile(this.rollbackDirectory.resolve(iconPath)))
-                obj.remove("icon_file");
+    private void deleteGhostIcons(String worldName) {
+        RollbackWorld world = getWorld(worldName);
+        for (RollbackBackup backup : world.backups)
+            if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
+                backup.iconPath = null;
+    }
+
+    public static BackupManager loadMetadata() {
+        Rollback.LOGGER.info("Loading metadata file...");
+        Path metadataFilePath = Minecraft.getInstance().getLevelSource().getBackupPath().resolve("rollbacks/rollbacks.json");
+        BackupManager backupManager;
+        boolean save = false;
+
+        try (FileReader reader = new FileReader(metadataFilePath.toFile())) {
+            JsonObject metadata = JsonParser.parseReader(reader).getAsJsonObject();
+            MetadataUpdater updater = new MetadataUpdater(metadata);
+            if (updater.getVersion().isOutdated()) {
+                metadata = updater.update();
+                save = true;
+            }
+            backupManager = gson.fromJson(metadata, BackupManager.class);
+        } catch (FileNotFoundException e) {
+            Rollback.LOGGER.warn("Metadata file not found! Creating a new one...");
+            backupManager = new BackupManager();
+            save = true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
+        if (save)
+            backupManager.saveMetadata();
+        return backupManager;
     }
 }

@@ -37,6 +37,6 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void addBackupManager(CallbackInfo ci) {
-        this.backupManager = new BackupManager();
+        this.backupManager = BackupManager.loadMetadata();
     }
 }

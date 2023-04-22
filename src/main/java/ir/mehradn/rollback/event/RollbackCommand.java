@@ -6,6 +6,7 @@ import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
+import ir.mehradn.rollback.util.backup.RollbackWorld;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -19,8 +20,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelStorageSource;
-
-import java.util.List;
 
 @Environment(EnvType.CLIENT)
 public final class RollbackCommand {
@@ -56,7 +55,7 @@ public final class RollbackCommand {
         MinecraftServer server = context.getSource().getServer();
         BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
 
-        boolean f = backupManager.createRollbackBackup(server, false);
+        boolean f = backupManager.createRollbackBackup(server);
         if (!f) {
             context.getSource().sendFailure(Component.translatable("rollback.createBackup.failed"));
             return 0;
@@ -98,18 +97,18 @@ public final class RollbackCommand {
             return 0;
 
         MinecraftServer server = context.getSource().getServer();
-        BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
         String worldName = ((MinecraftServerExpanded)server).getLevelAccess().getLevelId();
-        List<RollbackBackup> backups = backupManager.getRollbacksFor(worldName);
+        BackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
+        RollbackWorld world = backupManager.getWorld(worldName);
 
-        if (backups.isEmpty()) {
+        if (world.backups.isEmpty()) {
             context.getSource().sendSystemMessage(Component.translatable("rollback.command.list.noBackups"));
             return 1;
         }
 
         context.getSource().sendSystemMessage(Component.translatable("rollback.command.list.title"));
-        for (int i = 1; i <= backups.size(); i++) {
-            RollbackBackup backup = backups.get(backups.size() - i);
+        for (int i = 1; i <= world.backups.size(); i++) {
+            RollbackBackup backup = world.backups.get(world.backups.size() - i);
             MutableComponent part1, part2, part3;
             part1 = Component.literal(String.format("    #%-2d    ", i));
             part2 = Component.translatable("rollback.created", backup.getDateAsString()).append(Component.literal("    "));
@@ -123,7 +122,7 @@ public final class RollbackCommand {
         LocalPlayer player1 = Minecraft.getInstance().player;
         ServerPlayer player2 = context.getSource().getPlayer();
         if (player1 == null || player2 == null) {
-            context.getSource().sendFailure(Component.literal("This command can only be used by a player"));
+            context.getSource().sendFailure(Component.translatable("rollback.command.playerOnly"));
             return true;
         }
 

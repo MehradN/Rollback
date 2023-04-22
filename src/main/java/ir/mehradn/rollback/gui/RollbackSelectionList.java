@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
+import ir.mehradn.rollback.util.backup.RollbackWorld;
 import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -33,15 +34,17 @@ import java.util.Optional;
 public final class RollbackSelectionList extends ObjectSelectionList<RollbackSelectionList.Entry> {
     private final RollbackScreen screen;
     private final BackupManager backupManager;
+    private final RollbackWorld rollbackWorld;
     private final LevelSummary summary;
     private final CurrentSaveEntry currentSaveEntry;
     private boolean shouldReloadEntries;
 
-    public RollbackSelectionList(RollbackScreen screen, BackupManager backupManager, LevelSummary levelSummary, Minecraft minecraftClient,
+    public RollbackSelectionList(RollbackScreen screen, BackupManager backupManager, RollbackWorld rollbackWorld, LevelSummary levelSummary, Minecraft minecraftClient,
                                  int width, int height, int top, int bottom, int itemHeight) {
         super(minecraftClient, width, height, top, bottom, itemHeight);
         this.screen = screen;
         this.backupManager = backupManager;
+        this.rollbackWorld = rollbackWorld;
         this.summary = levelSummary;
         this.currentSaveEntry = new CurrentSaveEntry();
         this.shouldReloadEntries = true;
@@ -77,9 +80,8 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
         clearEntries();
         addEntry(this.currentSaveEntry);
 
-        List<RollbackBackup> backups = this.backupManager.getRollbacksFor(this.summary.getLevelId());
-        for (int i = 1; i <= backups.size(); i++)
-            addEntry(new RollbackEntry(i, backups.get(backups.size() - i)));
+        for (int i = 1; i <= this.rollbackWorld.backups.size(); i++)
+            addEntry(new RollbackEntry(i, this.rollbackWorld.backups.get(this.rollbackWorld.backups.size() - i)));
 
         this.screen.triggerImmediateNarration(true);
         this.shouldReloadEntries = false;
@@ -198,11 +200,13 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
     @Environment(EnvType.CLIENT)
     public final class RollbackEntry extends Entry {
         private final int backupNumber;
+        private final String worldName;
         private final RollbackBackup backup;
 
         public RollbackEntry(int backupNumber, RollbackBackup rollbackBackup) {
             super();
             this.backupNumber = backupNumber;
+            this.worldName = RollbackSelectionList.this.summary.getLevelId();
             this.backup = rollbackBackup;
             this.iconLocation = new ResourceLocation("rollback", "backup/" + this.backupNumber + "/icon.png");
             this.icon = getIconTexture();
@@ -231,7 +235,7 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
                 (confirmed) -> {
                     if (confirmed) {
                         Rollback.LOGGER.info("Rolling back to backup #{}...", this.backupNumber);
-                        boolean f = RollbackSelectionList.this.backupManager.rollbackTo(this.backup);
+                        boolean f = RollbackSelectionList.this.backupManager.rollbackTo(this.worldName, this.backup);
                         if (f)
                             RollbackSelectionList.this.screen.doAction(WorldSelectionListCallbackAction.JOIN_WORLD);
                         else
@@ -251,7 +255,7 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
                 (confirmed) -> {
                     if (confirmed) {
                         Rollback.LOGGER.info("Deleting the backup #{}...", this.backupNumber);
-                        RollbackSelectionList.this.backupManager.deleteBackup(this.backup.worldName, -this.backupNumber);
+                        RollbackSelectionList.this.backupManager.deleteBackup(this.worldName, -this.backupNumber);
                         RollbackSelectionList.this.shouldReloadEntries = true;
                     }
                     this.minecraft.setScreen(RollbackSelectionList.this.screen);

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import eu.midnightdust.lib.config.MidnightConfig;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.util.backup.BackupManager;
+import ir.mehradn.rollback.util.backup.RollbackWorld;
 import ir.mehradn.rollback.util.mixin.WorldSelectionListCallbackAction;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -25,6 +26,7 @@ public class RollbackScreen extends Screen {
     private final Consumer<WorldSelectionListCallbackAction> callback;
     private final LevelSummary levelSummary;
     private final BackupManager backupManager;
+    private final RollbackWorld rollbackWorld;
     private RollbackSelectionList rollbackList;
     private Button rollbackButton;
     private Button deleteButton;
@@ -33,7 +35,8 @@ public class RollbackScreen extends Screen {
         super(Component.translatable("rollback.screen.title"));
         this.callback = callback;
         this.levelSummary = summary;
-        this.backupManager = new BackupManager();
+        this.backupManager = BackupManager.loadMetadata();
+        this.rollbackWorld = this.backupManager.getWorld(this.levelSummary.getLevelId());
     }
 
     public void doAction(WorldSelectionListCallbackAction action) {
@@ -61,7 +64,7 @@ public class RollbackScreen extends Screen {
         assert this.minecraft != null;
 
         this.rollbackList = new RollbackSelectionList(
-            this, this.backupManager, this.levelSummary, this.minecraft,
+            this, this.backupManager, this.rollbackWorld, this.levelSummary, this.minecraft,
             this.width, this.height, 22, this.height - 84, 36
         );
         addWidget(this.rollbackList);
@@ -80,11 +83,13 @@ public class RollbackScreen extends Screen {
             }
         ).bounds(this.width / 2 + 4, this.height - 76, 150, 20).build());
 
-        boolean automatedEnabled = this.backupManager.getAutomated(this.levelSummary.getLevelId());
-        addRenderableWidget(CycleButton.onOffBuilder(automatedEnabled).create(
+        addRenderableWidget(CycleButton.onOffBuilder(this.rollbackWorld.automatedBackups).create(
             this.width / 2 - 154, this.height - 52, 150, 20,
             Component.translatable("rollback.screen.automatedOption"),
-            (button, enabled) -> this.backupManager.setAutomated(this.levelSummary.getLevelId(), enabled)
+            (button, enabled) -> {
+                this.rollbackWorld.automatedBackups = enabled;
+                this.backupManager.saveMetadata();
+            }
         ));
         addRenderableWidget(Button.builder(
             Component.translatable("selectWorld.edit.backupFolder"),
