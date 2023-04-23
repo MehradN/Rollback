@@ -32,7 +32,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
     private Button hideButton(Button btn) {
         if (Component.translatable("selectWorld.recreate").equals(btn.getMessage())) {
             this.buttonPos = new int[]{btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight()};
-            if (RollbackConfig.replaceReCreateButton())
+            if (RollbackConfig.replaceReCreateButton)
                 btn.setY(-99999);
             else
                 this.buttonPos[1] = -99999;
@@ -42,7 +42,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screens/worldselection/SelectWorldScreen;updateButtonStatus(ZZ)V"))
     private void addButton(CallbackInfo ci) {
-        if (RollbackConfig.replaceReCreateButton()) {
+        if (RollbackConfig.replaceReCreateButton) {
             this.rollbackButton = addRenderableWidget(Button.builder(
                 Component.translatable("rollback.button"),
                 (button) -> this.list.getSelectedOpt().ifPresent((worldEntry) -> ((WorldListEntryExpanded)(Object)worldEntry).rollbackWorld())
@@ -52,7 +52,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
 
     @Inject(method = "updateButtonStatus", at = @At("RETURN"))
     private void onUpdateButtonStatus(boolean isPlayable, boolean isSelectable, CallbackInfo ci) {
-        if (RollbackConfig.replaceReCreateButton())
+        if (RollbackConfig.replaceReCreateButton)
             this.rollbackButton.active = isPlayable;
     }
 }

@@ -32,11 +32,8 @@
   "rollback.midnightconfig.backupsPerWorld": "Maximum Backups Per World:",
   "rollback.midnightconfig.backupFrequency": "Minecraft Days Per Backup:",
   "rollback.midnightconfig.timerMode": "Backup Timer Is Based On:",
-  "rollback.midnightconfig.commandAccess": "Rollback-Command Access:",
   "rollback.midnightconfig.replaceReCreateButton": "Replace Re-Create Button:",
   "rollback.midnightconfig.promptEnabled": "Suggest Enabling Automated Backups:",
-  "rollback.midnightconfig.enum._TimerMode.DAYLIGHT_CYCLE": "Daylight Cycle",
-  "rollback.midnightconfig.enum._TimerMode.IN_GAME_TIME": "In-Game Time",
-  "rollback.midnightconfig.enum._CommandAccess.ON_CHEATS": "On Cheats",
-  "rollback.midnightconfig.enum._CommandAccess.ALWAYS": "Always"
+  "rollback.midnightconfig.enum.TimerMode.DAYLIGHT_CYCLE": "Daylight Cycle",
+  "rollback.midnightconfig.enum.TimerMode.IN_GAME_TIME": "In-Game Time"
 }

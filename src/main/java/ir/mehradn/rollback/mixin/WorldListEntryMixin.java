@@ -79,7 +79,7 @@ public abstract class WorldListEntryMixin extends WorldSelectionList.Entry imple
 
     @Inject(method = "loadWorld", cancellable = true, at = @At(value = "INVOKE", ordinal = 0, target = "Lnet/minecraft/client/gui/screens/worldselection/WorldSelectionList$WorldListEntry;queueLoadScreen()V"))
     private void promptFeature(CallbackInfo ci) {
-        if (RollbackConfig.promptDisabled())
+        if (!RollbackConfig.promptEnabled)
             return;
 
         this.queueLoadScreen();

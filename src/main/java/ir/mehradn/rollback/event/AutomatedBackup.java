@@ -79,7 +79,7 @@ public final class AutomatedBackup {
 
     private static boolean shouldCreateBackup(int worldTick) {
         if (rollbackWorld.automatedBackups) {
-            switch (RollbackConfig.timerMode()) {
+            switch (RollbackConfig.timerMode) {
                 case DAYLIGHT_CYCLE -> { return (isMorning(worldTick) && rollbackWorld.daysSinceLastBackup >= RollbackConfig.daysPerBackup()); }
                 case IN_GAME_TIME -> { return (rollbackWorld.ticksSinceLastBackup >= RollbackConfig.ticksPerBackup()); }
             }

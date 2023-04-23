@@ -27,7 +27,7 @@ public final class RollbackCommand {
     public static final int MAX_NAME_LENGTH = 32;
 
     public static void register() {
-        CommandRegistrationCallback.EVENT.register(((dispatcher, registryAccess, environment) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             Rollback.LOGGER.debug("Registering the rollback command...");
             if (environment.includeIntegrated)
                 dispatcher.register(Commands.literal("rollback")
@@ -41,20 +41,20 @@ public final class RollbackCommand {
                             .executes((context) -> deleteBackup(context, 0)))
                         .then(Commands.literal("latest")
                             .executes((context) -> deleteBackup(context, 1)))
-                        .then(Commands.argument("number", IntegerArgumentType.integer(1, RollbackConfig.maxBackupsPerWorld()))
+                        .then(Commands.argument("number", IntegerArgumentType.integer(1, 10))
                             .executes((context) -> deleteBackup(context, 2))))
                     .then(Commands.literal("list")
                         .executes(RollbackCommand::listBackups)));
-        }));
+        });
     }
 
     public static boolean hasAccessToCommand(CommandSourceStack source) {
-        return ((RollbackConfig.commandAccess() == RollbackConfig.CommandAccess.ALWAYS) || source.hasPermission(4));
+        return source.hasPermission(4);
     }
 
     public static int createBackup(CommandContext<CommandSourceStack> context, String name) {
         if (isNotServerHost(context))
-            return 0;
+            return -1;
 
         Rollback.LOGGER.info("Executing the \"backup new\" command...");
         MinecraftServer server = context.getSource().getServer();
@@ -64,7 +64,7 @@ public final class RollbackCommand {
             name = null;
         if (name != null && name.length() > MAX_NAME_LENGTH) {
             context.getSource().sendFailure(Component.translatable("rollback.command.create.nameTooLong"));
-            return 0;
+            return -2;
         }
 
         boolean f = backupManager.createRollbackBackup(server, name);
@@ -79,7 +79,7 @@ public final class RollbackCommand {
 
     public static int deleteBackup(CommandContext<CommandSourceStack> context, int position) {
         if (isNotServerHost(context))
-            return 0;
+            return -1;
 
         Rollback.LOGGER.info("Executing the \"backup delete\" command...");
         MinecraftServer server = context.getSource().getServer();
@@ -106,7 +106,7 @@ public final class RollbackCommand {
 
     public static int listBackups(CommandContext<CommandSourceStack> context) {
         if (isNotServerHost(context))
-            return 0;
+            return -1;
 
         MinecraftServer server = context.getSource().getServer();
         String worldName = ((MinecraftServerExpanded)server).getLevelAccess().getLevelId();
@@ -115,7 +115,7 @@ public final class RollbackCommand {
 
         if (world.backups.isEmpty()) {
             context.getSource().sendSystemMessage(Component.translatable("rollback.command.list.noBackups"));
-            return 1;
+            return 0;
         }
 
         context.getSource().sendSystemMessage(Component.translatable("rollback.command.list.title"));
