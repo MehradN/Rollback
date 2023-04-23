@@ -48,7 +48,7 @@ public abstract class WorldListEntryMixin extends WorldSelectionList.Entry imple
             switch (action) {
                 case NOTHING -> this.minecraft.setScreen(this.screen);
                 case RELOAD_WORLD_LIST -> {
-                    ((WorldSelectionListAccessor)this.field_19135).InvokeReloadWorldList();
+                    ((WorldSelectionListAccessor)this.field_19135).invokeReloadWorldList();
                     this.minecraft.setScreen(this.screen);
                 }
                 case JOIN_WORLD -> this.joinWorld();

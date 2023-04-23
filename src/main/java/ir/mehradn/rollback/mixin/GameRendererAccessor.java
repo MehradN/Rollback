@@ -12,5 +12,5 @@ import java.nio.file.Path;
 @Mixin(GameRenderer.class)
 public interface GameRendererAccessor {
     @Invoker("takeAutoScreenshot")
-    void InvokeTakeAutoScreenshot(Path path);
+    void invokeTakeAutoScreenshot(Path path);
 }

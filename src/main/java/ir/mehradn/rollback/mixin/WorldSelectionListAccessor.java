@@ -10,5 +10,5 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(WorldSelectionList.class)
 public interface WorldSelectionListAccessor {
     @Invoker("reloadWorldList")
-    void InvokeReloadWorldList();
+    void invokeReloadWorldList();
 }

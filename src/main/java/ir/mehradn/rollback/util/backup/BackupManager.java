@@ -18,11 +18,11 @@ import net.fabricmc.api.Environment;
 import net.minecraft.FileUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
 
@@ -81,6 +81,7 @@ public class BackupManager {
         LevelStorageSource.LevelStorageAccess levelAccess = ((MinecraftServerExpanded)server).getLevelAccess();
         String worldName = levelAccess.getLevelId();
         RollbackWorld world = getWorld(worldName);
+        int id = world.lastID + 1;
 
         while (world.backups.size() >= RollbackConfig.maxBackupsPerWorld())
             deleteBackup(worldName, 0);
@@ -107,42 +108,42 @@ public class BackupManager {
         try {
             path2 = this.rollbackDirectory.resolve(FileUtil.findAvailableName(
                 this.rollbackDirectory,
-                worldName + "_" + (world.lastID + 1),
+                worldName + "_" + id,
                 ".zip"
             ));
             Files.move(path1, path2);
         } catch (IOException e) {
             showError("rollback.createBackup.failed", "Failed to move the backup file!", e);
+            Rollback.LOGGER.info("Deleting the backup file...");
+            try {
+                Files.deleteIfExists(path1);
+            } catch (IOException ignored) { }
             return false;
         }
 
-        Rollback.LOGGER.debug("Creating an icon...");
-        Path path3;
-        try {
-            path3 = this.iconsDirectory.resolve(FileUtil.findAvailableName(this.iconsDirectory,
-                worldName + "_" + (world.lastID + 1), ".png"));
-            Path finalPath = path3;
-            Minecraft minecraft = Minecraft.getInstance();
-            minecraft.execute(() -> {
-                GameRenderer renderer = minecraft.gameRenderer;
-                ((GameRendererAccessor)renderer).InvokeTakeAutoScreenshot(finalPath);
-            });
-        } catch (IOException e) {
-            showError("rollback.createBackup.failed", "Failed to make an icon for the backup!", e);
-            return false;
-        }
-
-        ClientLevel level = Minecraft.getInstance().level;
+        Level level = server.overworld();
         int daysPlayed = (level == null ? -1 : (int)level.getDayTime() / 24000);
 
         Rollback.LOGGER.debug("Adding the metadata...");
         path2 = this.rollbackDirectory.relativize(path2);
-        path3 = this.rollbackDirectory.relativize(path3);
-        RollbackBackup backup = new RollbackBackup(path2, path3, LocalDateTime.now(), daysPlayed, name);
+        RollbackBackup backup = new RollbackBackup(path2, null, LocalDateTime.now(), daysPlayed, name);
         world.backups.add(backup);
         world.lastID++;
-
         saveMetadata();
+
+        Minecraft minecraft = Minecraft.getInstance();
+        minecraft.execute(() -> {
+            Rollback.LOGGER.debug("Creating an icon...");
+            try {
+                Path path = this.iconsDirectory.resolve(FileUtil.findAvailableName(this.iconsDirectory,
+                    worldName + "_" + id, ".png"));
+                GameRenderer renderer = minecraft.gameRenderer;
+                ((GameRendererAccessor)renderer).invokeTakeAutoScreenshot(path);
+                backup.iconPath = this.rollbackDirectory.relativize(path);
+                saveMetadata();
+            } catch (IOException ignored) { }
+        });
+
         return true;
     }
 
