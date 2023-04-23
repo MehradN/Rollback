@@ -14,6 +14,7 @@ public class RollbackWorld {
     @SerializedName("days_passed") public int daysSinceLastBackup = 0;
     @SerializedName("since_day") public int ticksSinceLastMorning = 0;
     @SerializedName("since_backup") public int ticksSinceLastBackup = 0;
+    @SerializedName("last_id") public int lastID = 0;
     @SerializedName("backups") public List<RollbackBackup> backups = new ArrayList<>();
 
     public void setPromptAnswer(boolean answer) {

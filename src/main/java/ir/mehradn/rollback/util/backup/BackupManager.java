@@ -80,7 +80,6 @@ public class BackupManager {
         Rollback.LOGGER.info("Creating a rollback backup...");
         LevelStorageSource.LevelStorageAccess levelAccess = ((MinecraftServerExpanded)server).getLevelAccess();
         String worldName = levelAccess.getLevelId();
-        LocalDateTime now = LocalDateTime.now();
         RollbackWorld world = getWorld(worldName);
 
         while (world.backups.size() >= RollbackConfig.maxBackupsPerWorld())
@@ -108,7 +107,7 @@ public class BackupManager {
         try {
             path2 = this.rollbackDirectory.resolve(FileUtil.findAvailableName(
                 this.rollbackDirectory,
-                now.format(LocalDateTimeAdapter.TIME_FORMATTER) + "_" + worldName,
+                worldName + "_" + (world.lastID + 1),
                 ".zip"
             ));
             Files.move(path1, path2);
@@ -120,7 +119,8 @@ public class BackupManager {
         Rollback.LOGGER.debug("Creating an icon...");
         Path path3;
         try {
-            path3 = this.iconsDirectory.resolve(FileUtil.findAvailableName(this.iconsDirectory, levelAccess.getLevelId(), ".png"));
+            path3 = this.iconsDirectory.resolve(FileUtil.findAvailableName(this.iconsDirectory,
+                worldName + "_" + (world.lastID + 1), ".png"));
             Path finalPath = path3;
             Minecraft minecraft = Minecraft.getInstance();
             minecraft.execute(() -> {
@@ -140,6 +140,7 @@ public class BackupManager {
         path3 = this.rollbackDirectory.relativize(path3);
         RollbackBackup backup = new RollbackBackup(path2, path3, LocalDateTime.now(), daysPlayed, name);
         world.backups.add(backup);
+        world.lastID++;
 
         saveMetadata();
         return true;
