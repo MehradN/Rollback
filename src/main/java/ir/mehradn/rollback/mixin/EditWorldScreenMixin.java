@@ -16,14 +16,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 @Mixin(EditWorldScreen.class)
 public abstract class EditWorldScreenMixin extends Screen implements EditWorldScreenExpanded {
     @Shadow @Final private BooleanConsumer callback;
-
     private Consumer<WorldSelectionListCallbackAction> callbackActionConsumer = null;
     private int[] buttonPos1;
     private int[] buttonPos2;
@@ -43,10 +41,10 @@ public abstract class EditWorldScreenMixin extends Screen implements EditWorldSc
     @ModifyExpressionValue(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/Button$Builder;build()Lnet/minecraft/client/gui/components/Button;"))
     private Button hideButtons(Button btn) {
         if (Component.translatable("selectWorld.edit.backup").equals(btn.getMessage())) {
-            this.buttonPos1 = new int[]{btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight()};
+            this.buttonPos1 = new int[]{ btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight() };
             btn.setY(-99999);
         } else if (Component.translatable("selectWorld.edit.backupFolder").equals(btn.getMessage())) {
-            this.buttonPos2 = new int[]{btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight()};
+            this.buttonPos2 = new int[]{ btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight() };
             btn.setY(-99999);
         }
         return btn;

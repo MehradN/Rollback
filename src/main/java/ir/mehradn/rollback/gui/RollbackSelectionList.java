@@ -21,13 +21,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.storage.LevelSummary;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
@@ -39,7 +37,8 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
     private final CurrentSaveEntry currentSaveEntry;
     private boolean shouldReloadEntries;
 
-    public RollbackSelectionList(RollbackScreen screen, BackupManager backupManager, RollbackWorld rollbackWorld, LevelSummary levelSummary, Minecraft minecraftClient,
+    public RollbackSelectionList(RollbackScreen screen, BackupManager backupManager, RollbackWorld rollbackWorld,
+                                 LevelSummary levelSummary, Minecraft minecraftClient,
                                  int width, int height, int top, int bottom, int itemHeight) {
         super(minecraftClient, width, height, top, bottom, itemHeight);
         this.screen = screen;

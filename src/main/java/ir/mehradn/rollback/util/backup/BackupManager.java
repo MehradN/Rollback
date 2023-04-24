@@ -25,7 +25,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import net.minecraft.world.level.storage.LevelSummary;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,6 +50,33 @@ public class BackupManager {
     private BackupManager() {
         this.rollbackDirectory = Minecraft.getInstance().getLevelSource().getBackupPath().resolve("rollbacks");
         this.iconsDirectory = this.rollbackDirectory.resolve("icons");
+    }
+
+    public static BackupManager loadMetadata() {
+        Rollback.LOGGER.info("Loading metadata file...");
+        Path metadataFilePath = Minecraft.getInstance().getLevelSource().getBackupPath().resolve("rollbacks/rollbacks.json");
+        BackupManager backupManager;
+        boolean save = false;
+
+        try (FileReader reader = new FileReader(metadataFilePath.toFile())) {
+            JsonObject metadata = JsonParser.parseReader(reader).getAsJsonObject();
+            MetadataUpdater updater = new MetadataUpdater(metadata);
+            if (updater.getVersion().isOutdated()) {
+                metadata = updater.update();
+                save = true;
+            }
+            backupManager = gson.fromJson(metadata, BackupManager.class);
+        } catch (FileNotFoundException e) {
+            Rollback.LOGGER.warn("Metadata file not found! Creating a new one...");
+            backupManager = new BackupManager();
+            save = true;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        if (save)
+            backupManager.saveMetadata();
+        return backupManager;
     }
 
     public RollbackWorld getWorld(String worldName) {
@@ -251,32 +277,5 @@ public class BackupManager {
         for (RollbackBackup backup : world.backups)
             if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
                 backup.iconPath = null;
-    }
-
-    public static BackupManager loadMetadata() {
-        Rollback.LOGGER.info("Loading metadata file...");
-        Path metadataFilePath = Minecraft.getInstance().getLevelSource().getBackupPath().resolve("rollbacks/rollbacks.json");
-        BackupManager backupManager;
-        boolean save = false;
-
-        try (FileReader reader = new FileReader(metadataFilePath.toFile())) {
-            JsonObject metadata = JsonParser.parseReader(reader).getAsJsonObject();
-            MetadataUpdater updater = new MetadataUpdater(metadata);
-            if (updater.getVersion().isOutdated()) {
-                metadata = updater.update();
-                save = true;
-            }
-            backupManager = gson.fromJson(metadata, BackupManager.class);
-        } catch (FileNotFoundException e) {
-            Rollback.LOGGER.warn("Metadata file not found! Creating a new one...");
-            backupManager = new BackupManager();
-            save = true;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        if (save)
-            backupManager.saveMetadata();
-        return backupManager;
     }
 }

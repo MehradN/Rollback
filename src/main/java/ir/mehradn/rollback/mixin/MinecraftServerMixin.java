@@ -18,9 +18,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Environment(EnvType.CLIENT)
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<TickTask> implements CommandSource, AutoCloseable, MinecraftServerExpanded {
+public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<TickTask>
+    implements CommandSource, AutoCloseable, MinecraftServerExpanded {
     @Shadow @Final protected LevelStorageSource.LevelStorageAccess storageSource;
-
     private BackupManager backupManager;
 
     public MinecraftServerMixin(String string) {

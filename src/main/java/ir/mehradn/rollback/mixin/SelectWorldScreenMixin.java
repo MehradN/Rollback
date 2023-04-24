@@ -20,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SelectWorldScreen.class)
 public abstract class SelectWorldScreenMixin extends Screen {
     @Shadow private WorldSelectionList list;
-
     private Button rollbackButton;
     private int[] buttonPos;
 
@@ -31,7 +30,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
     @ModifyExpressionValue(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/Button$Builder;build()Lnet/minecraft/client/gui/components/Button;"))
     private Button hideButton(Button btn) {
         if (Component.translatable("selectWorld.recreate").equals(btn.getMessage())) {
-            this.buttonPos = new int[]{btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight()};
+            this.buttonPos = new int[]{ btn.getX(), btn.getY(), btn.getWidth(), btn.getHeight() };
             if (RollbackConfig.replaceReCreateButton)
                 btn.setY(-99999);
             else

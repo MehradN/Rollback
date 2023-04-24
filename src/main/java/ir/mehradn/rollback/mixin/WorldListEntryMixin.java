@@ -37,10 +37,6 @@ public abstract class WorldListEntryMixin extends WorldSelectionList.Entry imple
 
     @Shadow public abstract void recreateWorld();
 
-    @Shadow protected abstract void queueLoadScreen();
-
-    @Shadow protected abstract void loadWorld();
-
     public void rollbackWorld() {
         Rollback.LOGGER.debug("Opening rollback screen...");
         queueLoadScreen();
@@ -57,6 +53,10 @@ public abstract class WorldListEntryMixin extends WorldSelectionList.Entry imple
             }
         }));
     }
+
+    @Shadow protected abstract void queueLoadScreen();
+
+    @Shadow protected abstract void loadWorld();
 
     @ModifyExpressionValue(method = "editWorld", at = @At(value = "NEW", target = "net/minecraft/client/gui/screens/worldselection/EditWorldScreen"))
     private EditWorldScreen improveEditWorldScreen(EditWorldScreen screen) {

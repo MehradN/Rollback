@@ -4,7 +4,6 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import ir.mehradn.rollback.Rollback;
-import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.util.backup.BackupManager;
 import ir.mehradn.rollback.util.backup.RollbackBackup;
 import ir.mehradn.rollback.util.backup.RollbackWorld;

@@ -11,7 +11,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-
 import java.util.Optional;
 
 @Environment(EnvType.CLIENT)

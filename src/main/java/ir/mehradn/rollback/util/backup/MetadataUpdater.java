@@ -54,6 +54,14 @@ public class MetadataUpdater {
             this.minor = minor;
         }
 
+        public static Version fromString(String version) {
+            String[] versionParts = version.split("\\.");
+            return new Version(
+                Integer.parseInt(versionParts[0]),
+                Integer.parseInt(versionParts[1])
+            );
+        }
+
         public boolean isLessThan(int major, int minor) {
             return (this.major < major || (this.major == major && this.minor < minor));
         }
@@ -68,14 +76,6 @@ public class MetadataUpdater {
 
         public String toString() {
             return this.major + "." + this.minor;
-        }
-
-        public static Version fromString(String version) {
-            String[] versionParts = version.split("\\.");
-            return new Version(
-                Integer.parseInt(versionParts[0]),
-                Integer.parseInt(versionParts[1])
-            );
         }
     }
 }

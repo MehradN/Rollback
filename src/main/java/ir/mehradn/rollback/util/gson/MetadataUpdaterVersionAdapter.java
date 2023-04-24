@@ -4,7 +4,6 @@ import com.google.gson.*;
 import ir.mehradn.rollback.util.backup.MetadataUpdater;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-
 import java.lang.reflect.Type;
 
 @Environment(EnvType.CLIENT)
