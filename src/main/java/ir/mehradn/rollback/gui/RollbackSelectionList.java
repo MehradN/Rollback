@@ -150,7 +150,7 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
             super();
             this.summary = RollbackSelectionList.this.summary;
             this.lastPlayed = RollbackBackup.DATE_FORMAT.format(new Date(this.summary.getLastPlayed()));
-            this.iconLocation = new ResourceLocation("rollback", "backup/current_save.png");
+            this.iconLocation = new ResourceLocation(Rollback.MOD_ID, "backup/current_save.png");
             this.icon = getIconTexture();
         }
 
@@ -209,7 +209,7 @@ public final class RollbackSelectionList extends ObjectSelectionList<RollbackSel
             this.backupNumber = backupNumber;
             this.worldName = RollbackSelectionList.this.summary.getLevelId();
             this.backup = rollbackBackup;
-            this.iconLocation = new ResourceLocation("rollback", "backup/" + this.backupNumber + "/icon.png");
+            this.iconLocation = new ResourceLocation(Rollback.MOD_ID, "backup/" + this.backupNumber + "/icon.png");
             this.icon = getIconTexture();
         }
 

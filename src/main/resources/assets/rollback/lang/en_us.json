@@ -28,6 +28,7 @@
   "rollback.command.list.noBackups": "There are no backups available for this world",
   "rollback.command.list.item": "#%s  Created: %s  Day %d",
   "rollback.command.list.itemNamed": "#%s  Created: %s  Day %d  Name: %s",
+  "rollback.command.config.success": "Updated the configurations successfully",
   "rollback.midnightconfig.title": "Rollback Options",
   "rollback.midnightconfig.backupsPerWorld": "Maximum Backups Per World:",
   "rollback.midnightconfig.backupFrequency": "Minecraft Days Per Backup:",

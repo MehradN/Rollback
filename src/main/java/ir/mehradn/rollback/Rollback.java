@@ -11,7 +11,8 @@ import org.slf4j.LoggerFactory;
 
 @Environment(EnvType.CLIENT)
 public class Rollback implements ClientModInitializer {
-    public static final Logger LOGGER = LoggerFactory.getLogger("rollback");
+    public static final String MOD_ID = "rollback";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public void onInitializeClient() {
         LOGGER.info("Registering MidnightConfig...");

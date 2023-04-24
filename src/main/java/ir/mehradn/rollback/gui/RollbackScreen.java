@@ -112,7 +112,7 @@ public class RollbackScreen extends Screen {
         ).bounds(this.width / 2 - 154, this.height - 28, 100, 20).build());
         addRenderableWidget(Button.builder(
             Component.translatable("menu.options"),
-            (button) -> this.minecraft.setScreen(MidnightConfig.getScreen(this, "rollback"))
+            (button) -> this.minecraft.setScreen(MidnightConfig.getScreen(this, Rollback.MOD_ID))
         ).bounds(this.width / 2 - 50, this.height - 28, 100, 20).build());
         addRenderableWidget(Button.builder(
             Component.translatable("gui.cancel"),

@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.config;
 
 import eu.midnightdust.lib.config.MidnightConfig;
+import ir.mehradn.rollback.Rollback;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
@@ -13,7 +14,7 @@ public final class RollbackConfig extends MidnightConfig {
     @Entry public static boolean promptEnabled = true;
 
     public static void register() {
-        MidnightConfig.init("rollback", RollbackConfig.class);
+        MidnightConfig.init(Rollback.MOD_ID, RollbackConfig.class);
     }
 
     public static int maxBackupsPerWorld() {
