@@ -139,8 +139,11 @@ public class BackupManager {
                     worldName + "_" + id, ".png"));
                 GameRenderer renderer = minecraft.gameRenderer;
                 ((GameRendererAccessor)renderer).invokeTakeAutoScreenshot(path);
-                backup.iconPath = this.rollbackDirectory.relativize(path);
-                saveMetadata();
+
+                server.execute(() -> {
+                    backup.iconPath = this.rollbackDirectory.relativize(path);
+                    saveMetadata();
+                });
             } catch (IOException ignored) { }
         });
 
