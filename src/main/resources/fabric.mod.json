@@ -3,7 +3,7 @@
   "id": "rollback",
   "version": "${version}",
   "name": "Rollback",
-  "description": "This mod adds a lot of features to the backup system, useful for both servers and single-player worlds.",
+  "description": "This mod improves the backup system. (Automatic backups, GUI, etc.)",
   "authors": [
     "Mehrad Nayyeri"
   ],
