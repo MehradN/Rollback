@@ -1,5 +1,5 @@
 # Rollback
-This Minecraft mod adds a lot of useful features to the backup system (such as automatic backups and GUI).
+This Minecraft mod improves the backup system. (Automatic backups, GUI, etc.)
 - Rolling back to a backup using in-game GUI
 - Creating backups using commands
 - Automated backups
@@ -11,6 +11,8 @@ This Minecraft mod adds a lot of useful features to the backup system (such as a
 Shows a list of the automated backups available for this world.
 #### /rollback create
 Creates an automated backup
-#### /rollback delete *value*
-Takes a value and deletes the corresponding backup. If the value is "latest" or "oldest" the latest/oldest backup gets deleted. If the value is a number, the backup with that index gets deleted.
+#### /rollback delete ("latest"/"oldest"/<index>)
+Deletes the corresponding backup. If "latest" or "oldest" is provided, the latest/oldest backup gets deleted. If an index is provided, the backup with that index gets deleted.
+#### /rollback config (<option>) (<value>)
+Changes the configuration, similar to the `/gamerule` command.
 
