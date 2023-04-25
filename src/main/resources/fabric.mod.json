@@ -14,23 +14,26 @@
   },
   "license": "GPL-3.0",
   "icon": "assets/rollback/icon.png",
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
-    "client": [
+    "main": [
       "ir.mehradn.rollback.Rollback"
     ],
-    "preLaunch": [
-      "ir.mehradn.rollback.RollbackPreLaunch"
+    "client": [
+      "ir.mehradn.rollback.RollbackClient"
     ]
   },
   "mixins": [
-    "rollback.mixins.json"
+    "rollback.mixins.json",
+    {
+      "config": "rollback.client.mixins.json",
+      "environment": "client"
+    }
   ],
   "depends": {
     "java": ">=17",
     "minecraft": "~1.19.4",
     "fabricloader": ">=0.14.19",
-    "fabric-api": ">=0.78.0+1.19.4",
-    "midnightlib": ">=1.3.0-fabric"
+    "fabric-api": ">=0.79.0+1.19.4"
   }
 }
