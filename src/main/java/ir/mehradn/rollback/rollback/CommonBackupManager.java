@@ -24,17 +24,21 @@ import java.util.zip.ZipFile;
 public class CommonBackupManager extends BackupManager {
     public static Path rollbackDirectory = null;
     private static Path iconsDirectory = null;
-    private final RollbackEventAnnouncer eventAnnouncer;
-    private final RollbackGofer gofer;
+    private final Gofer gofer;
+    private EventAnnouncer eventAnnouncer;
 
-    public CommonBackupManager(RollbackEventAnnouncer eventAnnouncer, RollbackGofer gofer) {
-        this.eventAnnouncer = eventAnnouncer;
+    public CommonBackupManager(Gofer gofer) {
         this.gofer = gofer;
+        this.eventAnnouncer = new NullEventAnnouncer();
     }
 
     public static void setPaths(Path rollbackDirectory) {
         CommonBackupManager.rollbackDirectory = rollbackDirectory;
         CommonBackupManager.iconsDirectory = rollbackDirectory.resolve("icons");
+    }
+
+    public void setEventAnnouncer(EventAnnouncer eventAnnouncer) {
+        this.eventAnnouncer = eventAnnouncer;
     }
 
     public void loadData()

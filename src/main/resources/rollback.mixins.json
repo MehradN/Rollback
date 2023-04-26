@@ -3,6 +3,9 @@
   "package": "ir.mehradn.rollback.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "LevelStorageAccessAccessor",
+    "LevelStorageAccessMixin",
+    "MinecraftServerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

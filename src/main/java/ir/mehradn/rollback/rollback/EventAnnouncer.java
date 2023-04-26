@@ -1,6 +1,6 @@
 package ir.mehradn.rollback.rollback;
 
-public interface RollbackEventAnnouncer {
+public interface EventAnnouncer {
     void onError(String translatableTitle, String literalInfo);
 
     void onSuccessfulBackup(long size);

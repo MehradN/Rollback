@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.exception.MinecraftException;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public interface RollbackGofer {
+public interface Gofer {
     int getDaysPlayed();
 
     Path getSaveDirectory();
