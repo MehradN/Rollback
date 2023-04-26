@@ -3,6 +3,7 @@ package ir.mehradn.rollback.rollback;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ir.mehradn.rollback.rollback.exception.BackupManagerException;
+import ir.mehradn.rollback.rollback.metadata.RollbackBackupType;
 import ir.mehradn.rollback.rollback.metadata.RollbackData;
 import ir.mehradn.rollback.rollback.metadata.RollbackVersion;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
@@ -22,15 +23,15 @@ public abstract class BackupManager {
 
     public abstract void loadData() throws BackupManagerException;
 
-    public abstract void updateWorld(String worldName, RollbackWorld world) throws BackupManagerException;
+    public abstract void updateWorld(String levelID, RollbackWorld world) throws BackupManagerException;
 
-    public abstract void deleteWorld(String worldName) throws BackupManagerException;
+    public abstract void deleteWorld(String levelID) throws BackupManagerException;
 
-    public abstract void deleteBackup(String worldName, int backupID) throws BackupManagerException;
+    public abstract void deleteBackup(String levelID, int backupID, RollbackBackupType type) throws BackupManagerException;
 
     public abstract void createNormalBackup(String name) throws BackupManagerException;
 
-    public abstract void createSpecialBackup(String name, RollbackWorld.BackupType type) throws BackupManagerException;
+    public abstract void createSpecialBackup(String levelID, String name, RollbackBackupType type) throws BackupManagerException;
 
-    public abstract void rollbackToBackup(String worldName, int backupID) throws BackupManagerException;
+    public abstract void rollbackToBackup(String levelID, int backupID, RollbackBackupType type) throws BackupManagerException;
 }

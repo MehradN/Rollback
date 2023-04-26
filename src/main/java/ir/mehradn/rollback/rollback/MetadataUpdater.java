@@ -1,7 +1,6 @@
 package ir.mehradn.rollback.rollback;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.metadata.RollbackVersion;
@@ -20,14 +19,13 @@ public class MetadataUpdater {
             return RollbackVersion.DEFAULT_VERSION;
     }
 
-    public JsonObject update() {
+    public void update() {
         Rollback.LOGGER.info("Updating the metadata...");
         RollbackVersion version = getVersion();
         if (version.isLessThan(0, 3))
             V0_3();
         if (version.isLessThan(0, 9))
             V0_9();
-        return this.json;
     }
 
     private void V0_3() {
@@ -47,8 +45,8 @@ public class MetadataUpdater {
     private void V0_9() {
         Rollback.LOGGER.info("Updating to V0.9...");
         JsonObject worlds = this.json.getAsJsonObject("worlds");
-        for (String worldName : worlds.keySet()) {
-            JsonObject world = worlds.getAsJsonObject(worldName);
+        for (String levelID : worlds.keySet()) {
+            JsonObject world = worlds.getAsJsonObject(levelID);
             JsonArray oldBackups = world.getAsJsonArray("backups");
             JsonObject newBackups = new JsonObject();
 

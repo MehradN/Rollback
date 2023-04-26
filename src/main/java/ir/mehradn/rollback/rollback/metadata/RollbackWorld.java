@@ -14,26 +14,20 @@ public class RollbackWorld {
     @SerializedName("rollbacks") public Map<Integer, RollbackBackup> automatedBackups = new HashMap<>();
     @SerializedName("backups") public Map<Integer, RollbackBackup> commandBackups = new HashMap<>();
 
-    public RollbackBackup getBackup(int id, BackupType type) {
-        RollbackBackup backup;
-        switch (type) {
-            case AUTOMATED -> backup = this.automatedBackups.get(id);
-            case COMMAND -> backup = this.commandBackups.get(id);
-            default -> backup = null;
-        }
-        return backup;
+    public RollbackBackup getBackup(int backupID, RollbackBackupType type) {
+        Map<Integer, RollbackBackup> backups = getBackups(type);
+        if (!backups.containsKey(backupID))
+            throw new IllegalArgumentException("Invalid backupID!");
+        return backups.get(backupID);
     }
 
-    public void addBackup(RollbackBackup backup, BackupType type) {
-        int id = ++this.lastID;
+    public Map<Integer, RollbackBackup> getBackups(RollbackBackupType type) {
+        Map<Integer, RollbackBackup> backups;
         switch (type) {
-            case AUTOMATED -> this.automatedBackups.put(id, backup);
-            case COMMAND -> this.commandBackups.put(id, backup);
+            case AUTOMATED -> backups = this.automatedBackups;
+            case COMMAND -> backups = this.commandBackups;
+            default -> backups = new HashMap<>();
         }
-    }
-
-    public enum BackupType {
-        AUTOMATED,
-        COMMAND
+        return backups;
     }
 }
