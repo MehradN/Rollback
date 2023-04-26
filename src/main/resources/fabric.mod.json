@@ -21,6 +21,9 @@
     ],
     "client": [
       "ir.mehradn.rollback.RollbackClient"
+    ],
+    "preLaunch": [
+      "ir.mehradn.rollback.RollbackPreLaunch"
     ]
   },
   "mixins": [
