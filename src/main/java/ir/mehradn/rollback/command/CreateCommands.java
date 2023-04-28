@@ -5,15 +5,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import ir.mehradn.rollback.rollback.BackupManager;
-import ir.mehradn.rollback.rollback.ChatEventAnnouncer;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import ir.mehradn.rollback.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackupType;
-import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.MinecraftServer;
 
 public class CreateCommands {
     public static LiteralArgumentBuilder<CommandSourceStack> createCommand() {
@@ -29,15 +26,12 @@ public class CreateCommands {
     }
 
     private static int createBackup(CommandSourceStack source, String name) throws CommandSyntaxException {
-        MinecraftServer server = source.getServer();
-        CommonBackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
-        if (backupManager.eventAnnouncer instanceof ChatEventAnnouncer chatEventAnnouncer)
-            chatEventAnnouncer.setCommandSource(source.getEntity());
+        CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
 
         if (name.isBlank())
             name = null;
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
-            throw new SimpleCommandExceptionType(Component.translatable("rollback.createBackup.nameTooLong")).create();
+            throw new SimpleCommandExceptionType(Component.translatable("rollback.command.create.nameTooLong")).create();
 
         try {
             backupManager.createSpecialBackup(name, RollbackBackupType.COMMAND);
@@ -48,10 +42,7 @@ public class CreateCommands {
     }
 
     private static int createManualBackup(CommandSourceStack source) {
-        MinecraftServer server = source.getServer();
-        CommonBackupManager backupManager = ((MinecraftServerExpanded)server).getBackupManager();
-        if (backupManager.eventAnnouncer instanceof ChatEventAnnouncer chatEventAnnouncer)
-            chatEventAnnouncer.setCommandSource(source.getEntity());
+        CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
 
         try {
             backupManager.createNormalBackup();

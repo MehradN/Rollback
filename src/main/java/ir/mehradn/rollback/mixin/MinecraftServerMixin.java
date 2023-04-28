@@ -1,6 +1,6 @@
 package ir.mehradn.rollback.mixin;
 
-import ir.mehradn.rollback.rollback.ChatEventAnnouncer;
+import ir.mehradn.rollback.rollback.CommandEventAnnouncer;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import ir.mehradn.rollback.rollback.ServerGofer;
 import ir.mehradn.rollback.rollback.exception.BackupIOException;
@@ -44,7 +44,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     private void addBackupManager(CallbackInfo ci) {
         ServerGofer gofer = new ServerGofer((MinecraftServer)(Object)this);
         this.backupManager = new CommonBackupManager(gofer);
-        this.backupManager.eventAnnouncer = new ChatEventAnnouncer(this);
+        this.backupManager.eventAnnouncer = new CommandEventAnnouncer(this);
 
         try {
             this.backupManager.loadData();

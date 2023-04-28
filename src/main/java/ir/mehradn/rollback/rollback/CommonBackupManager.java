@@ -8,7 +8,6 @@ import ir.mehradn.rollback.rollback.exception.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackupType;
 import ir.mehradn.rollback.rollback.metadata.RollbackData;
-import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
 import net.minecraft.FileUtil;
 import java.io.*;
 import java.nio.file.Files;
@@ -27,6 +26,7 @@ public class CommonBackupManager extends BackupManager {
     private final Path rollbackDirectory;
     private final Path iconsDirectory;
     private final Path saveDirectory;
+    private RollbackData data;
 
     public CommonBackupManager(Gofer gofer) {
         this.gofer = gofer;
@@ -59,6 +59,7 @@ public class CommonBackupManager extends BackupManager {
             throw new BackupIOException("Failed to read the metadata file!", e);
         }
 
+        this.world = this.data.getWorld(this.gofer.getLevelID());
         if (save)
             saveData();
     }
@@ -79,34 +80,32 @@ public class CommonBackupManager extends BackupManager {
         }
     }
 
-    public void updateWorld(String levelID, RollbackWorld world)
+    public void updateWorld()
         throws BackupIOException {
-        this.data.worlds.put(levelID, world);
         saveData();
     }
 
-    public void deleteWorld(String levelID)
+    public void deleteWorld()
         throws BackupIOException {
+        String levelID = this.gofer.getLevelID();
         Rollback.LOGGER.info("Deleting all the backups for world \"{}\"...", levelID);
-        RollbackWorld world = this.data.getWorld(levelID);
 
-        Set<Integer> automatedIDs = world.automatedBackups.keySet();
-        Set<Integer> commandIDs = world.commandBackups.keySet();
+        Set<Integer> automatedIDs = this.world.automatedBackups.keySet();
+        Set<Integer> commandIDs = this.world.commandBackups.keySet();
         while (!automatedIDs.isEmpty())
-            deleteBackup(levelID, automatedIDs.iterator().next(), RollbackBackupType.AUTOMATED);
+            deleteBackup(automatedIDs.iterator().next(), RollbackBackupType.AUTOMATED);
         while (!commandIDs.isEmpty())
-            deleteBackup(levelID, commandIDs.iterator().next(), RollbackBackupType.COMMAND);
+            deleteBackup(commandIDs.iterator().next(), RollbackBackupType.COMMAND);
 
         this.data.worlds.remove(levelID);
         saveData();
     }
 
-    public void deleteBackup(String levelID, int backupID, RollbackBackupType type)
+    public void deleteBackup(int backupID, RollbackBackupType type)
         throws BackupIOException {
         Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type.toString());
-        RollbackWorld world = this.data.getWorld(levelID);
-        Map<Integer, RollbackBackup> backups = world.getBackups(type);
-        RollbackBackup backup = world.getBackup(backupID, type);
+        Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
+        RollbackBackup backup = this.world.getBackup(backupID, type);
 
         Rollback.LOGGER.debug("Deleting the backup files...");
         try {
@@ -141,13 +140,12 @@ public class CommonBackupManager extends BackupManager {
 
         Rollback.LOGGER.info("Creating a rollback backup...");
         String levelID = this.gofer.getLevelID();
-        RollbackWorld world = this.data.getWorld(levelID);
-        Map<Integer, RollbackBackup> backups = world.getBackups(type);
-        int id = world.lastID + 1;
+        Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
+        int id = this.world.lastID + 1;
 
         while (backups.size() >= RollbackConfig.maxBackupsPerWorld(type))
-            deleteBackup(levelID, Collections.min(backups.keySet()), type);
-        deleteGhostIcons(levelID);
+            deleteBackup(Collections.min(backups.keySet()), type);
+        deleteGhostIcons();
 
         Rollback.LOGGER.debug("Saving the world...");
         try {
@@ -193,13 +191,13 @@ public class CommonBackupManager extends BackupManager {
         backup.daysPlayed = this.gofer.getDaysPlayed();
         backup.name = name;
         backups.put(id, backup);
-        world.lastID++;
+        this.world.lastID++;
         saveData();
     }
 
-    public void rollbackToBackup(String levelID, int backupID, RollbackBackupType type)
+    public void rollbackToBackup(int backupID, RollbackBackupType type)
         throws BackupIOException {
-        RollbackBackup backup = this.data.getWorld(levelID).getBackup(backupID, type);
+        RollbackBackup backup = this.world.getBackup(backupID, type);
         Rollback.LOGGER.info("Rolling back to backup \"{}\"...", backup.backupPath.toString());
 
         Rollback.LOGGER.debug("Deleting the current save...");
@@ -233,12 +231,11 @@ public class CommonBackupManager extends BackupManager {
         }
     }
 
-    private void deleteGhostIcons(String levelID) {
-        RollbackWorld world = this.data.getWorld(levelID);
-        for (RollbackBackup backup : world.automatedBackups.values())
+    private void deleteGhostIcons() {
+        for (RollbackBackup backup : this.world.automatedBackups.values())
             if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
                 backup.iconPath = null;
-        for (RollbackBackup backup : world.commandBackups.values())
+        for (RollbackBackup backup : this.world.commandBackups.values())
             if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
                 backup.iconPath = null;
     }

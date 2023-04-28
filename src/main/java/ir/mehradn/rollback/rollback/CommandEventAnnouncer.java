@@ -4,11 +4,11 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.network.chat.Component;
 
-public class ChatEventAnnouncer implements EventAnnouncer {
+public class CommandEventAnnouncer implements EventAnnouncer {
     CommandSource server;
     CommandSource source = null;
 
-    public ChatEventAnnouncer(CommandSource server) {
+    public CommandEventAnnouncer(CommandSource server) {
         this.server = server;
     }
 
@@ -17,7 +17,7 @@ public class ChatEventAnnouncer implements EventAnnouncer {
     }
 
     public void onError(String translatableTitle, String literalInfo) {
-        Component message = Component.translatable("rollback.chatEventAnnouncer.error",
+        Component message = Component.translatable("rollback.command.error",
             Component.translatable(translatableTitle).withStyle(ChatFormatting.BOLD),
             literalInfo
         ).withStyle(ChatFormatting.RED);
@@ -27,7 +27,7 @@ public class ChatEventAnnouncer implements EventAnnouncer {
     }
 
     public void onSuccessfulBackup(long size) {
-        Component message = Component.translatable("rollback.chatEventAnnouncer.successfulBackup", size / 1048576);
+        Component message = Component.translatable("rollback.command.create.successfulBackup", size / 1048576);
         this.server.sendSystemMessage(message);
         if (this.source != null)
             this.source.sendSystemMessage(message);

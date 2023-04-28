@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ir.mehradn.rollback.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackupType;
-import ir.mehradn.rollback.rollback.metadata.RollbackData;
 import ir.mehradn.rollback.rollback.metadata.RollbackVersion;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
 import ir.mehradn.rollback.util.gson.LocalDateTimeAdapter;
@@ -20,19 +19,19 @@ public abstract class BackupManager {
         .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
         .registerTypeAdapter(RollbackVersion.class, new RollbackVersionAdapter())
         .create();
-    public RollbackData data;
+    public RollbackWorld world;
 
     public abstract void loadData() throws BackupManagerException;
 
-    public abstract void updateWorld(String levelID, RollbackWorld world) throws BackupManagerException;
+    public abstract void updateWorld() throws BackupManagerException;
 
-    public abstract void deleteWorld(String levelID) throws BackupManagerException;
+    public abstract void deleteWorld() throws BackupManagerException;
 
-    public abstract void deleteBackup(String levelID, int backupID, RollbackBackupType type) throws BackupManagerException;
+    public abstract void deleteBackup(int backupID, RollbackBackupType type) throws BackupManagerException;
 
     public abstract void createNormalBackup() throws BackupManagerException;
 
     public abstract void createSpecialBackup(String name, RollbackBackupType type) throws BackupManagerException;
 
-    public abstract void rollbackToBackup(String levelID, int backupID, RollbackBackupType type) throws BackupManagerException;
+    public abstract void rollbackToBackup(int backupID, RollbackBackupType type) throws BackupManagerException;
 }
