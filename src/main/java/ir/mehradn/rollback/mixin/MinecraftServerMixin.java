@@ -1,8 +1,10 @@
 package ir.mehradn.rollback.mixin;
 
+import ir.mehradn.rollback.rollback.ChatEventAnnouncer;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import ir.mehradn.rollback.rollback.ServerGofer;
 import ir.mehradn.rollback.rollback.exception.BackupIOException;
+import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.server.MinecraftServer;
@@ -20,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<TickTask>
     implements CommandSource, AutoCloseable, MinecraftServerExpanded {
     @Shadow @Final protected LevelStorageSource.LevelStorageAccess storageSource;
-    private ServerGofer gofer;
     private CommonBackupManager backupManager;
 
     public MinecraftServerMixin(String string) {
@@ -32,21 +33,19 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     public LevelStorageSource getLevelStorageSource() {
-        return ((LevelStorageAccessAccessor)this.storageSource).getSource();
+        return ((LevelStorageAccessExpanded)this.storageSource).getSource();
     }
 
     public CommonBackupManager getBackupManager() {
         return this.backupManager;
     }
 
-    public ServerGofer getGofer() {
-        return this.gofer;
-    }
-
     @Inject(method = "<init>", at = @At("RETURN"))
     private void addBackupManager(CallbackInfo ci) {
-        this.gofer = new ServerGofer((MinecraftServer)(Object)this);
-        this.backupManager = new CommonBackupManager(this.gofer);
+        ServerGofer gofer = new ServerGofer((MinecraftServer)(Object)this);
+        this.backupManager = new CommonBackupManager(gofer);
+        this.backupManager.eventAnnouncer = new ChatEventAnnouncer(this);
+
         try {
             this.backupManager.loadData();
         } catch (BackupIOException e) {

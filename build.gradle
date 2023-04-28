@@ -18,6 +18,9 @@ repositories {
 	maven {
 		url = 'https://jitpack.io'
 	}
+	maven {
+		url = 'https://maven.nucleoid.xyz'
+	}
 }
 
 loom {
@@ -30,7 +33,10 @@ loom {
         }
     }
 
+	runs.server.runDir "server-run"
+	runs.client.runDir "client-run"
 }
+
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -45,6 +51,8 @@ dependencies {
 
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	modImplementation include("xyz.nucleoid:server-translations-api:${project.translation_version}")
 }
 
 processResources {

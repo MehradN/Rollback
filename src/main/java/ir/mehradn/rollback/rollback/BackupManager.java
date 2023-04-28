@@ -14,7 +14,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 public abstract class BackupManager {
-    protected static final Gson gson = new GsonBuilder()
+    public static final int MAX_NAME_LENGTH = 32;
+    protected static final Gson GSON = new GsonBuilder()
         .registerTypeHierarchyAdapter(Path.class, new PathAdapter())
         .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
         .registerTypeAdapter(RollbackVersion.class, new RollbackVersionAdapter())
@@ -29,9 +30,9 @@ public abstract class BackupManager {
 
     public abstract void deleteBackup(String levelID, int backupID, RollbackBackupType type) throws BackupManagerException;
 
-    public abstract void createNormalBackup(String name) throws BackupManagerException;
+    public abstract void createNormalBackup() throws BackupManagerException;
 
-    public abstract void createSpecialBackup(String levelID, String name, RollbackBackupType type) throws BackupManagerException;
+    public abstract void createSpecialBackup(String name, RollbackBackupType type) throws BackupManagerException;
 
     public abstract void rollbackToBackup(String levelID, int backupID, RollbackBackupType type) throws BackupManagerException;
 }

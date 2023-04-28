@@ -16,9 +16,17 @@ public class ServerGofer implements Gofer {
         this.server = server;
     }
 
+    public String getLevelID() {
+        return ((MinecraftServerExpanded)this.server).getLevelStorageAccess().getLevelId();
+    }
+
     public int getDaysPlayed() {
         ServerLevel level = this.server.overworld();
         return (int)(level == null ? -1 : level.getDayTime() / 24000);
+    }
+
+    public Path getBackupDirectory() {
+        return ((MinecraftServerExpanded)this.server).getLevelStorageSource().getBackupPath();
     }
 
     public Path getSaveDirectory() {

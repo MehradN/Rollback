@@ -4,13 +4,20 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import net.minecraft.world.level.storage.LevelStorageSource;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import java.nio.file.Path;
 
 @Mixin(LevelStorageSource.LevelStorageAccess.class)
 public abstract class LevelStorageAccessMixin implements AutoCloseable, LevelStorageAccessExpanded {
+    @Shadow @Final LevelStorageSource field_23766;
     private Path latestBackupPath;
+
+    public LevelStorageSource getSource() {
+        return this.field_23766;
+    }
 
     public Path getLatestBackupPath() {
         return this.latestBackupPath;

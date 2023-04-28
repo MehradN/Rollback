@@ -22,29 +22,24 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class CommonBackupManager extends BackupManager {
-    public static Path rollbackDirectory = null;
-    private static Path iconsDirectory = null;
+    public EventAnnouncer eventAnnouncer;
     private final Gofer gofer;
-    private EventAnnouncer eventAnnouncer;
+    private final Path rollbackDirectory;
+    private final Path iconsDirectory;
+    private final Path saveDirectory;
 
     public CommonBackupManager(Gofer gofer) {
         this.gofer = gofer;
         this.eventAnnouncer = new NullEventAnnouncer();
-    }
-
-    public static void setPaths(Path rollbackDirectory) {
-        CommonBackupManager.rollbackDirectory = rollbackDirectory;
-        CommonBackupManager.iconsDirectory = rollbackDirectory.resolve("icons");
-    }
-
-    public void setEventAnnouncer(EventAnnouncer eventAnnouncer) {
-        this.eventAnnouncer = eventAnnouncer;
+        this.rollbackDirectory = this.gofer.getBackupDirectory().resolve("rollbacks");
+        this.iconsDirectory = this.rollbackDirectory.resolve("icons");
+        this.saveDirectory = this.gofer.getSaveDirectory();
     }
 
     public void loadData()
         throws BackupIOException {
         Rollback.LOGGER.info("Loading the metadata file...");
-        Path metadataPath = rollbackDirectory.resolve("rollbacks.json");
+        Path metadataPath = this.rollbackDirectory.resolve("rollbacks.json");
         boolean save = false;
 
         try (FileReader reader = new FileReader(metadataPath.toFile())) {
@@ -54,7 +49,7 @@ public class CommonBackupManager extends BackupManager {
                 updater.update();
                 save = true;
             }
-            this.data = gson.fromJson(json, RollbackData.class);
+            this.data = GSON.fromJson(json, RollbackData.class);
         } catch (FileNotFoundException e) {
             Rollback.LOGGER.warn("Metadata file not found! Creating a new one...");
             this.data = new RollbackData();
@@ -70,16 +65,13 @@ public class CommonBackupManager extends BackupManager {
 
     public void saveData()
         throws BackupIOException {
-        assert rollbackDirectory != null;
-        assert iconsDirectory != null;
-
         Rollback.LOGGER.debug("Saving the metadata file...");
-        Path metadataPath = rollbackDirectory.resolve("rollbacks.json");
+        Path metadataPath = this.rollbackDirectory.resolve("rollbacks.json");
         try {
-            Files.createDirectories(rollbackDirectory);
-            Files.createDirectories(iconsDirectory);
+            Files.createDirectories(this.rollbackDirectory);
+            Files.createDirectories(this.iconsDirectory);
             try (FileWriter writer = new FileWriter(metadataPath.toFile())) {
-                gson.toJson(this.data, writer);
+                GSON.toJson(this.data, writer);
             }
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);
@@ -119,9 +111,9 @@ public class CommonBackupManager extends BackupManager {
         Rollback.LOGGER.debug("Deleting the backup files...");
         try {
             if (backup.backupPath != null)
-                Files.deleteIfExists(rollbackDirectory.resolve(backup.backupPath));
+                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
             if (backup.iconPath != null)
-                Files.deleteIfExists(rollbackDirectory.resolve(backup.iconPath));
+                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
         } catch (IOException e) {
             showError("rollback.deleteBackup.failed", "Failed to delete the backup files!", e, BackupIOException::new);
             return;
@@ -131,7 +123,7 @@ public class CommonBackupManager extends BackupManager {
         saveData();
     }
 
-    public void createNormalBackup(String name)
+    public void createNormalBackup()
         throws BackupIOException {
         Rollback.LOGGER.info("Creating a normal backup...");
         try {
@@ -142,9 +134,13 @@ public class CommonBackupManager extends BackupManager {
         }
     }
 
-    public void createSpecialBackup(String levelID, String name, RollbackBackupType type)
+    public void createSpecialBackup(String name, RollbackBackupType type)
         throws BackupMinecraftException, BackupIOException {
+        if (name != null && (name.isBlank() || name.length() > MAX_NAME_LENGTH))
+            throw new IllegalArgumentException("Backup name is too long");
+
         Rollback.LOGGER.info("Creating a rollback backup...");
+        String levelID = this.gofer.getLevelID();
         RollbackWorld world = this.data.getWorld(levelID);
         Map<Integer, RollbackBackup> backups = world.getBackups(type);
         int id = world.lastID + 1;
@@ -175,7 +171,7 @@ public class CommonBackupManager extends BackupManager {
         Path path1 = backupInfo.backupPath();
         Path path2;
         try {
-            path2 = rollbackDirectory.resolve(FileUtil.findAvailableName(rollbackDirectory, levelID + "_" + id, ".zip"));
+            path2 = this.rollbackDirectory.resolve(FileUtil.findAvailableName(this.rollbackDirectory, levelID + "_" + id, ".zip"));
             Files.move(path1, path2);
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to move the backup file!", e);
@@ -190,7 +186,7 @@ public class CommonBackupManager extends BackupManager {
         }
 
         Rollback.LOGGER.debug("Adding the metadata...");
-        path2 = rollbackDirectory.relativize(path2);
+        path2 = this.rollbackDirectory.relativize(path2);
         RollbackBackup backup = new RollbackBackup();
         backup.backupPath = path2;
         backup.creationDate = LocalDateTime.now();
@@ -215,8 +211,8 @@ public class CommonBackupManager extends BackupManager {
         }
 
         Rollback.LOGGER.debug("Extracting the backup to save directory...");
-        Path source = rollbackDirectory.resolve(backup.backupPath.toString());
-        Path dest = this.gofer.getSaveDirectory();
+        Path source = this.rollbackDirectory.resolve(backup.backupPath.toString());
+        Path dest = this.saveDirectory;
         try (ZipFile zip = new ZipFile(source.toFile())) {
             Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
@@ -240,10 +236,10 @@ public class CommonBackupManager extends BackupManager {
     private void deleteGhostIcons(String levelID) {
         RollbackWorld world = this.data.getWorld(levelID);
         for (RollbackBackup backup : world.automatedBackups.values())
-            if (backup.iconPath != null && !Files.isRegularFile(rollbackDirectory.resolve(backup.iconPath)))
+            if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
                 backup.iconPath = null;
         for (RollbackBackup backup : world.commandBackups.values())
-            if (backup.iconPath != null && !Files.isRegularFile(rollbackDirectory.resolve(backup.iconPath)))
+            if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
                 backup.iconPath = null;
     }
 

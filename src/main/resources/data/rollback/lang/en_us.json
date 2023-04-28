@@ -1,6 +1,7 @@
 {
   "rollback.deleteBackup.failed": "Failed to delete the rollback backup",
   "rollback.createBackup.failed": "Failed to create a rollback backup",
+  "rollback.createBackup.nameTooLong": "The chosen name is too long",
   "rollback.rollbackToBackup.failed": "Failed to rollback to backup",
   "rollback.chatEventAnnouncer.error": "An error occurred:\n    %s\n    %s",
   "rollback.chatEventAnnouncer.successfulBackup": "Created a new backup. (size: %s MB)"
