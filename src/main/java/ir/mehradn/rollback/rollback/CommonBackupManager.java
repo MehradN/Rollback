@@ -6,7 +6,6 @@ import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.rollback.exception.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
-import ir.mehradn.rollback.rollback.metadata.RollbackBackupType;
 import ir.mehradn.rollback.rollback.metadata.RollbackData;
 import net.minecraft.FileUtil;
 import java.io.*;
@@ -93,15 +92,15 @@ public class CommonBackupManager extends BackupManager {
         Set<Integer> automatedIDs = this.world.automatedBackups.keySet();
         Set<Integer> commandIDs = this.world.commandBackups.keySet();
         while (!automatedIDs.isEmpty())
-            deleteBackup(automatedIDs.iterator().next(), RollbackBackupType.AUTOMATED);
+            deleteBackup(automatedIDs.iterator().next(), BackupType.AUTOMATED);
         while (!commandIDs.isEmpty())
-            deleteBackup(commandIDs.iterator().next(), RollbackBackupType.COMMAND);
+            deleteBackup(commandIDs.iterator().next(), BackupType.COMMAND);
 
         this.data.worlds.remove(levelID);
         saveData();
     }
 
-    public void deleteBackup(int backupID, RollbackBackupType type)
+    public void deleteBackup(int backupID, BackupType type)
         throws BackupIOException {
         Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type.toString());
         Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
@@ -113,6 +112,7 @@ public class CommonBackupManager extends BackupManager {
                 Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
             if (backup.iconPath != null)
                 Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
+            this.eventAnnouncer.onSuccessfulDelete();
         } catch (IOException e) {
             showError("rollback.deleteBackup.failed", "Failed to delete the backup files!", e, BackupIOException::new);
             return;
@@ -133,7 +133,7 @@ public class CommonBackupManager extends BackupManager {
         }
     }
 
-    public void createSpecialBackup(String name, RollbackBackupType type)
+    public void createSpecialBackup(String name, BackupType type)
         throws BackupMinecraftException, BackupIOException {
         if (name != null && (name.isBlank() || name.length() > MAX_NAME_LENGTH))
             throw new IllegalArgumentException("Backup name is too long");
@@ -195,7 +195,7 @@ public class CommonBackupManager extends BackupManager {
         saveData();
     }
 
-    public void rollbackToBackup(int backupID, RollbackBackupType type)
+    public void rollbackToBackup(int backupID, BackupType type)
         throws BackupIOException {
         RollbackBackup backup = this.world.getBackup(backupID, type);
         Rollback.LOGGER.info("Rolling back to backup \"{}\"...", backup.backupPath.toString());

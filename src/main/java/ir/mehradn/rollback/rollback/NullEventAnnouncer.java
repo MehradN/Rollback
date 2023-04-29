@@ -4,4 +4,6 @@ public class NullEventAnnouncer implements EventAnnouncer {
     public void onError(String translatableTitle, String literalInfo) { }
 
     public void onSuccessfulBackup(long size) { }
+
+    public void onSuccessfulDelete() { }
 }

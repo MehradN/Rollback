@@ -1,14 +1,17 @@
 {
-  "rollback.deleteBackup.failed": "Failed to delete the rollback backup",
   "rollback.createBackup.failed": "Failed to create a rollback backup",
+  "rollback.deleteBackup.failed": "Failed to delete the rollback backup",
+  "rollback.deleteBackup.success": "Deleted the backup successfully",
   "rollback.rollbackToBackup.failed": "Failed to rollback to backup",
   "rollback.command.error": "An error occurred:\n    %s\n    %s",
+  "rollback.command.invalidIndex": "Invalid index",
+  "rollback.command.noBackups.automated": "There are no automated backups available for this world",
+  "rollback.command.noBackups.command": "There are no command backups available for this world",
   "rollback.command.create.successfulBackup": "Created a new backup. (size: %s MB)",
   "rollback.command.create.nameTooLong": "The chosen name is too long",
   "rollback.command.list.title.automated": "Automated Backups:",
   "rollback.command.list.title.command": "Command Backups:",
-  "rollback.command.list.noBackups.automated": "There are no automated backups available for this world",
-  "rollback.command.list.noBackups.command": "There are no command backups available for this world",
   "rollback.command.list.item": "#%s  Created: %s  Day %d",
-  "rollback.command.list.itemNamed": "#%s  Created: %s  Day %d  Name: %s"
+  "rollback.command.list.itemNamed": "#%s  Created: %s  Day %d  Name: %s",
+  "rollback.command.list.more": "and more..."
 }

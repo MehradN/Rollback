@@ -32,4 +32,11 @@ public class CommandEventAnnouncer implements EventAnnouncer {
         if (this.source != null)
             this.source.sendSystemMessage(message);
     }
+
+    public void onSuccessfulDelete() {
+        Component message = Component.translatable("rollback.deleteBackup.success");
+        this.server.sendSystemMessage(message);
+        if (this.source != null)
+            this.source.sendSystemMessage(message);
+    }
 }

@@ -7,7 +7,7 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import ir.mehradn.rollback.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.rollback.metadata.RollbackBackupType;
+import ir.mehradn.rollback.rollback.BackupType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -15,9 +15,9 @@ import net.minecraft.network.chat.Component;
 public class CreateCommands {
     public static LiteralArgumentBuilder<CommandSourceStack> createCommand() {
         return Commands.literal("create")
+            .executes((ctx) -> createBackup(ctx.getSource(), ""))
             .then(Commands.argument("name", StringArgumentType.string())
-                .executes((ctx) -> createBackup(ctx.getSource(), StringArgumentType.getString(ctx, "name"))))
-            .executes((ctx) -> createBackup(ctx.getSource(), ""));
+                .executes((ctx) -> createBackup(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
     }
 
     public static LiteralArgumentBuilder<CommandSourceStack> createManualBackupCommand() {
@@ -34,7 +34,7 @@ public class CreateCommands {
             throw new SimpleCommandExceptionType(Component.translatable("rollback.command.create.nameTooLong")).create();
 
         try {
-            backupManager.createSpecialBackup(name, RollbackBackupType.COMMAND);
+            backupManager.createSpecialBackup(name, BackupType.COMMAND);
             return 1;
         } catch (BackupManagerException e) {
             return 0;
