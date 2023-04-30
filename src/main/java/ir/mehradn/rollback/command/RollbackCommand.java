@@ -16,8 +16,8 @@ public class RollbackCommand {
                 .requires(RollbackCommand::hasRequirements)
                 .then(CreateCommands.createCommand())
                 .then(CreateCommands.createManualBackupCommand())
-                .then(ListCommand.listCommand())
-                .then(DeleteCommand.deleteCommand()));
+                .then(DeleteCommand.deleteCommand())
+                .then(ListCommand.listCommand()));
         });
     }
 

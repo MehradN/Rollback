@@ -24,17 +24,17 @@ public class ListCommand {
     }
 
     private static int listBackups(CommandSourceStack source, BackupType type, int count) {
+        assert type.list;
         CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
         List<RollbackBackup> backups = new ArrayList<>(new TreeMap<>(backupManager.world.getBackups(type)).values());
-        String typeString = type.getName();
 
         if (backups.isEmpty()) {
-            source.sendSystemMessage(Component.translatable("rollback.command.noBackups." + typeString));
+            source.sendSystemMessage(Component.translatable("rollback.command.noBackups." + type));
             return 0;
         }
 
         count = Math.min(backups.size(), count);
-        source.sendSystemMessage(Component.translatable("rollback.command.list.title." + typeString));
+        source.sendSystemMessage(Component.translatable("rollback.command.list.title." + type));
         for (int i = 1; i <= count; i++) {
             RollbackBackup backup = backups.get(backups.size() - i);
             Component text;

@@ -28,9 +28,7 @@ public abstract class BackupManager {
 
     public abstract void deleteBackup(int backupID, BackupType type) throws BackupManagerException;
 
-    public abstract void createNormalBackup() throws BackupManagerException;
-
-    public abstract void createSpecialBackup(String name, BackupType type) throws BackupManagerException;
+    public abstract void createBackup(String name, BackupType type) throws BackupManagerException;
 
     public abstract void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException;
 }

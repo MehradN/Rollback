@@ -102,6 +102,7 @@ public class CommonBackupManager extends BackupManager {
 
     public void deleteBackup(int backupID, BackupType type)
         throws BackupIOException {
+        assert type.automatedDeletion;
         Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type.toString());
         Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
         RollbackBackup backup = this.world.getBackup(backupID, type);
@@ -114,7 +115,7 @@ public class CommonBackupManager extends BackupManager {
                 Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
             this.eventAnnouncer.onSuccessfulDelete();
         } catch (IOException e) {
-            showError("rollback.deleteBackup.failed", "Failed to delete the backup files!", e, BackupIOException::new);
+            showError("rollback.error.backupDeletion", "Failed to delete the backup files!", e, BackupIOException::new);
             return;
         }
 
@@ -122,48 +123,44 @@ public class CommonBackupManager extends BackupManager {
         saveData();
     }
 
-    public void createNormalBackup()
-        throws BackupIOException {
-        Rollback.LOGGER.info("Creating a normal backup...");
-        try {
-            BackupInfo backupInfo = this.gofer.makeBackup();
-            this.eventAnnouncer.onSuccessfulBackup(backupInfo.size());
-        } catch (IOException e) {
-            showError("selectWorld.edit.backupFailed", "Failed to create a normal backup!", e, BackupIOException::new);
-        }
-    }
-
-    public void createSpecialBackup(String name, BackupType type)
-        throws BackupMinecraftException, BackupIOException {
-        if (name != null && (name.isBlank() || name.length() > MAX_NAME_LENGTH))
+    public void createBackup(String name, BackupType type)
+        throws BackupIOException, BackupMinecraftException {
+        if (name != null && (!type.list || name.isBlank()))
+            name = null;
+        if (name != null && name.length() > MAX_NAME_LENGTH)
             throw new IllegalArgumentException("Backup name is too long");
 
-        Rollback.LOGGER.info("Creating a rollback backup...");
+        Rollback.LOGGER.info("Creating a {} backup...", type);
         String levelID = this.gofer.getLevelID();
-        Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
-        int id = this.world.lastID + 1;
 
-        while (backups.size() >= RollbackConfig.maxBackupsPerWorld(type))
-            deleteBackup(Collections.min(backups.keySet()), type);
-        deleteGhostIcons();
+        if (type.automatedDeletion) {
+            Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
+            while (backups.size() >= RollbackConfig.maxBackupsPerWorld(type))
+                deleteBackup(Collections.min(backups.keySet()), type);
+            deleteGhostIcons();
+        }
 
         Rollback.LOGGER.debug("Saving the world...");
         try {
             this.gofer.saveEverything();
         } catch (MinecraftException e) {
-            showError("rollback.createBackup.failed", "Failed to save the world!", e, BackupMinecraftException::new);
+            showError("rollback.error.backupCreation", "Failed to save the world!", e, BackupMinecraftException::new);
             return;
         }
 
-        Rollback.LOGGER.debug("Creating a backup...");
+        Rollback.LOGGER.debug("Creating the backup...");
         BackupInfo backupInfo;
         try {
             backupInfo = this.gofer.makeBackup();
             this.eventAnnouncer.onSuccessfulBackup(backupInfo.size());
         } catch (IOException e) {
-            showError("rollback.createBackup.failed", "Failed to create a backup!", e, BackupIOException::new);
+            showError("rollback.error.backupCreation", "Failed to create a backup!", e, BackupIOException::new);
             return;
         }
+
+        if (!type.list)
+            return;
+        int id = this.world.lastID + 1;
 
         Rollback.LOGGER.debug("Moving the backup...");
         Path path1 = backupInfo.backupPath();
@@ -179,7 +176,7 @@ public class CommonBackupManager extends BackupManager {
                 Files.deleteIfExists(path1);
             } catch (IOException ignored) { }
 
-            this.eventAnnouncer.onError("rollback.createBackup.failed", "Failed to move the backup file!");
+            this.eventAnnouncer.onError("rollback.error.backupCreation", "Failed to move the backup file!");
             throw new BackupIOException("Failed to move the backup file!", e);
         }
 
@@ -190,13 +187,14 @@ public class CommonBackupManager extends BackupManager {
         backup.creationDate = LocalDateTime.now();
         backup.daysPlayed = this.gofer.getDaysPlayed();
         backup.name = name;
-        backups.put(id, backup);
+        this.world.getBackups(type).put(id, backup);
         this.world.lastID++;
         saveData();
     }
 
     public void rollbackToBackup(int backupID, BackupType type)
         throws BackupIOException {
+        assert type.rollback;
         RollbackBackup backup = this.world.getBackup(backupID, type);
         Rollback.LOGGER.info("Rolling back to backup \"{}\"...", backup.backupPath.toString());
 
@@ -204,7 +202,7 @@ public class CommonBackupManager extends BackupManager {
         try {
             this.gofer.deleteLevel();
         } catch (IOException e) {
-            showError("rollback.rollbackToBackup.failed", "Failed to delete the current save!", e, BackupIOException::new);
+            showError("rollback.error.rollbackToBackup", "Failed to delete the current save!", e, BackupIOException::new);
             return;
         }
 
@@ -227,7 +225,7 @@ public class CommonBackupManager extends BackupManager {
                 }
             }
         } catch (IOException e) {
-            showError("rollback.rollbackToBackup.failed", "Failed to extract the backup to the save directory!", e, BackupIOException::new);
+            showError("rollback.error.rollbackToBackup", "Failed to extract the backup to the save directory!", e, BackupIOException::new);
         }
     }
 

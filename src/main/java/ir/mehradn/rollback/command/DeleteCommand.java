@@ -27,12 +27,12 @@ public class DeleteCommand {
     }
 
     private static int deleteBackup(CommandSourceStack source, BackupType type, int index) throws CommandSyntaxException {
+        assert type.manualDeletion;
         CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
         List<Integer> ids = new ArrayList<>(backupManager.world.getBackups(type).keySet());
-        String typeString = type.getName();
 
         if (ids.isEmpty()) {
-            source.sendSystemMessage(Component.translatable("rollback.command.noBackups." + typeString));
+            source.sendSystemMessage(Component.translatable("rollback.command.noBackups." + type));
             return 0;
         }
 

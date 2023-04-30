@@ -16,6 +16,7 @@ public class RollbackWorld {
     @SerializedName("backups") public Map<Integer, RollbackBackup> commandBackups = new HashMap<>();
 
     public RollbackBackup getBackup(int backupID, BackupType type) {
+        assert type.list;
         Map<Integer, RollbackBackup> backups = getBackups(type);
         if (!backups.containsKey(backupID))
             throw new IllegalArgumentException("Invalid backupID!");
@@ -23,6 +24,7 @@ public class RollbackWorld {
     }
 
     public Map<Integer, RollbackBackup> getBackups(BackupType type) {
+        assert type.list;
         Map<Integer, RollbackBackup> backups;
         switch (type) {
             case AUTOMATED -> backups = this.automatedBackups;

@@ -15,37 +15,28 @@ import net.minecraft.network.chat.Component;
 public class CreateCommands {
     public static LiteralArgumentBuilder<CommandSourceStack> createCommand() {
         return Commands.literal("create")
-            .executes((ctx) -> createBackup(ctx.getSource(), ""))
+            .executes((ctx) -> createBackup(ctx.getSource(), null, BackupType.COMMAND))
             .then(Commands.argument("name", StringArgumentType.string())
-                .executes((ctx) -> createBackup(ctx.getSource(), StringArgumentType.getString(ctx, "name"))));
+                .executes((ctx) -> createBackup(ctx.getSource(), StringArgumentType.getString(ctx, "name"), BackupType.COMMAND)));
     }
 
     public static LiteralArgumentBuilder<CommandSourceStack> createManualBackupCommand() {
         return Commands.literal("create-manual-backup")
-            .executes((ctx) -> createManualBackup(ctx.getSource()));
+            .executes((ctx) -> createBackup(ctx.getSource(), null, BackupType.MANUAL));
     }
 
-    private static int createBackup(CommandSourceStack source, String name) throws CommandSyntaxException {
+    private static int createBackup(CommandSourceStack source, String name, BackupType type) throws CommandSyntaxException {
+        assert type.manualCreation;
         CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
 
-        if (name.isBlank())
+        if (name != null && (!type.list || name.isBlank()))
             name = null;
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
             throw new SimpleCommandExceptionType(Component.translatable("rollback.command.create.nameTooLong")).create();
 
         try {
-            backupManager.createSpecialBackup(name, BackupType.COMMAND);
-            return 1;
-        } catch (BackupManagerException e) {
-            return 0;
-        }
-    }
-
-    private static int createManualBackup(CommandSourceStack source) {
-        CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
-
-        try {
-            backupManager.createNormalBackup();
+            backupManager.createBackup(name, type);
+            source.sendSuccess(Component.translatable("rollback.command.create.success." + type), true);
             return 1;
         } catch (BackupManagerException e) {
             return 0;
