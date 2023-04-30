@@ -26,9 +26,11 @@ public abstract class BackupManager {
 
     public abstract void deleteWorld() throws BackupManagerException;
 
+    public abstract void createBackup(String name, BackupType type) throws BackupManagerException;
+
     public abstract void deleteBackup(int backupID, BackupType type) throws BackupManagerException;
 
-    public abstract void createBackup(String name, BackupType type) throws BackupManagerException;
+    public abstract void convertBackup(int backupID, BackupType from, String name, BackupType to) throws BackupManagerException;
 
     public abstract void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException;
 }

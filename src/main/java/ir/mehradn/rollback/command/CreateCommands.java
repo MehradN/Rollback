@@ -27,12 +27,12 @@ public class CreateCommands {
 
     private static int createBackup(CommandSourceStack source, String name, BackupType type) throws CommandSyntaxException {
         assert type.manualCreation;
-        CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
-
         if (name != null && (!type.list || name.isBlank()))
             name = null;
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
             throw new SimpleCommandExceptionType(Component.translatable("rollback.command.create.nameTooLong")).create();
+
+        CommonBackupManager backupManager = RollbackCommand.getBackupManager(source);
 
         try {
             backupManager.createBackup(name, type);

@@ -17,24 +17,25 @@ public class CommandEventAnnouncer implements EventAnnouncer {
     }
 
     public void onError(String translatableTitle, String literalInfo) {
-        Component message = Component.translatable("rollback.command.error",
+        sendMessage(Component.translatable("rollback.command.error",
             Component.translatable(translatableTitle).withStyle(ChatFormatting.BOLD),
             literalInfo
-        ).withStyle(ChatFormatting.RED);
-        this.server.sendSystemMessage(message);
-        if (this.source != null)
-            this.source.sendSystemMessage(message);
+        ).withStyle(ChatFormatting.RED));
     }
 
     public void onSuccessfulBackup(long size) {
-        Component message = Component.translatable("rollback.command.create.successfulBackup", size / 1048576);
-        this.server.sendSystemMessage(message);
-        if (this.source != null)
-            this.source.sendSystemMessage(message);
+        sendMessage(Component.translatable("rollback.command.create.successfulBackup", size / 1048576));
     }
 
     public void onSuccessfulDelete() {
-        Component message = Component.translatable("rollback.command.delete.successfulDelete");
+        sendMessage(Component.translatable("rollback.command.delete.successfulDelete"));
+    }
+
+    public void onSuccessfulConvert(BackupType from, BackupType to) {
+        sendMessage(Component.translatable("rollback.command.convert.successfulConvert." + from + "." + to));
+    }
+
+    private void sendMessage(Component message) {
         this.server.sendSystemMessage(message);
         if (this.source != null)
             this.source.sendSystemMessage(message);

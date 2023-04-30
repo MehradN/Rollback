@@ -6,4 +6,6 @@ public class NullEventAnnouncer implements EventAnnouncer {
     public void onSuccessfulBackup(long size) { }
 
     public void onSuccessfulDelete() { }
+
+    public void onSuccessfulConvert(BackupType from, BackupType to) { }
 }

@@ -17,6 +17,7 @@ public class RollbackCommand {
                 .then(CreateCommands.createCommand())
                 .then(CreateCommands.createManualBackupCommand())
                 .then(DeleteCommand.deleteCommand())
+                .then(ConvertCommand.convertCommand())
                 .then(ListCommand.listCommand()));
         });
     }

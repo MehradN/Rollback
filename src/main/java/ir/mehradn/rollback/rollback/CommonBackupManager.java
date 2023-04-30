@@ -22,6 +22,7 @@ import java.util.zip.ZipFile;
 public class CommonBackupManager extends BackupManager {
     public EventAnnouncer eventAnnouncer;
     private final Gofer gofer;
+    private final Path backupDirectory;
     private final Path rollbackDirectory;
     private final Path iconsDirectory;
     private final Path saveDirectory;
@@ -30,7 +31,8 @@ public class CommonBackupManager extends BackupManager {
     public CommonBackupManager(Gofer gofer) {
         this.gofer = gofer;
         this.eventAnnouncer = new NullEventAnnouncer();
-        this.rollbackDirectory = this.gofer.getBackupDirectory().resolve("rollbacks");
+        this.backupDirectory = this.gofer.getBackupDirectory();
+        this.rollbackDirectory = this.backupDirectory.resolve("rollbacks");
         this.iconsDirectory = this.rollbackDirectory.resolve("icons");
         this.saveDirectory = this.gofer.getSaveDirectory();
     }
@@ -100,29 +102,6 @@ public class CommonBackupManager extends BackupManager {
         saveData();
     }
 
-    public void deleteBackup(int backupID, BackupType type)
-        throws BackupIOException {
-        assert type.automatedDeletion;
-        Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type.toString());
-        Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
-        RollbackBackup backup = this.world.getBackup(backupID, type);
-
-        Rollback.LOGGER.debug("Deleting the backup files...");
-        try {
-            if (backup.backupPath != null)
-                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
-            if (backup.iconPath != null)
-                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
-            this.eventAnnouncer.onSuccessfulDelete();
-        } catch (IOException e) {
-            showError("rollback.error.backupDeletion", "Failed to delete the backup files!", e, BackupIOException::new);
-            return;
-        }
-
-        backups.remove(backupID);
-        saveData();
-    }
-
     public void createBackup(String name, BackupType type)
         throws BackupIOException, BackupMinecraftException {
         if (name != null && (!type.list || name.isBlank()))
@@ -171,7 +150,7 @@ public class CommonBackupManager extends BackupManager {
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to move the backup file!", e);
 
-            Rollback.LOGGER.info("Deleting the backup file...");
+            Rollback.LOGGER.debug("Deleting the backup file...");
             try {
                 Files.deleteIfExists(path1);
             } catch (IOException ignored) { }
@@ -189,6 +168,75 @@ public class CommonBackupManager extends BackupManager {
         backup.name = name;
         this.world.getBackups(type).put(id, backup);
         this.world.lastID++;
+        saveData();
+    }
+
+    public void deleteBackup(int backupID, BackupType type)
+        throws BackupIOException {
+        assert type.automatedDeletion;
+        Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type.toString());
+        Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
+        RollbackBackup backup = this.world.getBackup(backupID, type);
+
+        Rollback.LOGGER.debug("Deleting the backup files...");
+        try {
+            if (backup.backupPath != null)
+                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
+            if (backup.iconPath != null)
+                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
+            this.eventAnnouncer.onSuccessfulDelete();
+        } catch (IOException e) {
+            showError("rollback.error.backupDeletion", "Failed to delete the backup files!", e, BackupIOException::new);
+            return;
+        }
+
+        backups.remove(backupID);
+        saveData();
+    }
+
+    public void convertBackup(int backupID, BackupType from, String name, BackupType to)
+        throws BackupIOException {
+        assert from.convertFrom && to.convertTo;
+        assert !from.equals(to);
+        if (name != null && (!to.list || name.isBlank()))
+            name = null;
+        if (name != null && name.length() > MAX_NAME_LENGTH)
+            throw new IllegalArgumentException("Backup name is too long");
+
+        Rollback.LOGGER.info("Converting the backup #{} from {} to {}", backupID, from, to);
+        RollbackBackup backup = this.world.getBackup(backupID, from);
+
+        if (to == BackupType.MANUAL) {
+            if (backup.iconPath != null) {
+                Rollback.LOGGER.debug("Deleting the icon...");
+                try {
+                    Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
+                } catch (IOException e) {
+                    showError("rollback.error.backupConversion", "Failed to delete the icon!", e, BackupIOException::new);
+                    return;
+                }
+            }
+            if (backup.backupPath != null) {
+                Rollback.LOGGER.debug("Moving the backup file...");
+                try {
+                    String fileName = GSON.toJson(LocalDateTime.now()) + "_" + this.gofer.getLevelID();
+                    Path dest = this.rollbackDirectory.resolve(FileUtil.findAvailableName(this.rollbackDirectory, fileName, ".zip"));
+                    Files.move(backup.backupPath, dest);
+                } catch (IOException e) {
+                    showError("rollback.error.backupConversion", "Failed to move the backup files!", e, BackupIOException::new);
+                    return;
+                }
+            }
+        }
+        this.eventAnnouncer.onSuccessfulConvert(from, to);
+
+        Rollback.LOGGER.debug("Updating the metadata,,,");
+        this.world.getBackups(from).remove(backupID);
+        if (to.list) {
+            int id = ++this.world.lastID;
+            backup.name = name;
+            this.world.getBackups(to).put(id, backup);
+        }
         saveData();
     }
 

@@ -6,4 +6,6 @@ public interface EventAnnouncer {
     void onSuccessfulBackup(long size);
 
     void onSuccessfulDelete();
+
+    void onSuccessfulConvert(BackupType from, BackupType to);
 }

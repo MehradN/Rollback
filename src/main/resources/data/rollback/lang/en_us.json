@@ -1,6 +1,7 @@
 {
   "rollback.error.backupCreation": "Failed to create a backup",
   "rollback.error.backupDeletion": "Failed to delete the backup",
+  "rollback.error.backupConversion": "Failed to convert the backup",
   "rollback.error.rollbackToBackup": "Failed to rollback to the backup",
   "rollback.command.error": "An error occurred:\n    %s\n    %s",
   "rollback.command.invalidIndex": "Invalid index",
@@ -11,6 +12,9 @@
   "rollback.command.create.success.command": "Created a command backup successfully",
   "rollback.command.create.success.manual": "Created a manual backup successfully",
   "rollback.command.delete.successfulDelete": "Deleted the command backup successfully",
+  "rollback.command.convert.successfulConvert.automated.command": "Converted the automated backup to a command backup successfully",
+  "rollback.command.convert.successfulConvert.automated.manual": "Converted the automated backup to a manual backup successfully",
+  "rollback.command.convert.successfulConvert.command.manual": "Converted the command backup to a manual backup successfully",
   "rollback.command.list.title.automated": "Automated Backups:",
   "rollback.command.list.title.command": "Command Backups:",
   "rollback.command.list.item": "#%s  Created: %s  Day %d",
