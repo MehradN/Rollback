@@ -7,6 +7,7 @@ import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.rollback.exception.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
 import ir.mehradn.rollback.rollback.metadata.RollbackData;
+import ir.mehradn.rollback.util.gson.LocalDateTimeAdapter;
 import net.minecraft.FileUtil;
 import java.io.*;
 import java.nio.file.Files;
@@ -174,7 +175,7 @@ public class CommonBackupManager extends BackupManager {
     public void deleteBackup(int backupID, BackupType type)
         throws BackupIOException {
         assert type.automatedDeletion;
-        Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type.toString());
+        Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type);
         Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
         RollbackBackup backup = this.world.getBackup(backupID, type);
 
@@ -219,9 +220,10 @@ public class CommonBackupManager extends BackupManager {
             if (backup.backupPath != null) {
                 Rollback.LOGGER.debug("Moving the backup file...");
                 try {
-                    String fileName = GSON.toJson(LocalDateTime.now()) + "_" + this.gofer.getLevelID();
-                    Path dest = this.rollbackDirectory.resolve(FileUtil.findAvailableName(this.rollbackDirectory, fileName, ".zip"));
-                    Files.move(backup.backupPath, dest);
+                    String fileName = LocalDateTime.now().format(LocalDateTimeAdapter.TIME_FORMATTER) + "_" + this.gofer.getLevelID();
+                    Path source = this.rollbackDirectory.resolve(backup.backupPath);
+                    Path dest = this.backupDirectory.resolve(FileUtil.findAvailableName(this.backupDirectory, fileName, ".zip"));
+                    Files.move(source, dest);
                 } catch (IOException e) {
                     showError("rollback.error.backupConversion", "Failed to move the backup files!", e, BackupIOException::new);
                     return;

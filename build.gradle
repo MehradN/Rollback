@@ -63,6 +63,10 @@ processResources {
 	}
 }
 
+tasks.withType(JavaExec).configureEach {
+	enableAssertions = true
+}
+
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = 17
 }

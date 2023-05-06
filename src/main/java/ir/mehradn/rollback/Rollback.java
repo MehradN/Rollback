@@ -1,6 +1,6 @@
 package ir.mehradn.rollback;
 
-import ir.mehradn.rollback.command.RollbackCommand;
+import ir.mehradn.rollback.event.RollbackCommand;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

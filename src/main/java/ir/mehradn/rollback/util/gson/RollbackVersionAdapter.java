@@ -8,6 +8,7 @@ public class RollbackVersionAdapter implements JsonSerializer<RollbackVersion>, 
     public RollbackVersion deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
         return RollbackVersion.fromString(json.getAsString());
     }
+
     public JsonElement serialize(RollbackVersion obj, Type type, JsonSerializationContext context) {
         return new JsonPrimitive(obj.toString());
     }

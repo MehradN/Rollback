@@ -1,10 +1,9 @@
 package ir.mehradn.rollback.rollback;
 
 public enum BackupType {
-    AUTOMATED(false, false, true, true, true, true, false),
+    AUTOMATED(false, true, true, true, true, true, false),
     COMMAND(true, true, true, true, true, true, true),
     MANUAL(true, false, false, false, false, false, true);
-
     public final boolean manualCreation;
     public final boolean manualDeletion;
     public final boolean automatedDeletion;
