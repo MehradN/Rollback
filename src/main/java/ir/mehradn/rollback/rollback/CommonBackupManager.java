@@ -3,7 +3,6 @@ package ir.mehradn.rollback.rollback;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ir.mehradn.rollback.Rollback;
-import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.rollback.exception.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
 import ir.mehradn.rollback.rollback.metadata.RollbackData;
@@ -38,7 +37,7 @@ public class CommonBackupManager extends BackupManager {
         this.saveDirectory = this.gofer.getSaveDirectory();
     }
 
-    public void loadData()
+    public void loadWorld()
         throws BackupIOException {
         Rollback.LOGGER.info("Loading the metadata file...");
         Path metadataPath = this.rollbackDirectory.resolve("rollbacks.json");
@@ -51,7 +50,7 @@ public class CommonBackupManager extends BackupManager {
                 updater.update();
                 save = true;
             }
-            this.data = GSON.fromJson(json, RollbackData.class);
+            this.data = Rollback.GSON.fromJson(json, RollbackData.class);
         } catch (FileNotFoundException e) {
             Rollback.LOGGER.warn("Metadata file not found! Creating a new one...");
             this.data = new RollbackData();
@@ -62,11 +61,12 @@ public class CommonBackupManager extends BackupManager {
         }
 
         this.world = this.data.getWorld(this.gofer.getLevelID());
+        this.world.config.setBackupManager(this);
         if (save)
-            saveData();
+            saveWorld();
     }
 
-    public void saveData()
+    public void saveWorld()
         throws BackupIOException {
         Rollback.LOGGER.debug("Saving the metadata file...");
         Path metadataPath = this.rollbackDirectory.resolve("rollbacks.json");
@@ -74,17 +74,12 @@ public class CommonBackupManager extends BackupManager {
             Files.createDirectories(this.rollbackDirectory);
             Files.createDirectories(this.iconsDirectory);
             try (FileWriter writer = new FileWriter(metadataPath.toFile())) {
-                GSON.toJson(this.data, writer);
+                Rollback.GSON.toJson(this.data, writer);
             }
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);
             throw new BackupIOException("Failed to save the metadata file!", e);
         }
-    }
-
-    public void updateWorld()
-        throws BackupIOException {
-        saveData();
     }
 
     public void deleteWorld()
@@ -100,7 +95,7 @@ public class CommonBackupManager extends BackupManager {
             deleteBackup(commandIDs.iterator().next(), BackupType.COMMAND);
 
         this.data.worlds.remove(levelID);
-        saveData();
+        saveWorld();
     }
 
     public void createBackup(String name, BackupType type)
@@ -115,7 +110,7 @@ public class CommonBackupManager extends BackupManager {
 
         if (type.automatedDeletion) {
             Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
-            while (backups.size() >= RollbackConfig.maxBackupsPerWorld(type))
+            while (backups.size() >= this.world.config.getMaxBackupsForType(type))
                 deleteBackup(Collections.min(backups.keySet()), type);
             deleteGhostIcons();
         }
@@ -169,7 +164,7 @@ public class CommonBackupManager extends BackupManager {
         backup.name = name;
         this.world.getBackups(type).put(id, backup);
         this.world.lastID++;
-        saveData();
+        saveWorld();
     }
 
     public void deleteBackup(int backupID, BackupType type)
@@ -192,7 +187,7 @@ public class CommonBackupManager extends BackupManager {
         }
 
         backups.remove(backupID);
-        saveData();
+        saveWorld();
     }
 
     public void convertBackup(int backupID, BackupType from, String name, BackupType to)
@@ -239,7 +234,7 @@ public class CommonBackupManager extends BackupManager {
             backup.name = name;
             this.world.getBackups(to).put(id, backup);
         }
-        saveData();
+        saveWorld();
     }
 
     public void rollbackToBackup(int backupID, BackupType type)

@@ -22,6 +22,9 @@
     "client": [
       "ir.mehradn.rollback.RollbackClient"
     ],
+    "server": [
+      "ir.mehradn.rollback.RollbackServer"
+    ],
     "preLaunch": [
       "ir.mehradn.rollback.RollbackPreLaunch"
     ]

@@ -12,6 +12,7 @@ public class RollbackWorld {
     @SerializedName("since_day") public int ticksSinceLastMorning = 0;
     @SerializedName("since_backup") public int ticksSinceLastBackup = 0;
     @SerializedName("last_id") public int lastID = 0;
+    @SerializedName("config") public RollbackWorldConfig config = new RollbackWorldConfig();
     @SerializedName("rollbacks") public Map<Integer, RollbackBackup> automatedBackups = new HashMap<>();
     @SerializedName("backups") public Map<Integer, RollbackBackup> commandBackups = new HashMap<>();
 

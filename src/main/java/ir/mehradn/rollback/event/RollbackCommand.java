@@ -72,7 +72,7 @@ public class RollbackCommand {
 
     private static int getMaxCount(BuildContext context, String name) {
         BackupType type = getType(context, name);
-        return RollbackConfig.maxBackupsPerWorld(type);
+        return RollbackConfig.getMaxMaxBackups(type);
     }
 
     private static List<Integer> getIDList(ExecutionContext context, String name) throws CommandSyntaxException {

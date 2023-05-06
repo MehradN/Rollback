@@ -47,7 +47,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         this.backupManager.eventAnnouncer = new CommandEventAnnouncer(this);
 
         try {
-            this.backupManager.loadData();
+            this.backupManager.loadWorld();
         } catch (BackupIOException e) {
             throw new RuntimeException(e);
         }
