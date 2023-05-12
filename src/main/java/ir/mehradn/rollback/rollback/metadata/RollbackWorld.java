@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RollbackWorld {
-    @SerializedName("automated") public boolean automatedBackupsEnabled = false;
     @SerializedName("prompted") public boolean prompted = false;
     @SerializedName("days_passed") public int daysSinceLastBackup = 0;
     @SerializedName("since_day") public int ticksSinceLastMorning = 0;

@@ -47,9 +47,17 @@ public class MetadataUpdater {
         JsonObject worlds = this.json.getAsJsonObject("worlds");
         for (String levelID : worlds.keySet()) {
             JsonObject world = worlds.getAsJsonObject(levelID);
+
+            if (world.has("automated")) {
+                boolean value = world.getAsJsonPrimitive("automated").getAsBoolean();
+                world.remove("automated");
+                JsonObject config = new JsonObject();
+                config.addProperty("backupEnabled", value);
+                world.add("config", config);
+            }
+
             JsonArray oldBackups = world.getAsJsonArray("backups");
             JsonObject newBackups = new JsonObject();
-
             for (int i = 0; i < world.size(); i++)
                 newBackups.add(String.valueOf(i + 1), oldBackups.get(i));
             world.remove("backups");

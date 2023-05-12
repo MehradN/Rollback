@@ -62,7 +62,7 @@ public class CommonBackupManager implements BackupManager {
                 updater.update();
                 save = true;
             }
-            data = Rollback.GSON.fromJson(json, RollbackData.class);
+            data = GSON.fromJson(json, RollbackData.class);
         } catch (FileNotFoundException e) {
             Rollback.LOGGER.warn("Metadata file not found! Creating a new one...");
             data = new RollbackData();
@@ -88,7 +88,7 @@ public class CommonBackupManager implements BackupManager {
             Files.createDirectories(this.rollbackDirectory);
             Files.createDirectories(this.iconsDirectory);
             try (FileWriter writer = new FileWriter(metadataPath.toFile())) {
-                Rollback.GSON.toJson(this.data, writer);
+                GSON.toJson(this.data, writer);
             }
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);

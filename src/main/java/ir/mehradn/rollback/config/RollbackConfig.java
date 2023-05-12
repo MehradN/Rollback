@@ -1,7 +1,6 @@
 package ir.mehradn.rollback.config;
 
 import com.google.gson.*;
-import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
 import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
@@ -18,6 +17,7 @@ public abstract class RollbackConfig {
     public final ConfigEntry<Integer> backupFrequency;
     public final ConfigEntry<TimerMode> timerMode;
     protected List<ConfigEntry<?>> entries;
+    private static final Gson GSON = new GsonBuilder().create();
     private boolean locked = false;
 
     protected RollbackConfig(ConfigEntry<Boolean> backupEnabled, ConfigEntry<Integer> maxBackups, ConfigEntry<Integer> backupFrequency,
@@ -55,7 +55,7 @@ public abstract class RollbackConfig {
         JsonObject json = new JsonObject();
         for (ConfigEntry<?> entry : this.getEntries())
             if (!entry.needsFallback())
-                json.add(entry.name, Rollback.GSON.toJsonTree(entry.get(), entry.type));
+                json.add(entry.name, GSON.toJsonTree(entry.get(), entry.type));
         return json;
     }
 
@@ -66,7 +66,7 @@ public abstract class RollbackConfig {
 
     private <T> void setEntryFromJson(ConfigEntry<T> entry, JsonElement json) {
         if (json != null)
-            entry.set(Rollback.GSON.fromJson(json, entry.type));
+            entry.set(GSON.fromJson(json, entry.type));
         else
             entry.reset();
     }
