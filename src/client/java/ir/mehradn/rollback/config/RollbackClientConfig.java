@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Environment(EnvType.CLIENT)
-public class RollbackClientConfig extends RollbackServerConfig {
+public class RollbackClientConfig extends RollbackDefaultConfig {
     public final ConfigEntry<Boolean> replaceButton = new ConfigEntry<>("replaceButton", Boolean.class, true, null);
     public final ConfigEntry<Boolean> promptEnabled = new ConfigEntry<>("promptEnabled", Boolean.class, true, null);
     private static final Gson GSON = new GsonBuilder()
@@ -36,6 +36,6 @@ public class RollbackClientConfig extends RollbackServerConfig {
 
     @Override
     public void save() throws IOException {
-        saveWithGson(GSON);
+        saveWith(GSON);
     }
 }

@@ -37,4 +37,8 @@ public interface BackupManager {
     void convertBackup(int backupID, BackupType from, String name, BackupType to) throws BackupManagerException;
 
     void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException;
+
+    void saveConfig() throws BackupManagerException;
+
+    void copyConfigToDefault() throws BackupManagerException;
 }

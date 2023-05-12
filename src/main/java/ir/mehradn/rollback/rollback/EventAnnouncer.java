@@ -8,4 +8,6 @@ public interface EventAnnouncer {
     void onSuccessfulDelete();
 
     void onSuccessfulConvert(BackupType from, BackupType to);
+
+    void onSuccessfulConfig(boolean isDefault);
 }

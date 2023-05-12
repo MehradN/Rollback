@@ -1,7 +1,7 @@
 package ir.mehradn.rollback;
 
 import ir.mehradn.rollback.config.RollbackClientConfig;
-import ir.mehradn.rollback.config.RollbackConfig;
+import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -11,6 +11,6 @@ public class RollbackClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         Rollback.LOGGER.info("Loading config...");
-        RollbackConfig.DEFAULT = RollbackClientConfig.load();
+        RollbackDefaultConfig.defaultSupplier = RollbackClientConfig::load;
     }
 }

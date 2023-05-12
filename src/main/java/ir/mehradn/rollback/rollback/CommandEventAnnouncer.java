@@ -40,6 +40,11 @@ public class CommandEventAnnouncer implements EventAnnouncer {
         sendMessage(Component.translatable("rollback.command.convert.successfulConvert." + from + "." + to));
     }
 
+    @Override
+    public void onSuccessfulConfig(boolean isDefault) {
+        sendMessage(Component.translatable("rollback.command.config.successfulChange." + (isDefault ? "default" : "world")));
+    }
+
     private void sendMessage(Component message) {
         this.server.sendSystemMessage(message);
         if (this.source != null)

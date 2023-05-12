@@ -11,7 +11,6 @@ public abstract class RollbackConfig {
     public static final int MAX_AUTOMATED = 10;
     public static final int MAX_COMMAND = 99;
     public static final int MAX_FREQUENCY = 100;
-    public static RollbackConfig DEFAULT;
     public final ConfigEntry<Boolean> backupEnabled;
     public final ConfigEntry<Integer> maxBackups;
     public final ConfigEntry<Integer> backupFrequency;
@@ -41,6 +40,13 @@ public abstract class RollbackConfig {
         return getMaxMaxBackups(type);
     }
 
+    public void copyFrom(RollbackConfig config) {
+        this.backupEnabled.copy(config.backupEnabled);
+        this.maxBackups.copy(config.maxBackups);
+        this.backupFrequency.copy(config.backupFrequency);
+        this.timerMode.copy(config.timerMode);
+    }
+
     public List<ConfigEntry<?>> getEntries() {
         if (!this.locked) {
             this.entries = List.copyOf(this.entries);
@@ -48,8 +54,6 @@ public abstract class RollbackConfig {
         }
         return this.entries;
     }
-
-    public abstract void save() throws Exception;
 
     protected JsonObject toJson() {
         JsonObject json = new JsonObject();

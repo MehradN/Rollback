@@ -3,6 +3,7 @@ package ir.mehradn.rollback.rollback;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ir.mehradn.rollback.Rollback;
+import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BMECause;
 import ir.mehradn.rollback.exception.BackupManagerException;
@@ -25,6 +26,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class CommonBackupManager implements BackupManager {
+    public final RollbackDefaultConfig defaultConfig;
     @NotNull public EventAnnouncer eventAnnouncer = new NullEventAnnouncer();
     private final Gofer gofer;
     private final Path backupDirectory;
@@ -36,6 +38,7 @@ public class CommonBackupManager implements BackupManager {
 
     public CommonBackupManager(Gofer gofer) {
         this.gofer = gofer;
+        this.defaultConfig = RollbackDefaultConfig.defaultSupplier.get();
         this.backupDirectory = gofer.getBackupDirectory();
         this.rollbackDirectory = this.backupDirectory.resolve("rollbacks");
         this.iconsDirectory = this.rollbackDirectory.resolve("icons");
@@ -74,7 +77,7 @@ public class CommonBackupManager implements BackupManager {
 
         this.data = data;
         this.world = data.getWorld(this.gofer.getLevelID());
-        this.world.config.setBackupManager(this);
+        this.world.config.setDefaultConfig(this.defaultConfig);
         if (save)
             saveWorld();
     }
@@ -280,6 +283,25 @@ public class CommonBackupManager implements BackupManager {
         } catch (IOException e) {
             throw showError("rollback.error.rollbackToBackup", "Failed to extract the backup to the save directory!",
                 BMECause.IO_EXCEPTION, e);
+        }
+    }
+
+    @Override
+    public void saveConfig() throws BackupManagerException {
+        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
+        saveWorld();
+        this.eventAnnouncer.onSuccessfulConfig(false);
+    }
+
+    @Override
+    public void copyConfigToDefault() throws BackupManagerException {
+        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
+        this.defaultConfig.copyFrom(this.world.config);
+        try {
+            this.defaultConfig.save();
+            this.eventAnnouncer.onSuccessfulConfig(true);
+        } catch (IOException e) {
+            throw showError("rollback.error.saveConfig", "Failed to save the config file!", BMECause.IO_EXCEPTION, e);
         }
     }
 

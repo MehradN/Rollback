@@ -3,6 +3,7 @@
   "rollback.error.backupDeletion": "Failed to delete the backup",
   "rollback.error.backupConversion": "Failed to convert the backup",
   "rollback.error.rollbackToBackup": "Failed to rollback to the backup",
+  "rollback.error.saveConfig": "Failed to save the config",
   "rollback.command.error": "An error occurred:\n    %s\n    %s",
   "rollback.command.nameTooLong": "The chosen name is too long (at most %d characters are allowed)",
   "rollback.command.invalidIndex": "Invalid index",
@@ -19,5 +20,7 @@
   "rollback.command.list.title.command": "Command Backups:",
   "rollback.command.list.item": "#%s  Created: %s  Day %d",
   "rollback.command.list.itemNamed": "#%s  Created: %s  Day %d  Name: %s",
-  "rollback.command.list.more": "and more..."
+  "rollback.command.list.more": "and more...",
+  "rollback.command.config.successfulConfig.world": "Updated the world config successfully",
+  "rollback.command.config.successfulConfig.default": "Saved the world config as default successfully"
 }

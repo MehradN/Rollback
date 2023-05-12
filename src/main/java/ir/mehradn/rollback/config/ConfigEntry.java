@@ -8,26 +8,21 @@ import org.jetbrains.annotations.Nullable;
 public class ConfigEntry <T> {
     public final String name;
     public final Class<T> type;
-    @Nullable private final ConfigEntry<T> fallback;
     @Nullable private final T defaultValue;
     private final Trimmer<T> trimmer;
+    @Nullable private ConfigEntry<T> fallback;
     @Nullable private T value;
 
-    public ConfigEntry(String name, Class<T> type, @NotNull T defaultValue, @Nullable Trimmer<T> trimmer) {
-        this(name, type, null, defaultValue, trimmer);
-    }
-
-    public ConfigEntry(String name, Class<T> type, @NotNull ConfigEntry<T> fallback, @Nullable Trimmer<T> trimmer) {
-        this(name, type, fallback, null, trimmer);
-    }
-
-    private ConfigEntry(String name, Class<T> type, @Nullable ConfigEntry<T> fallback, @Nullable T defaultValue, @Nullable Trimmer<T> trimmer) {
+    public ConfigEntry(String name, Class<T> type, @Nullable T defaultValue, @Nullable Trimmer<T> trimmer) {
         this.name = name;
         this.type = type;
-        this.fallback = fallback;
         this.defaultValue = defaultValue;
         this.value = defaultValue;
         this.trimmer = (trimmer == null ? new EmptyTrimmer<>() : trimmer);
+    }
+
+    public void setFallback(@NotNull ConfigEntry<T> fallback) {
+        this.fallback = fallback;
     }
 
     public T get() {
@@ -43,10 +38,16 @@ public class ConfigEntry <T> {
     }
 
     public void reset() {
-        if (this.defaultValue != null)
-            this.value = this.defaultValue;
-        else if (this.fallback != null)
-            this.value = null;
+        this.value = this.defaultValue;
+    }
+
+    public void copy(ConfigEntry<T> entry) {
+        if (entry.value != null)
+            this.value = entry.value;
+    }
+
+    public void forceCopy(ConfigEntry<T> entry) {
+        this.value = entry.value;
     }
 
     public boolean needsFallback() {
@@ -58,7 +59,7 @@ public class ConfigEntry <T> {
     }
 
     public interface Trimmer <T> {
-        T trim(T value);
+        @NotNull T trim(@NotNull T value);
     }
 
     public static class IntegerTrimmer implements Trimmer<Integer> {
@@ -71,14 +72,14 @@ public class ConfigEntry <T> {
         }
 
         @Override
-        public Integer trim(Integer value) {
+        public @NotNull Integer trim(@NotNull Integer value) {
             return Mth.clamp(value, this.min, this.max);
         }
     }
 
     private static class EmptyTrimmer <T> implements Trimmer<T> {
         @Override
-        public T trim(T value) {
+        public @NotNull T trim(@NotNull T value) {
             return value;
         }
     }

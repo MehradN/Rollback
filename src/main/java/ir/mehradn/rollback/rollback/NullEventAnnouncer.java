@@ -12,4 +12,7 @@ public class NullEventAnnouncer implements EventAnnouncer {
 
     @Override
     public void onSuccessfulConvert(BackupType from, BackupType to) { }
+
+    @Override
+    public void onSuccessfulConfig(boolean isDefault) { }
 }
