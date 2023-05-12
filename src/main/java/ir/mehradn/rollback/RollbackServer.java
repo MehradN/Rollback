@@ -8,6 +8,7 @@ import net.fabricmc.api.Environment;
 
 @Environment(EnvType.SERVER)
 public class RollbackServer implements DedicatedServerModInitializer {
+    @Override
     public void onInitializeServer() {
         Rollback.LOGGER.info("Loading config...");
         RollbackConfig.DEFAULT = RollbackServerConfig.load();

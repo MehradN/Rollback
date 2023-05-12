@@ -13,11 +13,13 @@ public final class ExecutionNode extends CommandNode {
         this.action = action;
     }
 
+    @Override
     public ArgumentBuilder<CommandSourceStack, ?> build(ArgumentBuilder<CommandSourceStack, ?> command, BuildContext context) {
         ExecutionContext.Builder builder = new ExecutionContext.Builder(context);
         return command.executes((ctx) -> this.action.execute(builder.build(ctx)));
     }
 
+    @FunctionalInterface
     public interface Executable {
         int execute(ExecutionContext context) throws CommandSyntaxException;
     }

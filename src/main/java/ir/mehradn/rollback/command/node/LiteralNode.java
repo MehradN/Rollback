@@ -12,6 +12,7 @@ public final class LiteralNode extends CommandNode {
         this.text = text;
     }
 
+    @Override
     public ArgumentBuilder<CommandSourceStack, ?> build(ArgumentBuilder<CommandSourceStack, ?> command, BuildContext context) {
         return command.then(buildNext(Commands.literal(this.text), context));
     }

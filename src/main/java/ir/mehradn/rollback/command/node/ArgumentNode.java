@@ -21,14 +21,15 @@ public final class ArgumentNode extends CommandNode {
         return b != null && b;
     }
 
-    public ArgumentBuilder<CommandSourceStack, ?> build(ArgumentBuilder<CommandSourceStack, ?> command, BuildContext context) {
-        context.set(this.name + EXISTS, true);
-        command = this.argument.build(command, this.name, getNext(), context);
-        context.remove(this.name + EXISTS);
-        return command;
-    }
-
     public void addArgument(BuildContext context) {
         context.addArgument(this.name, this.argument);
+    }
+
+    @Override
+    public ArgumentBuilder<CommandSourceStack, ?> build(ArgumentBuilder<CommandSourceStack, ?> command, BuildContext context) {
+        context.set(this.name + EXISTS, true);
+        this.argument.build(command, this.name, getNext(), context);
+        context.remove(this.name + EXISTS);
+        return command;
     }
 }

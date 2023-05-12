@@ -1,16 +1,13 @@
-package ir.mehradn.rollback.command.node;
+package ir.mehradn.rollback.command.node.skipper;
 
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import ir.mehradn.rollback.command.BuildContext;
+import ir.mehradn.rollback.command.node.SkipperNode;
 import net.minecraft.commands.CommandSourceStack;
 
-public final class OptionalNode extends CommandNode {
+public final class OptionalNode extends SkipperNode {
+    @Override
     public ArgumentBuilder<CommandSourceStack, ?> build(ArgumentBuilder<CommandSourceStack, ?> command, BuildContext context) {
-        return getNext().build(buildNext(command, context), context);
-    }
-
-    protected CommandNode getNext() {
-        assert this.next != null;
-        return this.next.getNext();
+        return buildNextNext(buildNext(command, context), context);
     }
 }

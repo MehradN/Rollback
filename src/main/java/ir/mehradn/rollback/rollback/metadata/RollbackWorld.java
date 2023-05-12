@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.rollback.metadata;
 
 import com.google.gson.annotations.SerializedName;
+import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.rollback.BackupType;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,21 +18,18 @@ public class RollbackWorld {
     @SerializedName("backups") public Map<Integer, RollbackBackup> commandBackups = new HashMap<>();
 
     public RollbackBackup getBackup(int backupID, BackupType type) {
-        assert type.list;
+        Assertion.argument(type.list, "Invalid type!");
         Map<Integer, RollbackBackup> backups = getBackups(type);
-        if (!backups.containsKey(backupID))
-            throw new IllegalArgumentException("Invalid backupID!");
+        Assertion.argument(backups.containsKey(backupID), "Invalid backupID!");
         return backups.get(backupID);
     }
 
     public Map<Integer, RollbackBackup> getBackups(BackupType type) {
-        assert type.list;
-        Map<Integer, RollbackBackup> backups;
-        switch (type) {
-            case AUTOMATED -> backups = this.automatedBackups;
-            case COMMAND -> backups = this.commandBackups;
-            default -> backups = new HashMap<>();
-        }
-        return backups;
+        Assertion.argument(type.list, "Invalid type!");
+        return switch (type) {
+            case AUTOMATED -> this.automatedBackups;
+            case COMMAND -> this.commandBackups;
+            default -> new HashMap<>();
+        };
     }
 }

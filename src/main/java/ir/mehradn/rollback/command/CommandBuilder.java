@@ -2,25 +2,31 @@ package ir.mehradn.rollback.command;
 
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import ir.mehradn.rollback.command.argument.CommandArgument;
-import ir.mehradn.rollback.command.node.*;
+import ir.mehradn.rollback.command.node.ArgumentNode;
+import ir.mehradn.rollback.command.node.CommandNode;
+import ir.mehradn.rollback.command.node.ExecutionNode;
+import ir.mehradn.rollback.command.node.LiteralNode;
+import ir.mehradn.rollback.command.node.skipper.ConditionalNode;
+import ir.mehradn.rollback.command.node.skipper.OptionalNode;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import java.util.ArrayList;
 
 public final class CommandBuilder {
     private final String name;
-    private final ArrayList<CommandNode> nodes;
-    private final BuildContext context;
+    private final ArrayList<CommandNode> nodes = new ArrayList<>();
+    private final BuildContext context = new BuildContext();
 
     public CommandBuilder(String name) {
         this.name = name;
-        this.nodes = new ArrayList<>();
-        this.context = new BuildContext();
     }
 
     public ArgumentBuilder<CommandSourceStack, ?> build() {
+        ArgumentBuilder<CommandSourceStack, ?> command = Commands.literal(this.name);
+        if (this.nodes.isEmpty())
+            return command;
         CommandNode node = this.nodes.get(0);
-        return node.build(Commands.literal(this.name), this.context);
+        return node.build(command, this.context);
     }
 
     public CommandBuilder then(CommandNode node) {

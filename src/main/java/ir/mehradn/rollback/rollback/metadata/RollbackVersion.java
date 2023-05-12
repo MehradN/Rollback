@@ -39,10 +39,12 @@ public class RollbackVersion {
     }
 
     public static class Adapter implements JsonSerializer<RollbackVersion>, JsonDeserializer<RollbackVersion> {
+        @Override
         public RollbackVersion deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
             return fromString(json.getAsString());
         }
 
+        @Override
         public JsonElement serialize(RollbackVersion obj, Type type, JsonSerializationContext context) {
             return new JsonPrimitive(obj.toString());
         }

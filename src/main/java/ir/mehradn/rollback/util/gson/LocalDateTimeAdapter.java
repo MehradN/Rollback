@@ -17,10 +17,12 @@ public class LocalDateTimeAdapter implements JsonSerializer<LocalDateTime>, Json
         .appendValue(ChronoField.MINUTE_OF_HOUR, 2).appendLiteral('-')
         .appendValue(ChronoField.SECOND_OF_MINUTE, 2).toFormatter();
 
+    @Override
     public LocalDateTime deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
         return LocalDateTime.parse(json.getAsString(), TIME_FORMATTER);
     }
 
+    @Override
     public JsonElement serialize(LocalDateTime obj, Type type, JsonSerializationContext context) {
         return new JsonPrimitive(obj.format(TIME_FORMATTER));
     }

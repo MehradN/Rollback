@@ -8,9 +8,11 @@ import ir.mehradn.rollback.command.BuildContext;
 import ir.mehradn.rollback.command.ExecutionContext;
 import ir.mehradn.rollback.command.node.ArgumentNode;
 import ir.mehradn.rollback.command.node.CommandNode;
+import ir.mehradn.rollback.exception.Assertion;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,10 +30,11 @@ public final class IndexArgument extends CommandArgument<Integer> {
         this.maxIndex = maxIndex;
     }
 
-    public Integer get(ExecutionContext context, String name) throws CommandSyntaxException {
+    @Override
+    public @Nullable Integer get(ExecutionContext context, String name) throws CommandSyntaxException {
         int index;
         if (!ArgumentNode.exists(context, name)) {
-            assert this.defaultValue != null;
+            Assertion.state(this.defaultValue != null, "A default value is required!");
             index = -this.defaultValue;
         } else {
             IndexType type = context.getContext(name + INDEX);
@@ -52,25 +55,26 @@ public final class IndexArgument extends CommandArgument<Integer> {
         return ids.get(index);
     }
 
-    public ArgumentBuilder<CommandSourceStack, ?> build(ArgumentBuilder<CommandSourceStack, ?> command, String name, CommandNode next,
-                                                        BuildContext context) {
+    @Override
+    public void build(ArgumentBuilder<CommandSourceStack, ?> command, String name, CommandNode next,
+                      BuildContext context) {
         context.set(name + INDEX, IndexType.OLDEST);
-        command = command.then(next.build(Commands.literal("oldest"), context));
+        command.then(next.build(Commands.literal("oldest"), context));
         context.set(name + INDEX, IndexType.LATEST);
-        command = command.then(next.build(Commands.literal("latest"), context));
+        command.then(next.build(Commands.literal("latest"), context));
         context.set(name + INDEX, IndexType.NUMBER);
-        command = command.then(next.build(Commands.argument(name, IntegerArgumentType.integer(1, this.maxIndex.get(context))), context));
+        command.then(next.build(Commands.argument(name, IntegerArgumentType.integer(1, this.maxIndex.get(context))), context));
         context.remove(name + INDEX);
-        return command;
+    }
+
+    @FunctionalInterface
+    public interface IDListBuilder {
+        List<Integer> build(ExecutionContext context) throws CommandSyntaxException;
     }
 
     private enum IndexType {
         OLDEST,
         LATEST,
         NUMBER
-    }
-
-    public interface IDListBuilder {
-        List<Integer> build(ExecutionContext context) throws CommandSyntaxException;
     }
 }

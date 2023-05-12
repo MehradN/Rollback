@@ -1,7 +1,6 @@
 package ir.mehradn.rollback.rollback;
 
-import ir.mehradn.rollback.rollback.exception.MinecraftException;
-import java.io.IOException;
+import ir.mehradn.rollback.exception.BackupManagerException;
 import java.nio.file.Path;
 
 public interface Gofer {
@@ -13,9 +12,9 @@ public interface Gofer {
 
     Path getSaveDirectory();
 
-    void saveEverything() throws MinecraftException;
+    void saveEverything() throws BackupManagerException;
 
-    BackupInfo makeBackup() throws IOException;
+    BackupInfo makeBackup() throws BackupManagerException;
 
-    void deleteLevel() throws IOException;
+    void deleteLevel() throws BackupManagerException;
 }

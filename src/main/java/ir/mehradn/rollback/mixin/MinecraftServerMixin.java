@@ -1,9 +1,9 @@
 package ir.mehradn.rollback.mixin;
 
+import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.CommandEventAnnouncer;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import ir.mehradn.rollback.rollback.ServerGofer;
-import ir.mehradn.rollback.rollback.exception.BackupIOException;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.minecraft.commands.CommandSource;
@@ -28,14 +28,17 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
         super(string);
     }
 
+    @Override
     public LevelStorageSource.LevelStorageAccess getLevelStorageAccess() {
         return this.storageSource;
     }
 
+    @Override
     public LevelStorageSource getLevelStorageSource() {
         return ((LevelStorageAccessExpanded)this.storageSource).getSource();
     }
 
+    @Override
     public CommonBackupManager getBackupManager() {
         return this.backupManager;
     }
@@ -48,7 +51,7 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
         try {
             this.backupManager.loadWorld();
-        } catch (BackupIOException e) {
+        } catch (BackupManagerException e) {
             throw new RuntimeException(e);
         }
     }

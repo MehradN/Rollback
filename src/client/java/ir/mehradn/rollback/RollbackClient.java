@@ -8,6 +8,7 @@ import net.fabricmc.api.Environment;
 
 @Environment(EnvType.CLIENT)
 public class RollbackClient implements ClientModInitializer {
+    @Override
     public void onInitializeClient() {
         Rollback.LOGGER.info("Loading config...");
         RollbackConfig.DEFAULT = RollbackClientConfig.load();

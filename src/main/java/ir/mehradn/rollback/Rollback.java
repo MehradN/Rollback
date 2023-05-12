@@ -28,6 +28,7 @@ public class Rollback implements ModInitializer {
         .registerTypeAdapter(RollbackWorldConfig.class, new RollbackConfig.Adapter<>(RollbackWorldConfig.class))
         .create();
 
+    @Override
     public void onInitialize() {
         LOGGER.info("Registering events...");
         RollbackCommand.register();

@@ -15,10 +15,12 @@ public abstract class LevelStorageAccessMixin implements AutoCloseable, LevelSto
     @Shadow @Final LevelStorageSource field_23766;
     private Path latestBackupPath;
 
+    @Override
     public LevelStorageSource getSource() {
         return this.field_23766;
     }
 
+    @Override
     public Path getLatestBackupPath() {
         return this.latestBackupPath;
     }

@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class RollbackClientConfig extends RollbackServerConfig {
-    public final ConfigEntry<Boolean> replaceButton = new ConfigEntry<>("replaceButton", Boolean.class, true, null, null);
-    public final ConfigEntry<Boolean> promptEnabled = new ConfigEntry<>("promptEnabled", Boolean.class, true, null, null);
+    public final ConfigEntry<Boolean> replaceButton = new ConfigEntry<>("replaceButton", Boolean.class, true, null);
+    public final ConfigEntry<Boolean> promptEnabled = new ConfigEntry<>("promptEnabled", Boolean.class, true, null);
 
     public RollbackClientConfig() {
         super();

@@ -9,17 +9,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class RollbackServerConfig extends RollbackConfig {
-    // backupEnabled = new ConfigEntry<>("backupEnabled", Boolean.class, false, null, null);
-    // maxBackups = new ConfigEntry<>("maxBackups", Integer.class, 5, null, new ConfigEntry.IntegerTrimmer(1, MAX_AUTOMATED));
-    // backupFrequency = new ConfigEntry<>("backupFrequency", Integer.class, 1, null, new ConfigEntry.IntegerTrimmer(1, MAX_FREQUENCY));
-    // timerMode = new ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null, null);
+    // ConfigEntry<>("backupEnabled", Boolean.class, false, null),
+    // ConfigEntry<>("maxBackups", Integer.class, 5, new ConfigEntry.IntegerTrimmer(1, MAX_AUTOMATED)),
+    // ConfigEntry<>("backupFrequency", Integer.class, 1, new ConfigEntry.IntegerTrimmer(1, MAX_FREQUENCY)),
+    // ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
 
     public RollbackServerConfig() {
         super(
-            new ConfigEntry<>("backupEnabled", Boolean.class, false, null, null),
-            new ConfigEntry<>("maxBackups", Integer.class, 5, null, new ConfigEntry.IntegerTrimmer(1, MAX_AUTOMATED)),
-            new ConfigEntry<>("backupFrequency", Integer.class, 1, null, new ConfigEntry.IntegerTrimmer(1, MAX_FREQUENCY)),
-            new ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null, null)
+            new ConfigEntry<>("backupEnabled", Boolean.class, false, null),
+            new ConfigEntry<>("maxBackups", Integer.class, 5, new ConfigEntry.IntegerTrimmer(1, MAX_AUTOMATED)),
+            new ConfigEntry<>("backupFrequency", Integer.class, 1, new ConfigEntry.IntegerTrimmer(1, MAX_FREQUENCY)),
+            new ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
         );
     }
 
@@ -33,6 +33,7 @@ public class RollbackServerConfig extends RollbackConfig {
         }
     }
 
+    @Override
     public void save() throws IOException {
         Path configDir = FabricLoader.getInstance().getConfigDir();
         Path configFile = configDir.resolve(Rollback.MOD_ID + ".json");

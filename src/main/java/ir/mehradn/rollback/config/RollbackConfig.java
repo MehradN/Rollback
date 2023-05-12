@@ -3,6 +3,7 @@ package ir.mehradn.rollback.config;
 import com.google.gson.*;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
+import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ public abstract class RollbackConfig {
     public final ConfigEntry<Integer> backupFrequency;
     public final ConfigEntry<TimerMode> timerMode;
     protected List<ConfigEntry<?>> entries;
+    private boolean locked = false;
 
     protected RollbackConfig(ConfigEntry<Boolean> backupEnabled, ConfigEntry<Integer> maxBackups, ConfigEntry<Integer> backupFrequency,
                              ConfigEntry<TimerMode> timerMode) {
@@ -33,15 +35,18 @@ public abstract class RollbackConfig {
         return MAX_COMMAND;
     }
 
-    public List<ConfigEntry<?>> getEntries() {
-        this.entries = List.copyOf(this.entries);
-        return this.entries;
-    }
-
     public int getMaxBackupsForType(BackupType type) {
         if (type == BackupType.AUTOMATED)
             return this.maxBackups.get();
         return getMaxMaxBackups(type);
+    }
+
+    public List<ConfigEntry<?>> getEntries() {
+        if (!this.locked) {
+            this.entries = List.copyOf(this.entries);
+            this.locked = true;
+        }
+        return this.entries;
     }
 
     public abstract void save() throws Exception;
@@ -62,7 +67,7 @@ public abstract class RollbackConfig {
     private <T> void setEntryFromJson(ConfigEntry<T> entry, JsonElement json) {
         if (json != null)
             entry.set(Rollback.GSON.fromJson(json, entry.type));
-        else if (entry.hasFallback())
+        else
             entry.reset();
     }
 
@@ -87,6 +92,7 @@ public abstract class RollbackConfig {
             this.type = type;
         }
 
+        @Override @Nullable
         public T deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
             try {
                 T config = this.type.getDeclaredConstructor().newInstance();
@@ -97,6 +103,7 @@ public abstract class RollbackConfig {
             }
         }
 
+        @Override
         public JsonElement serialize(T object, Type type, JsonSerializationContext context) {
             return object.toJson();
         }

@@ -1,5 +1,7 @@
 package ir.mehradn.rollback.rollback;
 
+import ir.mehradn.rollback.exception.Assertion;
+
 public enum BackupType {
     AUTOMATED(false, true, true, true, true, true, false),
     COMMAND(true, true, true, true, true, true, true),
@@ -14,11 +16,11 @@ public enum BackupType {
 
     BackupType(boolean manualCreation, boolean manualDeletion, boolean automatedDeletion, boolean list, boolean rollback, boolean convertFrom,
                boolean convertTo) {
-        assert !convertTo || manualCreation;
-        assert !convertFrom || manualDeletion;
-        assert !manualDeletion || automatedDeletion;
-        assert !automatedDeletion || list;
-        assert !rollback || list;
+        Assertion.argument(ifAThenB(convertTo, manualCreation) &&
+                           ifAThenB(convertFrom, manualDeletion) &&
+                           ifAThenB(manualDeletion, automatedDeletion) &&
+                           ifAThenB(automatedDeletion, list) &&
+                           ifAThenB(rollback, list));
 
         this.manualCreation = manualCreation;
         this.manualDeletion = manualDeletion;
@@ -31,5 +33,9 @@ public enum BackupType {
 
     public String toString() {
         return super.toString().toLowerCase();
+    }
+
+    private boolean ifAThenB(boolean a, boolean b) {
+        return !a || b;
     }
 }
