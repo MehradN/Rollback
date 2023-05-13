@@ -34,17 +34,16 @@ public class RollbackCommand {
             Rollback.LOGGER.debug("Registering the rollback command...");
 
             CommandBuilder command1 = new CommandBuilder("create")
-                .optional()
-                .argument("type", new EnumArgument<>(BackupType.class, (type) -> type.manualCreation).setDefault(BackupType.COMMAND))
-                .conditional((ctx) -> Lambdas.getType(ctx, "type").list)
                 .argument("name", new StringArgument(Lambdas::nameRequirement))
                 .executes(RollbackCommand::createBackup);
-            CommandBuilder command2 = new CommandBuilder("delete")
+            CommandBuilder command2 = new CommandBuilder("create-manual")
+                .executes(RollbackCommand::createManualBackup);
+            CommandBuilder command3 = new CommandBuilder("delete")
                 .argument("type", new EnumArgument<>(BackupType.class, (type) -> type.manualDeletion))
                 .argument("index", new IndexArgument((ctx) -> Lambdas.getIDList(ctx, "type"),
                     (ctx) -> Lambdas.getMaxCount(ctx, "type")))
                 .executes(RollbackCommand::deleteBackup);
-            CommandBuilder command3 = new CommandBuilder("convert")
+            CommandBuilder command4 = new CommandBuilder("convert")
                 .argument("from", new EnumArgument<>(BackupType.class, (type) -> type.convertFrom))
                 .argument("index", new IndexArgument((ctx) -> Lambdas.getIDList(ctx, "from"),
                     (ctx) -> Lambdas.getMaxCount(ctx, "from")))
@@ -53,7 +52,7 @@ public class RollbackCommand {
                 .conditional((ctx) -> Lambdas.getType(ctx, "to").list)
                 .argument("name", new StringArgument(Lambdas::nameRequirement))
                 .executes(RollbackCommand::convertBackup);
-            CommandBuilder command4 = new CommandBuilder("list")
+            CommandBuilder command5 = new CommandBuilder("list")
                 .argument("type", new EnumArgument<>(BackupType.class, (type) -> type.list))
                 .conditional((ctx) -> Lambdas.getMaxCount(ctx, "type") > DEFAULT_COUNT)
                 .argument("count", new IntegerArgument((ctx) -> 1, (ctx) -> Lambdas.getMaxCount(ctx, "type")).setDefault(DEFAULT_COUNT))
@@ -65,6 +64,7 @@ public class RollbackCommand {
                 .then(command2.build())
                 .then(command3.build())
                 .then(command4.build())
+                .then(command5.build())
                 .then(ConfigCommand.build()));
         });
     }
@@ -72,13 +72,24 @@ public class RollbackCommand {
     private static int createBackup(ExecutionContext context) throws CommandSyntaxException {
         CommandSourceStack source = context.getSource();
         CommonBackupManager backupManager = context.getBackupManager();
-        BackupType type = context.<BackupType, EnumArgument<BackupType>>getArgument("type");
         String name = context.<String, StringArgument>getArgument("name");
-        Assertion.argument(type != null && type.manualCreation);
 
         try {
-            backupManager.createBackup(name, type);
-            source.sendSuccess(Component.translatable("rollback.command.create.success." + type), true);
+            backupManager.createBackup(name, BackupType.COMMAND);
+            source.sendSuccess(Component.translatable("rollback.command.create.success.command"), true);
+            return 1;
+        } catch (BackupManagerException e) {
+            return 0;
+        }
+    }
+
+    private static int createManualBackup(ExecutionContext context) {
+        CommandSourceStack source = context.getSource();
+        CommonBackupManager backupManager = context.getBackupManager();
+
+        try {
+            backupManager.createBackup(null, BackupType.MANUAL);
+            source.sendSuccess(Component.translatable("rollback.command.create.success.manual"), true);
             return 1;
         } catch (BackupManagerException e) {
             return 0;
