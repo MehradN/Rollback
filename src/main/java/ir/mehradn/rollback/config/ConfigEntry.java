@@ -47,10 +47,6 @@ public class ConfigEntry <T> {
             this.value = entry.value;
     }
 
-    public void forceCopy(ConfigEntry<T> entry) {
-        this.value = entry.value;
-    }
-
     public boolean needsFallback() {
         return this.value == null;
     }
@@ -69,7 +65,7 @@ public class ConfigEntry <T> {
         if (this.type == Boolean.class)
             text = Component.translatable("rollback.config.bool." + this.name + "." + str);
         else if (this.type.isEnum())
-            text = Component.translatable("rollback.config.enum." + str);
+            text = Component.translatable("rollback.config.enum." + this.name + "." + str);
         else
             text = Component.literal(str);
         return text;
