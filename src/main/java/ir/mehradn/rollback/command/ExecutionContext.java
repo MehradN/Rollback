@@ -3,7 +3,6 @@ package ir.mehradn.rollback.command;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import ir.mehradn.rollback.command.argument.CommandArgument;
-import ir.mehradn.rollback.rollback.CommandEventAnnouncer;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.minecraft.commands.CommandSourceStack;
@@ -31,10 +30,7 @@ public final class ExecutionContext implements HasBuildContext {
     }
 
     public CommonBackupManager getBackupManager() {
-        CommonBackupManager backupManager = ((MinecraftServerExpanded)getSource().getServer()).getBackupManager();
-        if (backupManager.eventAnnouncer instanceof CommandEventAnnouncer commandEventAnnouncer)
-            commandEventAnnouncer.setCommandSource(getSource().getEntity());
-        return backupManager;
+        return ((MinecraftServerExpanded)getSource().getServer()).getBackupManager();
     }
 
     @SuppressWarnings("unchecked")

@@ -1,8 +1,8 @@
 package ir.mehradn.rollback.mixin;
 
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.rollback.CommandEventAnnouncer;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
+import ir.mehradn.rollback.rollback.ServerEventAnnouncer;
 import ir.mehradn.rollback.rollback.ServerGofer;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
@@ -45,9 +45,9 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void addBackupManager(CallbackInfo ci) {
-        ServerGofer gofer = new ServerGofer((MinecraftServer)(Object)this);
-        this.backupManager = new CommonBackupManager(gofer);
-        this.backupManager.eventAnnouncer = new CommandEventAnnouncer(this);
+        @SuppressWarnings("DataFlowIssue")
+        MinecraftServer server = (MinecraftServer)(Object)this;
+        this.backupManager = new CommonBackupManager(new ServerGofer(server), new ServerEventAnnouncer(server));
 
         try {
             this.backupManager.loadWorld();

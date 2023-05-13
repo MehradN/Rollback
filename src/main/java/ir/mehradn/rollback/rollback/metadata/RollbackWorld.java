@@ -9,8 +9,8 @@ import java.util.Map;
 public class RollbackWorld {
     @SerializedName("prompted") public boolean prompted = false;
     @SerializedName("days_passed") public int daysSinceLastBackup = 0;
-    @SerializedName("since_day") public int ticksSinceLastMorning = 0;
-    @SerializedName("since_backup") public int ticksSinceLastBackup = 0;
+    @SerializedName("since_day") public long ticksSinceLastMorning = 0;
+    @SerializedName("since_backup") public long ticksSinceLastBackup = 0;
     @SerializedName("last_id") public int lastID = 0;
     @SerializedName("config") public RollbackWorldConfig config = new RollbackWorldConfig();
     @SerializedName("rollbacks") public Map<Integer, RollbackBackup> automatedBackups = new HashMap<>();

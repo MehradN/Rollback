@@ -1,5 +1,6 @@
 package ir.mehradn.rollback;
 
+import ir.mehradn.rollback.event.AutomatedBackup;
 import ir.mehradn.rollback.event.RollbackCommand;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -13,5 +14,6 @@ public class Rollback implements ModInitializer {
     public void onInitialize() {
         LOGGER.info("Registering events...");
         RollbackCommand.register();
+        AutomatedBackup.register();
     }
 }

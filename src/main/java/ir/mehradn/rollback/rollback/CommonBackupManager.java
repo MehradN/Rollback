@@ -3,6 +3,7 @@ package ir.mehradn.rollback.rollback;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ir.mehradn.rollback.Rollback;
+import ir.mehradn.rollback.config.ConfigType;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BMECause;
@@ -26,9 +27,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class CommonBackupManager implements BackupManager {
-    public final RollbackDefaultConfig defaultConfig;
-    @NotNull public EventAnnouncer eventAnnouncer = new NullEventAnnouncer();
     private final Gofer gofer;
+    private final EventAnnouncer eventAnnouncer;
+    private final RollbackDefaultConfig defaultConfig;
     private final Path backupDirectory;
     private final Path rollbackDirectory;
     private final Path iconsDirectory;
@@ -36,8 +37,9 @@ public class CommonBackupManager implements BackupManager {
     @Nullable private RollbackData data = null;
     @Nullable private RollbackWorld world = null;
 
-    public CommonBackupManager(Gofer gofer) {
+    public CommonBackupManager(Gofer gofer, EventAnnouncer eventAnnouncer) {
         this.gofer = gofer;
+        this.eventAnnouncer = eventAnnouncer;
         this.defaultConfig = RollbackDefaultConfig.defaultSupplier.get();
         this.backupDirectory = gofer.getBackupDirectory();
         this.rollbackDirectory = this.backupDirectory.resolve("rollbacks");
@@ -49,6 +51,11 @@ public class CommonBackupManager implements BackupManager {
     public @NotNull RollbackWorld getWorld() {
         Assertion.state(this.world != null, "Call loadWorld before this!");
         return this.world;
+    }
+
+    @Override
+    public @NotNull RollbackDefaultConfig getDefaultConfig() {
+        return this.defaultConfig;
     }
 
     @Override
@@ -143,7 +150,7 @@ public class CommonBackupManager implements BackupManager {
         BackupInfo backupInfo;
         try {
             backupInfo = this.gofer.makeBackup();
-            this.eventAnnouncer.onSuccessfulBackup(backupInfo.size());
+            this.eventAnnouncer.onSuccessfulBackup(type, backupInfo.size());
         } catch (BackupManagerException e) {
             throw showError("rollback.error.backupCreation", "Failed to create a backup!", e);
         }
@@ -196,7 +203,7 @@ public class CommonBackupManager implements BackupManager {
                 Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
             if (backup.iconPath != null)
                 Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
-            this.eventAnnouncer.onSuccessfulDelete();
+            this.eventAnnouncer.onSuccessfulDelete(backupID, type);
         } catch (IOException e) {
             throw showError("rollback.error.backupDeletion", "Failed to delete the backup files!", BMECause.IO_EXCEPTION, e);
         }
@@ -237,7 +244,7 @@ public class CommonBackupManager implements BackupManager {
                 }
             }
         }
-        this.eventAnnouncer.onSuccessfulConvert(from, to);
+        this.eventAnnouncer.onSuccessfulConvert(backupID, from, to);
 
         Rollback.LOGGER.debug("Updating the metadata,,,");
         this.world.getBackups(from).remove(backupID);
@@ -290,7 +297,7 @@ public class CommonBackupManager implements BackupManager {
     public void saveConfig() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         saveWorld();
-        this.eventAnnouncer.onSuccessfulConfig(false);
+        this.eventAnnouncer.onSuccessfulConfig(ConfigType.WORLD);
     }
 
     @Override
@@ -299,7 +306,7 @@ public class CommonBackupManager implements BackupManager {
         this.defaultConfig.copyFrom(this.world.config);
         try {
             this.defaultConfig.save();
-            this.eventAnnouncer.onSuccessfulConfig(true);
+            this.eventAnnouncer.onSuccessfulConfig(ConfigType.DEFAULT);
         } catch (IOException e) {
             throw showError("rollback.error.saveConfig", "Failed to save the config file!", BMECause.IO_EXCEPTION, e);
         }

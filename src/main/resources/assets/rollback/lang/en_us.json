@@ -1,0 +1,12 @@
+{
+  "rollback.error.backupCreation": "Failed to create a backup!",
+  "rollback.error.backupDeletion": "Failed to delete the backup!",
+  "rollback.error.backupConversion": "Failed to convert the backup!",
+  "rollback.error.rollbackToBackup": "Failed to rollback to the backup!",
+  "rollback.error.saveConfig": "Failed to save the config!",
+  "rollback.success.createBackup": "Created a new backup. (type: %s, size: %s)",
+  "rollback.success.deleteBackup": "Deleted the backup #%d. (type: %s)",
+  "rollback.success.convertBackup": "Converted the backup #%d. (from %s to %s)",
+  "rollback.success.updateConfig.world": "Updated the world config successfully:",
+  "rollback.success.updateConfig.default": "Updated the default config successfully:"
+}
