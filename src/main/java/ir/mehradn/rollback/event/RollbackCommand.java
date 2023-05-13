@@ -1,15 +1,15 @@
 package ir.mehradn.rollback.event;
 
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.command.BuildContext;
 import ir.mehradn.rollback.command.CommandBuilder;
 import ir.mehradn.rollback.command.ExecutionContext;
-import ir.mehradn.rollback.command.argument.EnumArgument;
-import ir.mehradn.rollback.command.argument.IndexArgument;
-import ir.mehradn.rollback.command.argument.IntegerArgument;
-import ir.mehradn.rollback.command.argument.StringArgument;
+import ir.mehradn.rollback.command.argument.*;
+import ir.mehradn.rollback.command.node.ArgumentNode;
+import ir.mehradn.rollback.config.ConfigEntry;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
@@ -17,6 +17,7 @@ import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
+import ir.mehradn.rollback.rollback.metadata.RollbackWorldConfig;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -63,7 +64,8 @@ public class RollbackCommand {
                 .then(command1.build())
                 .then(command2.build())
                 .then(command3.build())
-                .then(command4.build()));
+                .then(command4.build())
+                .then(ConfigCommand.build()));
         });
     }
 
@@ -173,6 +175,74 @@ public class RollbackCommand {
             CommonBackupManager backupManager = context.getBackupManager();
             Assertion.argument(type != null);
             return new ArrayList<>(backupManager.getWorld().getBackups(type).keySet());
+        }
+    }
+
+    private static class ConfigCommand {
+        public static ArgumentBuilder<CommandSourceStack, ?> build() {
+            ArgumentBuilder<CommandSourceStack, ?> command = Commands.literal("config");
+            for (RollbackWorldConfig.Entry entry : RollbackWorldConfig.Entry.values()) {
+                CommandBuilder c1 = new CommandBuilder(entry.name)
+                    .optional()
+                    .argument("value", entry.commandArgument)
+                    .executes((ctx) -> entrySetOrGet(ctx, entry));
+                command.then(c1.build());
+            }
+            CommandBuilder c2 = new CommandBuilder("reset")
+                .argument("entry", new EnumArgument<>(RollbackWorldConfig.Entry.class))
+                .executes(ConfigCommand::entryReset);
+            CommandBuilder c3 = new CommandBuilder("save-as-default")
+                .executes(ConfigCommand::saveAsDefault);
+            return command
+                .then(c2.build())
+                .then(c3.build());
+        }
+
+        private static <T, S extends CommandArgument<T>> int entrySetOrGet(ExecutionContext context, RollbackWorldConfig.Entry entry)
+            throws CommandSyntaxException {
+            CommonBackupManager backupManager = context.getBackupManager();
+            ConfigEntry<T> configEntry = backupManager.getWorld().config.getEntry(entry);
+
+            if (ArgumentNode.exists(context, "value")) {
+                T value = context.<T, S>getArgument("value");
+                Assertion.argument(value != null);
+                configEntry.set(value);
+                try {
+                    backupManager.saveConfig();
+                    return 1;
+                } catch (BackupManagerException e) {
+                    return 0;
+                }
+            }
+
+            String key = (configEntry.needsFallback() ? "rollback.command.config.entry.default" : "rollback.command.config.entry");
+            context.getSource().sendSystemMessage(Component.translatable(key, configEntry.name, configEntry.getAsString()));
+            return 1;
+        }
+
+        private static <T> int entryReset(ExecutionContext context) throws CommandSyntaxException {
+            RollbackWorldConfig.Entry entry = context.<RollbackWorldConfig.Entry, EnumArgument<RollbackWorldConfig.Entry>>getArgument("entry");
+            Assertion.argument(entry != null);
+
+            CommonBackupManager backupManager = context.getBackupManager();
+            ConfigEntry<T> configEntry = backupManager.getWorld().config.getEntry(entry);
+            configEntry.reset();
+            try {
+                backupManager.saveConfig();
+                return 1;
+            } catch (BackupManagerException e) {
+                return 0;
+            }
+        }
+
+        private static int saveAsDefault(ExecutionContext context) {
+            CommonBackupManager backupManager = context.getBackupManager();
+            try {
+                backupManager.saveConfigAsDefault();
+                return 1;
+            } catch (BackupManagerException e) {
+                return 0;
+            }
         }
     }
 }

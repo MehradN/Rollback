@@ -40,5 +40,5 @@ public interface BackupManager {
 
     void saveConfig() throws BackupManagerException;
 
-    void copyConfigToDefault() throws BackupManagerException;
+    void saveConfigAsDefault() throws BackupManagerException;
 }

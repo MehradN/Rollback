@@ -294,7 +294,7 @@ public class CommonBackupManager implements BackupManager {
     }
 
     @Override
-    public void copyConfigToDefault() throws BackupManagerException {
+    public void saveConfigAsDefault() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         this.defaultConfig.copyFrom(this.world.config);
         try {

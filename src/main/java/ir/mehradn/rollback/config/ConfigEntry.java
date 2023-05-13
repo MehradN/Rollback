@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.config;
 
 import ir.mehradn.rollback.exception.Assertion;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,6 +57,22 @@ public class ConfigEntry <T> {
 
     public Trimmer<T> getTrimmer() {
         return this.trimmer;
+    }
+
+    public String getAsString() {
+        return this.get().toString();
+    }
+
+    public Component getAsTranslated() {
+        String str = getAsString();
+        Component text;
+        if (this.type == Boolean.class)
+            text = Component.translatable("rollback.config.bool." + this.name + "." + str);
+        else if (this.type.isEnum())
+            text = Component.translatable("rollback.config.enum." + str);
+        else
+            text = Component.literal(str);
+        return text;
     }
 
     public interface Trimmer <T> {

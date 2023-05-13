@@ -42,7 +42,7 @@ public class CommandEventAnnouncer implements EventAnnouncer {
 
     @Override
     public void onSuccessfulConfig(boolean isDefault) {
-        sendMessage(Component.translatable("rollback.command.config.successfulChange." + (isDefault ? "default" : "world")));
+        sendMessage(Component.translatable("rollback.command.config.successfulConfig." + (isDefault ? "default" : "world")));
     }
 
     private void sendMessage(Component message) {

@@ -22,5 +22,21 @@
   "rollback.command.list.itemNamed": "#%s  Created: %s  Day %d  Name: %s",
   "rollback.command.list.more": "and more...",
   "rollback.command.config.successfulConfig.world": "Updated the world config successfully",
-  "rollback.command.config.successfulConfig.default": "Saved the world config as default successfully"
+  "rollback.command.config.successfulConfig.default": "Saved the world config as default successfully",
+  "rollback.command.config.entry": "%s = %s",
+  "rollback.command.config.entry.default": "%s = <default: %s>",
+  "rollback.config.entry.backupEnabled": "Automated backups",
+  "rollback.config.entry.maxBackups": "Maximum amount of automated backups per world",
+  "rollback.config.entry.backupFrequency": "Minecraft days (20 minutes) per automated backup",
+  "rollback.config.entry.timerMode": "Automated backup timer is based on",
+  "rollback.config.entry.replaceButton": "Replace re-create button",
+  "rollback.config.entry.promptEnabled": "Suggest enabling automated backups",
+  "rollback.config.enum.daylightCycle": "Daylight Cycle",
+  "rollback.config.enum.inGameTime": "In-Game Time",
+  "rollback.config.bool.backupEnabled.true": "Enabled",
+  "rollback.config.bool.backupEnabled.false": "Disabled",
+  "rollback.config.bool.replaceButton.true": "Yes",
+  "rollback.config.bool.replaceButton.false": "No",
+  "rollback.config.bool.promptEnabled.true": "Yes",
+  "rollback.config.bool.promptEnabled.false": "No"
 }
