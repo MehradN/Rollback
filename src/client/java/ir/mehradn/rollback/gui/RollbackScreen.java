@@ -3,6 +3,7 @@ package ir.mehradn.rollback.gui;
 import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.rollback.BackupManager;
+import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -35,8 +36,10 @@ public class RollbackScreen extends Screen {
 
     @Override
     public void init() {
-        this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width)
-            .addTabs(new AutomatedTab(), new CommandTab(), new ActionTab()).build();
+        this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width).addTabs(
+            new BackupListTab(BackupType.AUTOMATED, "rollback.screen.tab.automated", this, this.backupManager, this.gofer),
+            new BackupListTab(BackupType.COMMAND, "rollback.screen.tab.command", this, this.backupManager, this.gofer),
+            new ActionTab(this, this.backupManager, this.gofer)).build();
         addRenderableWidget(this.navigationBar);
         this.navigationBar.selectTab(0, false);
         this.repositionElements();
@@ -49,7 +52,7 @@ public class RollbackScreen extends Screen {
         this.navigationBar.setWidth(this.width);
         this.navigationBar.arrangeElements();
         int y = this.navigationBar.getRectangle().bottom();
-        this.tabManager.setTabArea(new ScreenRectangle(0, y, this.width, this.height - y));
+        this.tabManager.setTabArea(new ScreenRectangle(0, y + 8, this.width, this.height - y - 8));
     }
 
     @Override
