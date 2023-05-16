@@ -6,6 +6,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
+import ir.mehradn.rollback.network.ServerPacketManager;
+import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.rollback.ServerBackupManager;
@@ -26,7 +28,9 @@ public class RollbackCommand {
                     .then(Commands.argument("name", StringArgumentType.string())
                         .executes((ctx) -> createBackup(getBackupManager(ctx), StringArgumentType.getString(ctx, "name"), BackupType.COMMAND))))
                 .then(Commands.literal("create-manual")
-                    .executes((ctx) -> createBackup(getBackupManager(ctx), null, BackupType.MANUAL))));
+                    .executes((ctx) -> createBackup(getBackupManager(ctx), null, BackupType.MANUAL)))
+                .then(Commands.literal("gui")
+                    .executes(RollbackCommand::requestOpenGui)));
         });
     }
 
@@ -45,6 +49,11 @@ public class RollbackCommand {
         } catch (BackupManagerException e) {
             return 0;
         }
+    }
+
+    private static int requestOpenGui(CommandContext<CommandSourceStack> context) {
+        ServerPacketManager.send(context.getSource().getPlayer(), Packets.openGui, null);
+        return 1;
     }
 
     private static ServerBackupManager getBackupManager(CommandContext<CommandSourceStack> context) {
