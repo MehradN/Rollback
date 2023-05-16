@@ -16,16 +16,14 @@ import net.minecraft.network.chat.Component;
 
 @Environment(EnvType.CLIENT)
 public class RollbackScreen extends Screen {
-    private final BackupManager backupManager;
-    private final GuiGofer gofer;
+    final BackupManager backupManager;
     private final Screen lastScreen;
-    private TabManager tabManager;
+    private final TabManager tabManager;
     private TabNavigationBar navigationBar;
 
-    public RollbackScreen(BackupManager backupManager, GuiGofer guiGofer, Screen lastScreen) {
+    public RollbackScreen(BackupManager backupManager, Screen lastScreen) {
         super(Component.translatable("rollback.screen.title"));
         this.backupManager = backupManager;
-        this.gofer = guiGofer;
         this.lastScreen = lastScreen;
         this.tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
     }
@@ -37,9 +35,9 @@ public class RollbackScreen extends Screen {
     @Override
     public void init() {
         this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width).addTabs(
-            new BackupListTab(BackupType.AUTOMATED, "rollback.screen.tab.automated", this, this.backupManager, this.gofer),
-            new BackupListTab(BackupType.COMMAND, "rollback.screen.tab.command", this, this.backupManager, this.gofer),
-            new ActionTab(this, this.backupManager, this.gofer)).build();
+            new BackupListTab(this, BackupType.AUTOMATED, "rollback.screen.tab.automated"),
+            new BackupListTab(this, BackupType.COMMAND, "rollback.screen.tab.command"),
+            new ActionTab(this)).build();
         addRenderableWidget(this.navigationBar);
         this.navigationBar.selectTab(0, false);
         this.repositionElements();

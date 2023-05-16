@@ -1,6 +1,5 @@
 package ir.mehradn.rollback.gui;
 
-import ir.mehradn.rollback.rollback.BackupManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.components.Button;
@@ -12,14 +11,10 @@ import net.minecraft.network.chat.Component;
 public class ActionTab extends GridLayoutTab {
     private static final Component TITLE = Component.translatable("rollback.screen.tab.action");
     private final RollbackScreen screen;
-    private final BackupManager backupManager;
-    private final GuiGofer gofer;
 
-    public ActionTab(RollbackScreen screen, BackupManager backupManager, GuiGofer gofer) {
+    public ActionTab(RollbackScreen screen) {
         super(TITLE);
         this.screen = screen;
-        this.backupManager = backupManager;
-        this.gofer = gofer;
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),

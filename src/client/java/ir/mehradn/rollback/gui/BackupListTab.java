@@ -1,7 +1,6 @@
 package ir.mehradn.rollback.gui;
 
 import ir.mehradn.rollback.exception.Assertion;
-import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -20,8 +19,6 @@ public class BackupListTab implements Tab {
     private final RollbackScreen screen;
     private final Component title;
     private final BackupType backupType;
-    private final BackupManager backupManager;
-    private final GuiGofer gofer;
     private final List<AbstractWidget> widgets = new ArrayList<>();
     private final Button rollbackButton;
     private final Button convertButton;
@@ -29,13 +26,11 @@ public class BackupListTab implements Tab {
     private final Button renameButton;
     private final Button cancelButton;
 
-    public BackupListTab(BackupType backupType, String title, RollbackScreen screen, BackupManager backupManager, GuiGofer gofer) {
+    public BackupListTab(RollbackScreen screen, BackupType backupType, String title) {
         Assertion.argument(backupType.list, "Invalid type!");
         this.screen = screen;
         this.backupType = backupType;
         this.title = Component.translatable(title);
-        this.backupManager = backupManager;
-        this.gofer = gofer;
 
         this.rollbackButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rollback"),
             (button) -> { }).size(150, 20).build());

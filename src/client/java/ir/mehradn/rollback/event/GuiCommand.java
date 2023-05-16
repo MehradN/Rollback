@@ -26,7 +26,7 @@ public class GuiCommand {
         ((MinecraftExpanded)client).runOnNextTick(() -> {
             client.setScreen(null);
             client.pauseGame(false);
-            client.setScreen(new RollbackScreen(null, null, client.screen));
+            client.setScreen(new RollbackScreen(null, client.screen));
         });
         return 1;
     }
