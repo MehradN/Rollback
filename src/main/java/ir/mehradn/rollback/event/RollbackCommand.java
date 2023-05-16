@@ -8,7 +8,7 @@ import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
-import ir.mehradn.rollback.rollback.CommonBackupManager;
+import ir.mehradn.rollback.rollback.ServerBackupManager;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
@@ -34,7 +34,7 @@ public class RollbackCommand {
         return (source.getPlayer() != null && source.hasPermission(4));
     }
 
-    private static int createBackup(CommonBackupManager backupManager, String name, BackupType type) throws CommandSyntaxException {
+    private static int createBackup(ServerBackupManager backupManager, String name, BackupType type) throws CommandSyntaxException {
         if (name != null && (!type.list || name.isBlank()))
             name = null;
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
@@ -47,7 +47,7 @@ public class RollbackCommand {
         }
     }
 
-    private static CommonBackupManager getBackupManager(CommandContext<CommandSourceStack> context) {
+    private static ServerBackupManager getBackupManager(CommandContext<CommandSourceStack> context) {
         return ((MinecraftServerExpanded)context.getSource().getServer()).getBackupManager();
     }
 }

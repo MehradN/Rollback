@@ -38,13 +38,13 @@ public class BackupListTab implements Tab {
         this.gofer = gofer;
 
         this.rollbackButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rollback"),
-            (button) -> {}).size(150, 20).build());
+            (button) -> { }).size(150, 20).build());
         this.convertButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.convert"),
-            (button) -> {}).size(150, 20).build());
+            (button) -> { }).size(150, 20).build());
         this.deleteButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.delete"),
-            (button) -> {}).size(100, 20).build());
+            (button) -> { }).size(100, 20).build());
         this.renameButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rename"),
-            (button) -> {}).size(100, 20).build());
+            (button) -> { }).size(100, 20).build());
         this.cancelButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"),
             (button) -> this.screen.onClose()).size(100, 20).build());
     }

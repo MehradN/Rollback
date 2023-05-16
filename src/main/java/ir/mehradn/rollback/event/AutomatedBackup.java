@@ -3,7 +3,7 @@ package ir.mehradn.rollback.event;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.BackupType;
-import ir.mehradn.rollback.rollback.CommonBackupManager;
+import ir.mehradn.rollback.rollback.ServerBackupManager;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -12,7 +12,7 @@ import net.minecraft.server.MinecraftServer;
 
 public class AutomatedBackup {
     private static final int DAY = 24000;
-    private static CommonBackupManager backupManager;
+    private static ServerBackupManager backupManager;
     private static long latestUpdate;
 
     public static void register() {

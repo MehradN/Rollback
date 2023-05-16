@@ -26,25 +26,13 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class CommonBackupManager implements BackupManager {
-    private final Gofer gofer;
-    private final EventAnnouncer eventAnnouncer;
+public abstract class CommonBackupManager implements BackupManager {
     private final RollbackDefaultConfig defaultConfig;
-    private final Path backupDirectory;
-    private final Path rollbackDirectory;
-    private final Path iconsDirectory;
-    private final Path saveDirectory;
     @Nullable private RollbackData data = null;
     @Nullable private RollbackWorld world = null;
 
-    public CommonBackupManager(Gofer gofer, EventAnnouncer eventAnnouncer) {
-        this.gofer = gofer;
-        this.eventAnnouncer = eventAnnouncer;
+    public CommonBackupManager() {
         this.defaultConfig = RollbackDefaultConfig.defaultSupplier.get();
-        this.backupDirectory = gofer.getBackupDirectory();
-        this.rollbackDirectory = this.backupDirectory.resolve("rollbacks");
-        this.iconsDirectory = this.rollbackDirectory.resolve("icons");
-        this.saveDirectory = this.gofer.getSaveDirectory();
     }
 
     @Override
@@ -61,7 +49,7 @@ public class CommonBackupManager implements BackupManager {
     @Override
     public void loadWorld() throws BackupManagerException {
         Rollback.LOGGER.info("Loading the metadata file...");
-        Path metadataPath = this.rollbackDirectory.resolve("rollbacks.json");
+        Path metadataPath = getRollbackDirectory().resolve("rollbacks.json");
         boolean save = false;
 
         RollbackData data;
@@ -83,7 +71,7 @@ public class CommonBackupManager implements BackupManager {
         }
 
         this.data = data;
-        this.world = data.getWorld(this.gofer.getLevelID());
+        this.world = data.getWorld(getLevelID());
         this.world.config.setDefaultConfig(this.defaultConfig);
         if (save)
             saveWorld();
@@ -93,10 +81,9 @@ public class CommonBackupManager implements BackupManager {
     public void saveWorld() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         Rollback.LOGGER.debug("Saving the metadata file...");
-        Path metadataPath = this.rollbackDirectory.resolve("rollbacks.json");
+        Path metadataPath = getRollbackDirectory().resolve("rollbacks.json");
         try {
-            Files.createDirectories(this.rollbackDirectory);
-            Files.createDirectories(this.iconsDirectory);
+            Files.createDirectories(getRollbackDirectory());
             try (FileWriter writer = new FileWriter(metadataPath.toFile())) {
                 GSON.toJson(this.data, writer);
             }
@@ -109,7 +96,7 @@ public class CommonBackupManager implements BackupManager {
     @Override
     public void deleteWorld() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        String levelID = this.gofer.getLevelID();
+        String levelID = getLevelID();
         Rollback.LOGGER.info("Deleting all the backups for world \"{}\"...", levelID);
 
         Set<Integer> automatedIDs = this.world.automatedBackups.keySet();
@@ -130,7 +117,7 @@ public class CommonBackupManager implements BackupManager {
             name = null;
         Assertion.argument(name == null || name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
         Rollback.LOGGER.info("Creating a {} backup...", type);
-        String levelID = this.gofer.getLevelID();
+        String levelID = getLevelID();
 
         if (type.automatedDeletion) {
             Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
@@ -141,7 +128,7 @@ public class CommonBackupManager implements BackupManager {
 
         Rollback.LOGGER.debug("Saving the world...");
         try {
-            this.gofer.saveEverything();
+            saveEverything();
         } catch (BackupManagerException e) {
             throw showError("rollback.error.backupCreation", "Failed to save the world!", e);
         }
@@ -149,8 +136,7 @@ public class CommonBackupManager implements BackupManager {
         Rollback.LOGGER.debug("Creating the backup...");
         BackupInfo backupInfo;
         try {
-            backupInfo = this.gofer.makeBackup();
-            this.eventAnnouncer.onSuccessfulBackup(type, backupInfo.size());
+            backupInfo = makeBackup();
         } catch (BackupManagerException e) {
             throw showError("rollback.error.backupCreation", "Failed to create a backup!", e);
         }
@@ -163,7 +149,7 @@ public class CommonBackupManager implements BackupManager {
         Path path1 = backupInfo.backupPath();
         Path path2;
         try {
-            path2 = this.rollbackDirectory.resolve(FileUtil.findAvailableName(this.rollbackDirectory, levelID + "_" + id, ".zip"));
+            path2 = getRollbackDirectory().resolve(FileUtil.findAvailableName(getRollbackDirectory(), levelID + "_" + id, ".zip"));
             Files.move(path1, path2);
         } catch (IOException e) {
             BackupManagerException exception =
@@ -178,15 +164,16 @@ public class CommonBackupManager implements BackupManager {
         }
 
         Rollback.LOGGER.debug("Adding the metadata...");
-        path2 = this.rollbackDirectory.relativize(path2);
+        path2 = getRollbackDirectory().relativize(path2);
         RollbackBackup backup = new RollbackBackup();
         backup.backupPath = path2;
         backup.creationDate = LocalDateTime.now();
-        backup.daysPlayed = this.gofer.getDaysPlayed();
+        backup.daysPlayed = getDaysPlayed();
         backup.name = name;
         this.world.getBackups(type).put(id, backup);
         this.world.lastID++;
         saveWorld();
+        broadcastSuccessfulBackup(type, backupInfo.size());
     }
 
     @Override
@@ -200,16 +187,16 @@ public class CommonBackupManager implements BackupManager {
         Rollback.LOGGER.debug("Deleting the backup files...");
         try {
             if (backup.backupPath != null)
-                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.backupPath));
+                Files.deleteIfExists(getRollbackDirectory().resolve(backup.backupPath));
             if (backup.iconPath != null)
-                Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
-            this.eventAnnouncer.onSuccessfulDelete(backupID, type);
+                Files.deleteIfExists(getRollbackDirectory().resolve(backup.iconPath));
         } catch (IOException e) {
             throw showError("rollback.error.backupDeletion", "Failed to delete the backup files!", BMECause.IO_EXCEPTION, e);
         }
 
         backups.remove(backupID);
         saveWorld();
+        broadcastSuccessfulDelete(backupID, type);
     }
 
     @Override
@@ -227,7 +214,7 @@ public class CommonBackupManager implements BackupManager {
             if (backup.iconPath != null) {
                 Rollback.LOGGER.debug("Deleting the icon...");
                 try {
-                    Files.deleteIfExists(this.rollbackDirectory.resolve(backup.iconPath));
+                    Files.deleteIfExists(getRollbackDirectory().resolve(backup.iconPath));
                 } catch (IOException e) {
                     throw showError("rollback.error.backupConversion", "Failed to delete the icon!", BMECause.IO_EXCEPTION, e);
                 }
@@ -235,16 +222,15 @@ public class CommonBackupManager implements BackupManager {
             if (backup.backupPath != null) {
                 Rollback.LOGGER.debug("Moving the backup file...");
                 try {
-                    String fileName = LocalDateTime.now().format(LocalDateTimeAdapter.TIME_FORMATTER) + "_" + this.gofer.getLevelID();
-                    Path source = this.rollbackDirectory.resolve(backup.backupPath);
-                    Path dest = this.backupDirectory.resolve(FileUtil.findAvailableName(this.backupDirectory, fileName, ".zip"));
+                    String fileName = LocalDateTime.now().format(LocalDateTimeAdapter.TIME_FORMATTER) + "_" + getLevelID();
+                    Path source = getRollbackDirectory().resolve(backup.backupPath);
+                    Path dest = getBackupDirectory().resolve(FileUtil.findAvailableName(getBackupDirectory(), fileName, ".zip"));
                     Files.move(source, dest);
                 } catch (IOException e) {
                     throw showError("rollback.error.backupConversion", "Failed to move the backup files!", BMECause.IO_EXCEPTION, e);
                 }
             }
         }
-        this.eventAnnouncer.onSuccessfulConvert(backupID, from, to);
 
         Rollback.LOGGER.debug("Updating the metadata,,,");
         this.world.getBackups(from).remove(backupID);
@@ -254,29 +240,62 @@ public class CommonBackupManager implements BackupManager {
             this.world.getBackups(to).put(id, backup);
         }
         saveWorld();
+        broadcastSuccessfulConvert(backupID, from, to);
     }
 
     @Override
-    public void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException {
+    public void saveConfig() throws BackupManagerException {
+        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
+        saveWorld();
+        broadcastSuccessfulConfig(ConfigType.WORLD);
+    }
+
+    @Override
+    public void saveConfigAsDefault() throws BackupManagerException {
+        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
+        this.defaultConfig.copyFrom(this.world.config);
+        try {
+            this.defaultConfig.save();
+            broadcastSuccessfulConfig(ConfigType.DEFAULT);
+        } catch (IOException e) {
+            throw showError("rollback.error.saveConfig", "Failed to save the config file!", BMECause.IO_EXCEPTION, e);
+        }
+    }
+
+    protected abstract Path getBackupDirectory();
+
+    protected abstract Path getSaveDirectory();
+
+    protected abstract String getLevelID();
+
+    protected abstract int getDaysPlayed();
+
+    protected abstract void saveEverything() throws BackupManagerException;
+
+    protected abstract BackupInfo makeBackup() throws BackupManagerException;
+
+    protected abstract void broadcastError(String translatableTitle, String literalInfo);
+
+    protected abstract void broadcastSuccessfulBackup(BackupType type, long size);
+
+    protected abstract void broadcastSuccessfulDelete(int backupID, BackupType type);
+
+    protected abstract void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to);
+
+    protected abstract void broadcastSuccessfulConfig(ConfigType configType);
+
+    protected void extractBackup(int backupID, BackupType type) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         Assertion.argument(type.rollback, "Invalid type!");
         RollbackBackup backup = this.world.getBackup(backupID, type);
-        Rollback.LOGGER.info("Rolling back to backup \"{}\"...", backup.backupPath.toString());
+        Rollback.LOGGER.debug("Extracting the backup \"{}\"...", backup.backupPath.toString());
 
-        Rollback.LOGGER.debug("Deleting the current save...");
-        try {
-            this.gofer.deleteLevel();
-        } catch (BackupManagerException e) {
-            throw showError("rollback.error.rollbackToBackup", "Failed to delete the current save!", e);
-        }
-
-        Rollback.LOGGER.debug("Extracting the backup to save directory...");
-        Path source = this.rollbackDirectory.resolve(backup.backupPath.toString());
+        Path source = getRollbackDirectory().resolve(backup.backupPath.toString());
         try (ZipFile zip = new ZipFile(source.toFile())) {
             Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                Path path = this.saveDirectory.resolve(entry.getName());
+                Path path = getSaveDirectory().resolve(entry.getName());
                 if (entry.isDirectory())
                     Files.createDirectories(path);
                 else {
@@ -293,44 +312,29 @@ public class CommonBackupManager implements BackupManager {
         }
     }
 
-    @Override
-    public void saveConfig() throws BackupManagerException {
-        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        saveWorld();
-        this.eventAnnouncer.onSuccessfulConfig(ConfigType.WORLD);
-    }
-
-    @Override
-    public void saveConfigAsDefault() throws BackupManagerException {
-        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        this.defaultConfig.copyFrom(this.world.config);
-        try {
-            this.defaultConfig.save();
-            this.eventAnnouncer.onSuccessfulConfig(ConfigType.DEFAULT);
-        } catch (IOException e) {
-            throw showError("rollback.error.saveConfig", "Failed to save the config file!", BMECause.IO_EXCEPTION, e);
-        }
+    private Path getRollbackDirectory() {
+        return getBackupDirectory().resolve("rollbacks");
     }
 
     private void deleteGhostIcons() {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         for (RollbackBackup backup : this.world.automatedBackups.values())
-            if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
+            if (backup.iconPath != null && !Files.isRegularFile(getRollbackDirectory().resolve(backup.iconPath)))
                 backup.iconPath = null;
         for (RollbackBackup backup : this.world.commandBackups.values())
-            if (backup.iconPath != null && !Files.isRegularFile(this.rollbackDirectory.resolve(backup.iconPath)))
+            if (backup.iconPath != null && !Files.isRegularFile(getRollbackDirectory().resolve(backup.iconPath)))
                 backup.iconPath = null;
     }
 
     private BackupManagerException showError(String title, String info, BMECause cause, Throwable exception) {
         Rollback.LOGGER.error(info, exception);
-        this.eventAnnouncer.onError(title, info);
+        broadcastError(title, info);
         return new BackupManagerException(cause, info, exception);
     }
 
     private BackupManagerException showError(String title, String info, BackupManagerException cause) {
         Rollback.LOGGER.error(info, cause);
-        this.eventAnnouncer.onError(title, info);
+        broadcastError(title, info);
         return new BackupManagerException(info, cause);
     }
 }

@@ -1,9 +1,7 @@
 package ir.mehradn.rollback.mixin;
 
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.rollback.CommonBackupManager;
-import ir.mehradn.rollback.rollback.ServerEventAnnouncer;
-import ir.mehradn.rollback.rollback.ServerGofer;
+import ir.mehradn.rollback.rollback.ServerBackupManager;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.minecraft.commands.CommandSource;
@@ -22,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<TickTask>
     implements CommandSource, AutoCloseable, MinecraftServerExpanded {
     @Shadow @Final protected LevelStorageSource.LevelStorageAccess storageSource;
-    private CommonBackupManager backupManager;
+    private ServerBackupManager backupManager;
 
     public MinecraftServerMixin(String string) {
         super(string);
@@ -39,15 +37,14 @@ public abstract class MinecraftServerMixin extends ReentrantBlockableEventLoop<T
     }
 
     @Override
-    public CommonBackupManager getBackupManager() {
+    public ServerBackupManager getBackupManager() {
         return this.backupManager;
     }
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void addBackupManager(CallbackInfo ci) {
-        @SuppressWarnings("DataFlowIssue")
-        MinecraftServer server = (MinecraftServer)(Object)this;
-        this.backupManager = new CommonBackupManager(new ServerGofer(server), new ServerEventAnnouncer(server));
+        //noinspection DataFlowIssue
+        this.backupManager = new ServerBackupManager((MinecraftServer)(Object)this);
 
         try {
             this.backupManager.loadWorld();

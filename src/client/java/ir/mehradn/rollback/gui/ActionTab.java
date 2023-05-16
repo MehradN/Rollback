@@ -23,17 +23,17 @@ public class ActionTab extends GridLayoutTab {
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),
-            (button) -> {}).width(200).build());
+            (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeCommand"),
-            (button) -> {}).width(200).build());
+            (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeManual"),
-            (button) -> {}).width(200).build());
+            (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.openFolder"),
-            (button) -> {}).width(200).build());
+            (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.optimizeBackups"),
-            (button) -> {}).width(200).build());
+            (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.optimizeFiles"),
-            (button) -> {}).width(200).build());
+            (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.cancel"),
             (button) -> this.screen.onClose()).width(200).build());
     }
