@@ -32,12 +32,12 @@ public final class ServerBackupManager extends CommonBackupManager {
     }
 
     @Override
-    protected Path getBackupDirectory() {
+    public Path getBackupDirectory() {
         return ((MinecraftServerExpanded)this.server).getLevelStorageSource().getBackupPath();
     }
 
     @Override
-    protected Path getSaveDirectory() {
+    public Path getSaveDirectory() {
         return ((MinecraftServerExpanded)this.server).getLevelStorageSource().getBaseDir();
     }
 

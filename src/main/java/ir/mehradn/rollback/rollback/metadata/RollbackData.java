@@ -1,10 +1,11 @@
 package ir.mehradn.rollback.rollback.metadata;
 
 import com.google.gson.annotations.SerializedName;
+import ir.mehradn.rollback.rollback.BackupManager;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RollbackData {
+public class RollbackData implements UpdatesAfterLoading {
     @SerializedName("version") public RollbackVersion version = RollbackVersion.LATEST_VERSION;
     @SerializedName("worlds") public Map<String, RollbackWorld> worlds = new HashMap<>();
 
@@ -12,5 +13,11 @@ public class RollbackData {
         if (!this.worlds.containsKey(levelID))
             this.worlds.put(levelID, new RollbackWorld());
         return this.worlds.get(levelID);
+    }
+
+    @Override
+    public void update(BackupManager backupManager) {
+        for (RollbackWorld world : this.worlds.values())
+            world.update(backupManager);
     }
 }

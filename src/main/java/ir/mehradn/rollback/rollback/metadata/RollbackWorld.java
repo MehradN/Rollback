@@ -2,11 +2,12 @@ package ir.mehradn.rollback.rollback.metadata;
 
 import com.google.gson.annotations.SerializedName;
 import ir.mehradn.rollback.exception.Assertion;
+import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RollbackWorld {
+public class RollbackWorld implements UpdatesAfterLoading {
     @SerializedName("prompted") public boolean prompted = false;
     @SerializedName("days_passed") public int daysSinceLastBackup = 0;
     @SerializedName("since_day") public long ticksSinceLastMorning = 0;
@@ -30,5 +31,14 @@ public class RollbackWorld {
             case COMMAND -> this.commandBackups;
             default -> new HashMap<>();
         };
+    }
+
+    @Override
+    public void update(BackupManager backupManager) {
+        this.config.update(backupManager);
+        for (RollbackBackup backup : this.automatedBackups.values())
+            backup.update(backupManager);
+        for (RollbackBackup backup : this.commandBackups.values())
+            backup.update(backupManager);
     }
 }

@@ -35,6 +35,14 @@ public abstract class CommonBackupManager implements BackupManager {
         this.defaultConfig = RollbackDefaultConfig.defaultSupplier.get();
     }
 
+    public abstract Path getBackupDirectory();
+
+    public abstract Path getSaveDirectory();
+
+    public Path getRollbackDirectory() {
+        return getBackupDirectory().resolve("rollbacks");
+    }
+
     @Override
     public @NotNull RollbackWorld getWorld() {
         Assertion.state(this.world != null, "Call loadWorld before this!");
@@ -72,7 +80,7 @@ public abstract class CommonBackupManager implements BackupManager {
 
         this.data = data;
         this.world = data.getWorld(getLevelID());
-        this.world.config.setDefaultConfig(this.defaultConfig);
+        this.data.update(this);
         if (save)
             saveWorld();
     }
@@ -169,6 +177,7 @@ public abstract class CommonBackupManager implements BackupManager {
         backup.backupPath = path2;
         backup.creationDate = LocalDateTime.now();
         backup.daysPlayed = getDaysPlayed();
+        backup.fileSize = backupInfo.size();
         backup.name = name;
         this.world.getBackups(type).put(id, backup);
         this.world.lastID++;
@@ -262,10 +271,6 @@ public abstract class CommonBackupManager implements BackupManager {
         }
     }
 
-    protected abstract Path getBackupDirectory();
-
-    protected abstract Path getSaveDirectory();
-
     protected abstract String getLevelID();
 
     protected abstract int getDaysPlayed();
@@ -310,10 +315,6 @@ public abstract class CommonBackupManager implements BackupManager {
             throw showError("rollback.error.rollbackToBackup", "Failed to extract the backup to the save directory!",
                 BMECause.IO_EXCEPTION, e);
         }
-    }
-
-    private Path getRollbackDirectory() {
-        return getBackupDirectory().resolve("rollbacks");
     }
 
     private void deleteGhostIcons() {
