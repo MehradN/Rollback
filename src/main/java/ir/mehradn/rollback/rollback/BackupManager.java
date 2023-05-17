@@ -23,13 +23,13 @@ public interface BackupManager {
         .registerTypeAdapter(RollbackWorldConfig.class, new RollbackConfig.Adapter<>(RollbackWorldConfig.class))
         .create();
 
+    @NotNull State getCurrentState();
+
     @NotNull RollbackWorld getWorld();
 
     @NotNull RollbackDefaultConfig getDefaultConfig();
 
     void loadWorld() throws BackupManagerException;
-
-    void saveWorld() throws BackupManagerException;
 
     void deleteWorld() throws BackupManagerException;
 
@@ -37,11 +37,19 @@ public interface BackupManager {
 
     void deleteBackup(int backupID, BackupType type) throws BackupManagerException;
 
-    void convertBackup(int backupID, BackupType from, String name, BackupType to) throws BackupManagerException;
+    void renameBackup(int backupID, BackupType type, String name) throws BackupManagerException;
+
+    void convertBackup(int backupID, BackupType from, BackupType to) throws BackupManagerException;
 
     void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException;
 
     void saveConfig() throws BackupManagerException;
 
     void saveConfigAsDefault() throws BackupManagerException;
+
+    enum State {
+        INITIAL,
+        IDLE,
+        LOADING
+    }
 }

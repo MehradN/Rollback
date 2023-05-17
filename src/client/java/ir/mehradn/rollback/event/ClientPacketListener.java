@@ -1,6 +1,6 @@
 package ir.mehradn.rollback.event;
 
-import ir.mehradn.rollback.gui.RollbackScreen;
+import ir.mehradn.rollback.gui.ScreenManager;
 import ir.mehradn.rollback.network.ClientPacketManager;
 import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.network.packets.SendMetadata;
@@ -20,7 +20,7 @@ public final class ClientPacketListener {
     private static void onOpenGui(Minecraft client, Void data) {
         client.setScreen(null);
         client.pauseGame(false);
-        client.setScreen(new RollbackScreen(new NetworkBackupManager(client), client.screen));
+        ScreenManager.activate(client, new NetworkBackupManager(client));
     }
 
     private static void onSendMetadata(Minecraft client, SendMetadata.Metadata data) {
@@ -31,10 +31,8 @@ public final class ClientPacketListener {
     }
 
     private static @Nullable NetworkBackupManager getBackupManager(Minecraft client) {
-        if (!(client.screen instanceof RollbackScreen screen))
-            return null;
-        if (!(screen.backupManager instanceof NetworkBackupManager backupManager))
-            return null;
-        return backupManager;
+        if (ScreenManager.getInstance() != null && ScreenManager.getInstance().backupManager instanceof NetworkBackupManager backupManager)
+            return backupManager;
+        return null;
     }
 }

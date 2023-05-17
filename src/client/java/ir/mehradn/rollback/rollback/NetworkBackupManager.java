@@ -18,20 +18,26 @@ public final class NetworkBackupManager implements BackupManager {
     private final Minecraft client;
     @Nullable private RollbackWorld world = null;
     @Nullable private RollbackDefaultConfig defaultConfig = null;
-    private boolean loading = false;
+    private State state;
 
     public NetworkBackupManager(Minecraft client) {
         this.client = client;
-    }
-
-    public boolean isLoading() {
-        return this.loading;
+        this.state = State.INITIAL;
     }
 
     public void loadingFinished(@NotNull SendMetadata.Metadata metadata) {
         this.world = metadata.world();
         this.defaultConfig = metadata.config();
-        this.loading = false;
+        actionFinished();
+    }
+
+    public void actionFinished() {
+        this.state = State.IDLE;
+    }
+
+    @Override
+    public @NotNull State getCurrentState() {
+        return this.state;
     }
 
     @Override
@@ -50,11 +56,9 @@ public final class NetworkBackupManager implements BackupManager {
     public void loadWorld() {
         this.world = null;
         this.defaultConfig = null;
-        this.loading = true;
+        this.state = State.LOADING;
         ClientPacketManager.send(Packets.fetchMetadata, null);
     }
-
-    @Override public void saveWorld() throws BackupManagerException { }
 
     @Override public void deleteWorld() throws BackupManagerException { }
 
@@ -62,7 +66,9 @@ public final class NetworkBackupManager implements BackupManager {
 
     @Override public void deleteBackup(int backupID, BackupType type) throws BackupManagerException { }
 
-    @Override public void convertBackup(int backupID, BackupType from, String name, BackupType to) throws BackupManagerException { }
+    @Override public void renameBackup(int backupID, BackupType type, String name) throws BackupManagerException { }
+
+    @Override public void convertBackup(int backupID, BackupType from, BackupType to) throws BackupManagerException { }
 
     @Override public void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException { }
 

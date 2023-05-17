@@ -1,46 +1,31 @@
 package ir.mehradn.rollback.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import ir.mehradn.rollback.exception.Assertion;
-import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.tabs.TabManager;
 import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 @Environment(EnvType.CLIENT)
 public class RollbackScreen extends Screen {
-    public final BackupManager backupManager;
-    private final Screen lastScreen;
     private final TabManager tabManager;
     private TabNavigationBar navigationBar;
-    private boolean shouldLoadWorld;
 
-    public RollbackScreen(BackupManager backupManager, Screen lastScreen) {
+    public RollbackScreen() {
         super(Component.translatable("rollback.screen.title"));
-        this.backupManager = backupManager;
-        this.lastScreen = lastScreen;
         this.tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
-        this.shouldLoadWorld = true;
-    }
-
-    public static void queueReloadScreen(Minecraft client) {
-        client.forceSetScreen(new GenericDirtMessageScreen(Component.translatable("rollback.screen.reload")));
     }
 
     @Override
     public void init() {
         this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width).addTabs(
-            new BackupListTab(this, BackupType.AUTOMATED, "rollback.screen.tab.automated"),
-            new BackupListTab(this, BackupType.COMMAND, "rollback.screen.tab.command"),
-            new ActionTab(this)).build();
+            new BackupListTab(BackupType.AUTOMATED, "rollback.screen.tab.automated"),
+            new BackupListTab(BackupType.COMMAND, "rollback.screen.tab.command"),
+            new ActionTab()).build();
         addRenderableWidget(this.navigationBar);
         this.navigationBar.selectTab(0, false);
         this.repositionElements();
@@ -60,14 +45,6 @@ public class RollbackScreen extends Screen {
     public void tick() {
         super.tick();
         this.tabManager.tickCurrent();
-        if (this.shouldLoadWorld) {
-            try {
-                this.backupManager.loadWorld();
-                this.shouldLoadWorld = false;
-            } catch (BackupManagerException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     @Override
@@ -81,11 +58,5 @@ public class RollbackScreen extends Screen {
         if (this.navigationBar.keyPressed(keyCode))
             return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    @Override
-    public void onClose() {
-        Assertion.runtime(this.minecraft != null);
-        this.minecraft.setScreen(this.lastScreen);
     }
 }

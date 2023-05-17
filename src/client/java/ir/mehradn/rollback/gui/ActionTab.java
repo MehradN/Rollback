@@ -10,11 +10,9 @@ import net.minecraft.network.chat.Component;
 @Environment(EnvType.CLIENT)
 public class ActionTab extends GridLayoutTab {
     private static final Component TITLE = Component.translatable("rollback.screen.tab.action");
-    private final RollbackScreen screen;
 
-    public ActionTab(RollbackScreen screen) {
+    public ActionTab() {
         super(TITLE);
-        this.screen = screen;
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),
@@ -25,11 +23,7 @@ public class ActionTab extends GridLayoutTab {
             (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.openFolder"),
             (button) -> { }).width(200).build());
-        rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.optimizeBackups"),
-            (button) -> { }).width(200).build());
-        rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.optimizeFiles"),
-            (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.cancel"),
-            (button) -> this.screen.onClose()).width(200).build());
+            (button) -> { }).width(200).build());
     }
 }

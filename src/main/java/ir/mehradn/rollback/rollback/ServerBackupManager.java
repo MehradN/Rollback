@@ -87,6 +87,11 @@ public final class ServerBackupManager extends CommonBackupManager {
     }
 
     @Override
+    protected void broadcastSuccessfulRename(int backupID, BackupType type) {
+        this.server.sendSystemMessage(Component.translatable("rollback.success.renameBackup", backupID, type));
+    }
+
+    @Override
     protected void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.convertBackup", backupID, from, to));
     }

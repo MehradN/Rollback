@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 public class BackupListTab implements Tab {
-    private final RollbackScreen screen;
     private final Component title;
     private final BackupType backupType;
     private final List<AbstractWidget> widgets = new ArrayList<>();
@@ -26,9 +25,8 @@ public class BackupListTab implements Tab {
     private final Button renameButton;
     private final Button cancelButton;
 
-    public BackupListTab(RollbackScreen screen, BackupType backupType, String title) {
+    public BackupListTab(BackupType backupType, String title) {
         Assertion.argument(backupType.list, "Invalid type!");
-        this.screen = screen;
         this.backupType = backupType;
         this.title = Component.translatable(title);
 
@@ -41,7 +39,7 @@ public class BackupListTab implements Tab {
         this.renameButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rename"),
             (button) -> { }).size(100, 20).build());
         this.cancelButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"),
-            (button) -> this.screen.onClose()).size(100, 20).build());
+            (button) -> { }).size(100, 20).build());
     }
 
     @Override

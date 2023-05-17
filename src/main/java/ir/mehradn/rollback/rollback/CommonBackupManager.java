@@ -43,6 +43,26 @@ public abstract class CommonBackupManager implements BackupManager {
         return getBackupDirectory().resolve("rollbacks");
     }
 
+    public void saveWorld() throws BackupManagerException {
+        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
+        Rollback.LOGGER.debug("Saving the metadata file...");
+        Path metadataPath = getRollbackDirectory().resolve("rollbacks.json");
+        try {
+            Files.createDirectories(getRollbackDirectory());
+            try (FileWriter writer = new FileWriter(metadataPath.toFile())) {
+                GSON.toJson(this.data, writer);
+            }
+        } catch (IOException e) {
+            Rollback.LOGGER.error("Failed to save the metadata file!", e);
+            throw new BackupManagerException(BMECause.IO_EXCEPTION, "Failed to save the metadata file!", e);
+        }
+    }
+
+    @Override
+    public @NotNull State getCurrentState() {
+        return (this.world == null ? State.INITIAL : State.IDLE);
+    }
+
     @Override
     public @NotNull RollbackWorld getWorld() {
         Assertion.state(this.world != null, "Call loadWorld before this!");
@@ -83,22 +103,6 @@ public abstract class CommonBackupManager implements BackupManager {
         this.data.update(this);
         if (save)
             saveWorld();
-    }
-
-    @Override
-    public void saveWorld() throws BackupManagerException {
-        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        Rollback.LOGGER.debug("Saving the metadata file...");
-        Path metadataPath = getRollbackDirectory().resolve("rollbacks.json");
-        try {
-            Files.createDirectories(getRollbackDirectory());
-            try (FileWriter writer = new FileWriter(metadataPath.toFile())) {
-                GSON.toJson(this.data, writer);
-            }
-        } catch (IOException e) {
-            Rollback.LOGGER.error("Failed to save the metadata file!", e);
-            throw new BackupManagerException(BMECause.IO_EXCEPTION, "Failed to save the metadata file!", e);
-        }
     }
 
     @Override
@@ -209,13 +213,21 @@ public abstract class CommonBackupManager implements BackupManager {
     }
 
     @Override
-    public void convertBackup(int backupID, BackupType from, String name, BackupType to) throws BackupManagerException {
+    public void renameBackup(int backupID, BackupType type, String name) throws BackupManagerException {
+        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
+        Assertion.argument(type.list, "Invalid type");
+        Assertion.argument(name == null || name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
+        Rollback.LOGGER.info("Rename the backup #{} type {} to \"{}\"...", backupID, type, name);
+
+        this.world.getBackup(backupID, type).name = name;
+        saveWorld();
+        broadcastSuccessfulRename(backupID, type);
+    }
+
+    @Override
+    public void convertBackup(int backupID, BackupType from, BackupType to) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         Assertion.argument(from.convertFrom && to.convertTo && from != to, "Invalid types!");
-        if (name != null && (!to.list || name.isBlank()))
-            name = null;
-        Assertion.argument(name == null || name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
-
         Rollback.LOGGER.info("Converting the backup #{} from {} to {}", backupID, from, to);
         RollbackBackup backup = this.world.getBackup(backupID, from);
 
@@ -245,7 +257,6 @@ public abstract class CommonBackupManager implements BackupManager {
         this.world.getBackups(from).remove(backupID);
         if (to.list) {
             int id = ++this.world.lastID;
-            backup.name = name;
             this.world.getBackups(to).put(id, backup);
         }
         saveWorld();
@@ -284,6 +295,8 @@ public abstract class CommonBackupManager implements BackupManager {
     protected abstract void broadcastSuccessfulBackup(BackupType type, long size);
 
     protected abstract void broadcastSuccessfulDelete(int backupID, BackupType type);
+
+    protected abstract void broadcastSuccessfulRename(int backupID, BackupType type);
 
     protected abstract void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to);
 
