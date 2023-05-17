@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 
-public class AutomatedBackup {
+public final class AutomatedBackup {
     private static final int DAY = 24000;
     private static ServerBackupManager backupManager;
     private static long latestUpdate;

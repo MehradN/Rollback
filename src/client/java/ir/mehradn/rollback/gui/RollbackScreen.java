@@ -2,6 +2,7 @@ package ir.mehradn.rollback.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.exception.Assertion;
+import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.api.EnvType;
@@ -16,16 +17,18 @@ import net.minecraft.network.chat.Component;
 
 @Environment(EnvType.CLIENT)
 public class RollbackScreen extends Screen {
-    final BackupManager backupManager;
+    public final BackupManager backupManager;
     private final Screen lastScreen;
     private final TabManager tabManager;
     private TabNavigationBar navigationBar;
+    private boolean shouldLoadWorld;
 
     public RollbackScreen(BackupManager backupManager, Screen lastScreen) {
         super(Component.translatable("rollback.screen.title"));
         this.backupManager = backupManager;
         this.lastScreen = lastScreen;
         this.tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
+        this.shouldLoadWorld = true;
     }
 
     public static void queueReloadScreen(Minecraft client) {
@@ -57,6 +60,14 @@ public class RollbackScreen extends Screen {
     public void tick() {
         super.tick();
         this.tabManager.tickCurrent();
+        if (this.shouldLoadWorld) {
+            try {
+                this.backupManager.loadWorld();
+                this.shouldLoadWorld = false;
+            } catch (BackupManagerException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     @Override

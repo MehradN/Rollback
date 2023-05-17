@@ -35,7 +35,7 @@ public class RollbackClientConfig extends RollbackDefaultConfig {
     }
 
     @Override
-    public void save() throws IOException {
-        saveWith(GSON);
+    public Gson getGson() {
+        return GSON;
     }
 }

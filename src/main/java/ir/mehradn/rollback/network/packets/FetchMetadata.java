@@ -3,9 +3,9 @@ package ir.mehradn.rollback.network.packets;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public final class OpenGUI extends Packet<Void> {
-    OpenGUI() {
-        super("open_gui");
+public final class FetchMetadata extends Packet<Void> {
+    FetchMetadata() {
+        super("fetch_metadata");
     }
 
     @Override
