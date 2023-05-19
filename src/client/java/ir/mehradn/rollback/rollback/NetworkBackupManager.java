@@ -62,11 +62,11 @@ public final class NetworkBackupManager implements BackupManager {
 
     @Override public void deleteWorld() throws BackupManagerException { }
 
-    @Override public void createBackup(String name, BackupType type) throws BackupManagerException { }
+    @Override public void createBackup(BackupType type, @Nullable String name) throws BackupManagerException { }
 
     @Override public void deleteBackup(int backupID, BackupType type) throws BackupManagerException { }
 
-    @Override public void renameBackup(int backupID, BackupType type, String name) throws BackupManagerException { }
+    @Override public void renameBackup(int backupID, BackupType type, @Nullable String name) throws BackupManagerException { }
 
     @Override public void convertBackup(int backupID, BackupType from, BackupType to) throws BackupManagerException { }
 

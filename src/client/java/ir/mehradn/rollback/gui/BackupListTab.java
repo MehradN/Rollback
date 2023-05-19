@@ -31,9 +31,9 @@ public class BackupListTab implements Tab {
         this.title = Component.translatable(title);
 
         this.rollbackButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rollback"),
-            (button) -> { }).size(150, 20).build());
+            (button) -> { }).size(152, 20).build());
         this.convertButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.convert"),
-            (button) -> { }).size(150, 20).build());
+            (button) -> { }).size(152, 20).build());
         this.deleteButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.delete"),
             (button) -> { }).size(100, 20).build());
         this.renameButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rename"),
@@ -58,7 +58,7 @@ public class BackupListTab implements Tab {
         int mid = rect.position().x() + rect.width() / 2;
         int bottom = rect.position().y() + rect.height();
         this.rollbackButton.setPosition(mid - 154, bottom - 52);
-        this.convertButton.setPosition(mid + 4, bottom - 52);
+        this.convertButton.setPosition(mid + 2, bottom - 52);
         this.deleteButton.setPosition(mid - 154, bottom - 28);
         this.renameButton.setPosition(mid - 50, bottom - 28);
         this.cancelButton.setPosition(mid + 54, bottom - 28);

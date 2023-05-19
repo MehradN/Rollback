@@ -16,7 +16,7 @@ public class RollbackScreen extends Screen {
     private TabNavigationBar navigationBar;
 
     public RollbackScreen() {
-        super(Component.translatable("rollback.screen.title"));
+        super(Component.translatable("rollback.screen.title.rollbackScreen"));
         this.tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
     }
 
@@ -49,7 +49,7 @@ public class RollbackScreen extends Screen {
 
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
-        this.renderDirtBackground(poseStack);
+        renderDirtBackground(poseStack);
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
@@ -58,5 +58,11 @@ public class RollbackScreen extends Screen {
         if (this.navigationBar.keyPressed(keyCode))
             return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public void onClose() {
+        if (ScreenManager.getInstance() != null)
+            ScreenManager.deactivate();
     }
 }

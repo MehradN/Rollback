@@ -44,7 +44,7 @@ public final class RollbackCommand {
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
             throw new SimpleCommandExceptionType(Component.literal("The chosen name is too long! (at most 32 characters are allowed)")).create();
         try {
-            backupManager.createBackup(name, type);
+            backupManager.createBackup(type, name);
             return 1;
         } catch (BackupManagerException e) {
             return 0;

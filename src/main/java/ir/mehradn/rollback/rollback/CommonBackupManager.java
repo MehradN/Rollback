@@ -123,7 +123,7 @@ public abstract class CommonBackupManager implements BackupManager {
     }
 
     @Override
-    public void createBackup(String name, BackupType type) throws BackupManagerException {
+    public void createBackup(BackupType type, @Nullable String name) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         if (name != null && (!type.list || name.isBlank()))
             name = null;
@@ -213,10 +213,12 @@ public abstract class CommonBackupManager implements BackupManager {
     }
 
     @Override
-    public void renameBackup(int backupID, BackupType type, String name) throws BackupManagerException {
+    public void renameBackup(int backupID, BackupType type, @Nullable String name) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         Assertion.argument(type.list, "Invalid type");
-        Assertion.argument(name == null || name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
+        if (name != null && name.isBlank())
+            name = null;
+        Assertion.argument(name != null && name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
         Rollback.LOGGER.info("Rename the backup #{} type {} to \"{}\"...", backupID, type, name);
 
         this.world.getBackup(backupID, type).name = name;

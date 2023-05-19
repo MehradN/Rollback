@@ -11,6 +11,7 @@ import ir.mehradn.rollback.rollback.metadata.RollbackWorldConfig;
 import ir.mehradn.rollback.util.gson.LocalDateTimeAdapter;
 import ir.mehradn.rollback.util.gson.PathAdapter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 
@@ -33,11 +34,11 @@ public interface BackupManager {
 
     void deleteWorld() throws BackupManagerException;
 
-    void createBackup(String name, BackupType type) throws BackupManagerException;
+    void createBackup(BackupType type, @Nullable String name) throws BackupManagerException;
 
     void deleteBackup(int backupID, BackupType type) throws BackupManagerException;
 
-    void renameBackup(int backupID, BackupType type, String name) throws BackupManagerException;
+    void renameBackup(int backupID, BackupType type, @Nullable String name) throws BackupManagerException;
 
     void convertBackup(int backupID, BackupType from, BackupType to) throws BackupManagerException;
 
