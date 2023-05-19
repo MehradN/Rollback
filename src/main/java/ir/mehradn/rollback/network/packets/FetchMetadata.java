@@ -3,18 +3,20 @@ package ir.mehradn.rollback.network.packets;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public final class FetchMetadata extends Packet<Void> {
+public final class FetchMetadata extends Packet<Boolean, Boolean> {
     FetchMetadata() {
         super("fetch_metadata");
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Void data) {
-        return PacketByteBufs.empty();
+    public FriendlyByteBuf toBuf(Boolean data) {
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeBoolean(data);
+        return buf;
     }
 
     @Override
-    public Void fromBuf(FriendlyByteBuf buf) {
-        return null;
+    public Boolean fromBuf(FriendlyByteBuf buf) {
+        return buf.readBoolean();
     }
 }

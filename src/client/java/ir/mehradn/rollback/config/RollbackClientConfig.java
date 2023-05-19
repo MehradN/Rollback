@@ -15,7 +15,7 @@ public class RollbackClientConfig extends RollbackDefaultConfig {
     public final ConfigEntry<Boolean> replaceButton = new ConfigEntry<>("replaceButton", Boolean.class, true, null);
     public final ConfigEntry<Boolean> promptEnabled = new ConfigEntry<>("promptEnabled", Boolean.class, true, null);
     private static final Gson GSON = new GsonBuilder()
-        .registerTypeAdapter(RollbackClientConfig.class, new RollbackConfig.Adapter<>(RollbackClientConfig.class))
+        .registerTypeAdapter(RollbackClientConfig.class, new Adapter<>(RollbackClientConfig.class))
         .create();
 
     public RollbackClientConfig() {
@@ -34,8 +34,7 @@ public class RollbackClientConfig extends RollbackDefaultConfig {
         }
     }
 
-    @Override
-    public Gson getGson() {
+    @Override protected Gson getGson() {
         return GSON;
     }
 }

@@ -2,7 +2,6 @@ package ir.mehradn.rollback.rollback.metadata;
 
 import ir.mehradn.rollback.config.ConfigEntry;
 import ir.mehradn.rollback.config.RollbackConfig;
-import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.rollback.BackupManager;
 
 public class RollbackWorldConfig extends RollbackConfig implements UpdatesAfterLoading {
@@ -22,7 +21,7 @@ public class RollbackWorldConfig extends RollbackConfig implements UpdatesAfterL
 
     @Override
     public void update(BackupManager backupManager) {
-        RollbackDefaultConfig defaultConfig = backupManager.getDefaultConfig();
+        RollbackConfig defaultConfig = backupManager.getDefaultConfig();
         this.backupEnabled.setFallback(defaultConfig.backupEnabled);
         this.maxBackups.setFallback(defaultConfig.maxBackups);
         this.backupFrequency.setFallback(defaultConfig.backupFrequency);

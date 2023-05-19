@@ -1,9 +1,9 @@
 package ir.mehradn.rollback.rollback;
 
-import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ClientPacketManager;
+import ir.mehradn.rollback.network.RollbackNetworkConfig;
 import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.network.packets.SendMetadata;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 public final class NetworkBackupManager implements BackupManager {
     private final Minecraft client;
     @Nullable private RollbackWorld world = null;
-    @Nullable private RollbackDefaultConfig defaultConfig = null;
+    @Nullable private RollbackNetworkConfig defaultConfig = null;
     private State state;
 
     public NetworkBackupManager(Minecraft client) {
@@ -25,7 +25,7 @@ public final class NetworkBackupManager implements BackupManager {
         this.state = State.INITIAL;
     }
 
-    public void loadingFinished(@NotNull SendMetadata.Metadata metadata) {
+    public void loadingFinished(@NotNull SendMetadata.MetadataReceive metadata) {
         this.world = metadata.world();
         this.defaultConfig = metadata.config();
         actionFinished();
@@ -47,7 +47,7 @@ public final class NetworkBackupManager implements BackupManager {
     }
 
     @Override
-    public @NotNull RollbackDefaultConfig getDefaultConfig() {
+    public @NotNull RollbackNetworkConfig getDefaultConfig() {
         Assertion.state(this.defaultConfig != null, "Call loadWorld and wait for loading to be finished!");
         return this.defaultConfig;
     }
@@ -57,7 +57,7 @@ public final class NetworkBackupManager implements BackupManager {
         this.world = null;
         this.defaultConfig = null;
         this.state = State.LOADING;
-        ClientPacketManager.send(Packets.fetchMetadata, null);
+        ClientPacketManager.send(Packets.fetchMetadata, this.client.hasSingleplayerServer());
     }
 
     @Override public void deleteWorld() throws BackupManagerException { }

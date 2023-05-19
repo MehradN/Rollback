@@ -12,10 +12,10 @@ import java.nio.file.Path;
 import java.util.function.Supplier;
 
 public class RollbackDefaultConfig extends RollbackConfig {
-    public static final Gson GSON = new GsonBuilder()
-        .registerTypeAdapter(RollbackDefaultConfig.class, new RollbackConfig.Adapter<>(RollbackDefaultConfig.class))
-        .create();
     public static Supplier<RollbackDefaultConfig> defaultSupplier;
+    private static final Gson GSON = new GsonBuilder()
+        .registerTypeAdapter(RollbackDefaultConfig.class, new Adapter<>(RollbackDefaultConfig.class))
+        .create();
     // ConfigEntry<>("backupEnabled", Boolean.class, false, null),
     // ConfigEntry<>("maxBackups", Integer.class, 5, new ConfigEntry.IntegerTrimmer(1, MAX_AUTOMATED)),
     // ConfigEntry<>("backupFrequency", Integer.class, 1, new ConfigEntry.IntegerTrimmer(1, MAX_FREQUENCY)),
@@ -54,7 +54,7 @@ public class RollbackDefaultConfig extends RollbackConfig {
         }
     }
 
-    public Gson getGson() {
+    protected Gson getGson() {
         return GSON;
     }
 }

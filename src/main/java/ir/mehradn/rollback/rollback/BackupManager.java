@@ -3,7 +3,6 @@ package ir.mehradn.rollback.rollback;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ir.mehradn.rollback.config.RollbackConfig;
-import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.metadata.RollbackVersion;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
@@ -28,7 +27,7 @@ public interface BackupManager {
 
     @NotNull RollbackWorld getWorld();
 
-    @NotNull RollbackDefaultConfig getDefaultConfig();
+    @NotNull RollbackConfig getDefaultConfig();
 
     void loadWorld() throws BackupManagerException;
 

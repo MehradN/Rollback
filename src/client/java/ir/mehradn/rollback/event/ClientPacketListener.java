@@ -21,16 +21,17 @@ public final class ClientPacketListener {
         client.setScreen(null);
         client.pauseGame(false);
         ScreenManager.activate(client, new NetworkBackupManager(client));
+        ClientPacketManager.send(Packets.openGui, null);
     }
 
-    private static void onSendMetadata(Minecraft client, SendMetadata.Metadata data) {
-        NetworkBackupManager backupManager = getBackupManager(client);
+    private static void onSendMetadata(Minecraft client, SendMetadata.MetadataReceive data) {
+        NetworkBackupManager backupManager = getBackupManager();
         if (backupManager == null)
             return;
         backupManager.loadingFinished(data);
     }
 
-    private static @Nullable NetworkBackupManager getBackupManager(Minecraft client) {
+    private static @Nullable NetworkBackupManager getBackupManager() {
         if (ScreenManager.getInstance() != null && ScreenManager.getInstance().backupManager instanceof NetworkBackupManager backupManager)
             return backupManager;
         return null;

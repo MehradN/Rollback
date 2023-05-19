@@ -55,7 +55,7 @@ public abstract class RollbackConfig {
         return this.entries;
     }
 
-    protected JsonObject toJson() {
+    JsonObject toJson() {
         JsonObject json = new JsonObject();
         for (ConfigEntry<?> entry : this.getEntries())
             if (!entry.needsFallback())
@@ -63,7 +63,7 @@ public abstract class RollbackConfig {
         return json;
     }
 
-    protected void fromJson(JsonObject json) {
+    void fromJson(JsonObject json) {
         for (ConfigEntry<?> entry : this.getEntries())
             setEntryFromJson(entry, json.get(entry.name));
     }

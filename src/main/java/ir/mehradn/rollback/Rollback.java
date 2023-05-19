@@ -3,6 +3,7 @@ package ir.mehradn.rollback;
 import ir.mehradn.rollback.event.AutomatedBackup;
 import ir.mehradn.rollback.event.RollbackCommand;
 import ir.mehradn.rollback.event.ServerPacketListener;
+import ir.mehradn.rollback.event.ServerTickTimer;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ public class Rollback implements ModInitializer {
         LOGGER.info("Registering events...");
         RollbackCommand.register();
         AutomatedBackup.register();
+        ServerTickTimer.register();
         Rollback.LOGGER.info("Registering packet listeners...");
         ServerPacketListener.register();
     }

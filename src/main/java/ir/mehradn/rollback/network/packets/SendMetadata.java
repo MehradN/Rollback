@@ -5,13 +5,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.network.JsonCompressor;
+import ir.mehradn.rollback.network.RollbackNetworkConfig;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public final class SendMetadata extends Packet<SendMetadata.Metadata> {
-    private static final JsonCompressor COMPRESSOR = new JsonCompressor(false);
+public final class SendMetadata extends Packet<SendMetadata.MetadataSend, SendMetadata.MetadataReceive> {
     private static final Gson GSON = new Gson();
 
     SendMetadata() {
@@ -19,10 +19,9 @@ public final class SendMetadata extends Packet<SendMetadata.Metadata> {
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Metadata data) {
+    public FriendlyByteBuf toBuf(MetadataSend data) {
         JsonElement json = data.toJson();
-        JsonElement compressed = COMPRESSOR.compress(json);
-        String string = GSON.toJson(compressed);
+        String string = GSON.toJson(json);
 
         FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeUtf(string);
@@ -30,29 +29,38 @@ public final class SendMetadata extends Packet<SendMetadata.Metadata> {
     }
 
     @Override
-    public Metadata fromBuf(FriendlyByteBuf buf) {
+    public MetadataReceive fromBuf(FriendlyByteBuf buf) {
         String string = buf.readUtf();
-        JsonElement compressed = GSON.fromJson(string, JsonElement.class);
-        JsonElement json = COMPRESSOR.decompress(compressed);
-        return Metadata.fromJson(json.getAsJsonObject());
+        JsonElement json = GSON.fromJson(string, JsonElement.class);
+        return MetadataReceive.fromJson(json);
     }
 
-    public record Metadata(RollbackWorld world, RollbackDefaultConfig config) {
-        public static Metadata fromJson(JsonObject json) {
-            JsonElement worldJson = json.get("world");
-            JsonElement configJson = json.get("defaultConfig");
-            RollbackWorld world = BackupManager.GSON.fromJson(worldJson, RollbackWorld.class);
-            RollbackDefaultConfig config = RollbackDefaultConfig.GSON.fromJson(configJson, RollbackDefaultConfig.class);
-            return new Metadata(world, config);
-        }
+    public record MetadataSend(boolean integrated, RollbackWorld world, RollbackDefaultConfig config) {
+        JsonElement toJson() {
+            RollbackNetworkConfig networkConfig = new RollbackNetworkConfig();
+            networkConfig.copyFrom(this.config);
 
-        public JsonObject toJson() {
             JsonElement worldJson = BackupManager.GSON.toJsonTree(this.world, RollbackWorld.class);
-            JsonElement configJson = this.config.getGson().toJsonTree(this.config);
+            JsonElement configJson = networkConfig.toJson();
             JsonObject json = new JsonObject();
             json.add("world", worldJson);
             json.add("defaultConfig", configJson);
-            return json;
+
+            JsonCompressor compressor = new JsonCompressor(this.integrated);
+            return compressor.compress(json);
+        }
+    }
+
+    public record MetadataReceive(RollbackWorld world, RollbackNetworkConfig config) {
+        static MetadataReceive fromJson(JsonElement json) {
+            JsonCompressor compressor = new JsonCompressor(false);
+            JsonObject object = compressor.decompress(json).getAsJsonObject();
+            JsonElement worldJson = object.get("world");
+            JsonElement configJson = object.get("defaultConfig");
+
+            RollbackWorld world = BackupManager.GSON.fromJson(worldJson, RollbackWorld.class);
+            RollbackNetworkConfig config = RollbackNetworkConfig.fromJson(configJson);
+            return new MetadataReceive(world, config);
         }
     }
 }

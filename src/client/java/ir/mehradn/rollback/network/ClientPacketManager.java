@@ -8,14 +8,14 @@ import net.minecraft.client.Minecraft;
 
 @Environment(EnvType.CLIENT)
 public final class ClientPacketManager {
-    public static <T> void register(Packet<T> packet, OnReceive<T> onReceive) {
+    public static <T> void register(Packet<?, T> packet, OnReceive<T> onReceive) {
         ClientPlayNetworking.registerGlobalReceiver(packet.identifier, ((client, handler, buf, responseSender) -> {
             T data = packet.fromBuf(buf);
             client.execute(() -> onReceive.call(client, data));
         }));
     }
 
-    public static <T> void send(Packet<T> packet, T data) {
+    public static <T> void send(Packet<T, ?> packet, T data) {
         ClientPlayNetworking.send(packet.identifier, packet.toBuf(data));
     }
 

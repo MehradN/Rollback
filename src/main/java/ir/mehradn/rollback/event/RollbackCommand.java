@@ -7,15 +7,18 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
+import ir.mehradn.rollback.network.packets.OpenGUI;
 import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.rollback.ServerBackupManager;
+import ir.mehradn.rollback.util.TickTimer;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 public final class RollbackCommand {
     public static void register() {
@@ -52,7 +55,19 @@ public final class RollbackCommand {
     }
 
     private static int requestOpenGui(CommandContext<CommandSourceStack> context) {
-        ServerPacketManager.send(context.getSource().getPlayer(), Packets.openGui, null);
+        CommandSourceStack source = context.getSource();
+        ServerPlayer player = source.getPlayer();
+        if (OpenGUI.awaitingPlayers.contains(player))
+            return 0;
+
+        OpenGUI.awaitingPlayers.add(player);
+        ServerTickTimer.addTimer(new TickTimer(100, () -> {
+            if (OpenGUI.awaitingPlayers.contains(player)) {
+                source.sendFailure(Component.literal("Failed to open the gui screen. Are you sure you have the mod installed on your client?"));
+                OpenGUI.awaitingPlayers.remove(player);
+            }
+        }));
+        ServerPacketManager.send(player, Packets.openGui, null);
         return 1;
     }
 
