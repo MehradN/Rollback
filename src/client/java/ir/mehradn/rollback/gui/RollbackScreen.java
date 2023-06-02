@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -9,23 +10,39 @@ import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
 public class RollbackScreen extends Screen {
+    @Nullable public BackupSelectionList selectionList = null;
     private final TabManager tabManager;
     private TabNavigationBar navigationBar;
+    private BackupListTab automatedTab;
+    private BackupListTab commandTab;
+    private boolean canRollback = false;
+    private boolean canModify = false;
+    private boolean showSelectionList = false;
 
     public RollbackScreen() {
         super(Component.translatable("rollback.screen.title.rollbackScreen"));
         this.tabManager = new TabManager(this::addRenderableWidget, this::removeWidget);
     }
 
+    public void setEntrySelected(boolean canRollback, boolean canModify) {
+        this.canRollback = canRollback;
+        this.canModify = canModify;
+        this.automatedTab.setEntrySelected(canRollback, canModify);
+        this.commandTab.setEntrySelected(canRollback, canModify);
+    }
+
     @Override
     public void init() {
-        this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width).addTabs(
-            new BackupListTab(BackupType.AUTOMATED, "rollback.screen.tab.automated"),
-            new BackupListTab(BackupType.COMMAND, "rollback.screen.tab.command"),
-            new ActionTab()).build();
+        this.automatedTab = new BackupListTab(BackupType.AUTOMATED, "rollback.screen.tab.automated");
+        this.commandTab = new BackupListTab(BackupType.COMMAND, "rollback.screen.tab.command");
+        setEntrySelected(this.canRollback, this.canModify);
+
+        this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width)
+            .addTabs(this.automatedTab, this.commandTab, new ActionTab()).build();
         addRenderableWidget(this.navigationBar);
         this.navigationBar.selectTab(0, false);
         this.repositionElements();
@@ -39,6 +56,12 @@ public class RollbackScreen extends Screen {
         this.navigationBar.arrangeElements();
         int y = this.navigationBar.getRectangle().bottom();
         this.tabManager.setTabArea(new ScreenRectangle(0, y + 8, this.width, this.height - y - 8));
+
+        removeWidget(this.selectionList);
+        this.showSelectionList = false;
+        setEntrySelected(false, false);
+        this.selectionList = new BackupSelectionList(this.minecraft, this.width, this.height, y + 8, this.height - 64, 36);
+        adjustSelectionListBackupType();
     }
 
     @Override
@@ -50,6 +73,11 @@ public class RollbackScreen extends Screen {
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         renderDirtBackground(poseStack);
+
+        adjustSelectionListBackupType();
+        if (this.selectionList != null && this.showSelectionList)
+            this.selectionList.render(poseStack, mouseX, mouseY, partialTick);
+
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
@@ -61,8 +89,33 @@ public class RollbackScreen extends Screen {
     }
 
     @Override
+    public void removed() {
+        if (this.selectionList != null)
+            this.selectionList.children().forEach(BackupSelectionList.Entry::close);
+    }
+
+    @Override
     public void onClose() {
         if (ScreenManager.getInstance() != null)
             ScreenManager.deactivate();
+        else
+            super.onClose();
+    }
+
+    private void adjustSelectionListBackupType() {
+        Assertion.state(this.selectionList != null);
+        if (this.tabManager.getCurrentTab() instanceof BackupListTab tab) {
+            if (!this.showSelectionList) {
+                addWidget(this.selectionList);
+                this.showSelectionList = true;
+            }
+            this.selectionList.setBackupType(tab.backupType);
+        } else {
+            if (this.showSelectionList) {
+                removeWidget(this.selectionList);
+                this.showSelectionList = false;
+                setEntrySelected(false, false);
+            }
+        }
     }
 }

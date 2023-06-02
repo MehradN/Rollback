@@ -26,7 +26,7 @@ public final class ServerBackupManager extends CommonBackupManager {
     }
 
     @Override
-    public void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException {
+    public void rollbackToBackup(int backupID, BackupType type) {
         //noinspection DataFlowIssue
         Assertion.runtime(false, "Rollback is not implemented for servers");
     }

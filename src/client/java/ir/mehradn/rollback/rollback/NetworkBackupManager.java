@@ -15,13 +15,13 @@ import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
 public final class NetworkBackupManager implements BackupManager {
-    private final Minecraft client;
+    private final Minecraft minecraft;
     @Nullable private RollbackWorld world = null;
     @Nullable private RollbackNetworkConfig defaultConfig = null;
     private State state;
 
-    public NetworkBackupManager(Minecraft client) {
-        this.client = client;
+    public NetworkBackupManager(Minecraft minecraft) {
+        this.minecraft = minecraft;
         this.state = State.INITIAL;
     }
 
@@ -57,7 +57,7 @@ public final class NetworkBackupManager implements BackupManager {
         this.world = null;
         this.defaultConfig = null;
         this.state = State.LOADING;
-        ClientPacketManager.send(Packets.fetchMetadata, this.client.hasSingleplayerServer());
+        ClientPacketManager.send(Packets.fetchMetadata, this.minecraft.hasSingleplayerServer());
     }
 
     @Override public void deleteWorld() throws BackupManagerException { }

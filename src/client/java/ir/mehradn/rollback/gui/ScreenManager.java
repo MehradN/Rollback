@@ -1,5 +1,6 @@
 package ir.mehradn.rollback.gui;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.BackupManager;
@@ -22,15 +23,15 @@ import java.nio.file.Path;
 public final class ScreenManager {
     public final BackupManager backupManager;
     @Nullable private static ScreenManager instance = null;
-    private final Minecraft client;
+    final RollbackScreen rollbackScreen;
+    private final Minecraft minecraft;
     private final Screen lastScreen;
-    private final RollbackScreen rollbackScreen;
     private boolean onInputScreen = false;
 
-    private ScreenManager(Minecraft client, BackupManager backupManager) {
+    private ScreenManager(Minecraft minecraft, BackupManager backupManager) {
         this.backupManager = backupManager;
-        this.client = client;
-        this.lastScreen = client.screen;
+        this.minecraft = minecraft;
+        this.lastScreen = minecraft.screen;
         this.rollbackScreen = new RollbackScreen();
     }
 
@@ -38,16 +39,16 @@ public final class ScreenManager {
         return instance;
     }
 
-    public static void activate(Minecraft client, BackupManager backupManager) {
+    public static void activate(Minecraft minecraft, BackupManager backupManager) {
         if (instance != null)
             deactivate();
-        instance = new ScreenManager(client, backupManager);
+        instance = new ScreenManager(minecraft, backupManager);
     }
 
     public static void deactivate() {
         if (instance == null)
             return;
-        instance.client.setScreen(instance.lastScreen);
+        instance.minecraft.setScreen(instance.lastScreen);
         instance = null;
     }
 
@@ -69,6 +70,7 @@ public final class ScreenManager {
         }
     }
 
+    // TODO
     public void deleteBackup(int backupID, BackupType type) {
         try {
             setMessageScreen(Component.translatable("rollback.screen.message.deleting"));
@@ -80,7 +82,7 @@ public final class ScreenManager {
 
     public void renameBackup(int backupID, BackupType type) {
         this.onInputScreen = true;
-        this.client.setScreen(new RenameScreen(
+        this.minecraft.setScreen(new RenameScreen(
             this.backupManager.getWorld().getBackup(backupID, type).name,
             (renamed, name) -> {
                 this.onInputScreen = false;
@@ -97,7 +99,7 @@ public final class ScreenManager {
 
     public void convertBackup(int backupID, BackupType from) {
         this.onInputScreen = true;
-        this.client.setScreen(new ConvertScreen(from,
+        this.minecraft.setScreen(new ConvertScreen(from,
             (converted, to) -> {
                 this.onInputScreen = false;
                 if (!converted)
@@ -111,6 +113,7 @@ public final class ScreenManager {
             }));
     }
 
+    // TODO
     public void rollbackToBackup(int backupID, BackupType type) {
         try {
             setMessageScreen(Component.translatable("rollback.screen.message.rolling"));
@@ -118,6 +121,12 @@ public final class ScreenManager {
         } catch (BackupManagerException e) {
             Rollback.LOGGER.error("Failed to rollback to the backup!", e);
         }
+    }
+
+    // TODO
+    public void playCurrentSave() {
+        if (this.minecraft.level != null)
+            deactivate();
     }
 
     // TODO
@@ -143,7 +152,7 @@ public final class ScreenManager {
     }
 
     public void openBackupFolder() {
-        LevelStorageSource levelStorageSource = this.client.getLevelSource();
+        LevelStorageSource levelStorageSource = this.minecraft.getLevelSource();
         Path path = levelStorageSource.getBackupPath();
 
         try {
@@ -157,14 +166,14 @@ public final class ScreenManager {
 
     public void onError(String translatableTitle, String literalInfo) {
         this.onInputScreen = true;
-        this.client.forceSetScreen(new RollbackErrorScreen(
+        this.minecraft.forceSetScreen(new RollbackErrorScreen(
             Component.translatable(translatableTitle),
             Component.literal(literalInfo),
             () -> this.onInputScreen = false));
     }
 
     public void onSuccess(Component title, Component info) {
-        this.client.getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
+        this.minecraft.getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
     }
 
     public void onTick() {
@@ -174,8 +183,8 @@ public final class ScreenManager {
         BackupManager.State state = this.backupManager.getCurrentState();
         if (state == BackupManager.State.INITIAL)
             loadMetadata();
-        if (state == BackupManager.State.IDLE && this.client.screen != this.rollbackScreen)
-            this.client.setScreen(this.rollbackScreen);
+        if (state == BackupManager.State.IDLE && this.minecraft.screen != this.rollbackScreen)
+            this.minecraft.setScreen(this.rollbackScreen);
     }
 
     // TODO
@@ -183,7 +192,19 @@ public final class ScreenManager {
         this.loadMetadata();
     }
 
+    // TODO
+    public Component currentSaveLastPlayed() {
+        if (this.minecraft.level != null)
+            return Component.translatable("rollback.screen.text.playingNow");
+        return Component.empty();
+    }
+
+    // TODO
+    public @Nullable NativeImage loadCurrentSaveIcon() {
+        return null;
+    }
+
     private void setMessageScreen(Component message) {
-        this.client.forceSetScreen(new GenericDirtMessageScreen(message));
+        this.minecraft.forceSetScreen(new GenericDirtMessageScreen(message));
     }
 }

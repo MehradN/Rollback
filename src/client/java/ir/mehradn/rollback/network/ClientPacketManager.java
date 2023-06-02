@@ -9,9 +9,9 @@ import net.minecraft.client.Minecraft;
 @Environment(EnvType.CLIENT)
 public final class ClientPacketManager {
     public static <T> void register(Packet<?, T> packet, OnReceive<T> onReceive) {
-        ClientPlayNetworking.registerGlobalReceiver(packet.identifier, ((client, handler, buf, responseSender) -> {
+        ClientPlayNetworking.registerGlobalReceiver(packet.identifier, ((minecraft, handler, buf, responseSender) -> {
             T data = packet.fromBuf(buf);
-            client.execute(() -> onReceive.call(client, data));
+            minecraft.execute(() -> onReceive.call(minecraft, data));
         }));
     }
 
@@ -21,6 +21,6 @@ public final class ClientPacketManager {
 
     @FunctionalInterface
     public interface OnReceive <T> {
-        void call(Minecraft client, T data);
+        void call(Minecraft minecraft, T data);
     }
 }

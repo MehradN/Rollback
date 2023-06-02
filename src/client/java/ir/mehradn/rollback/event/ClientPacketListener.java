@@ -17,14 +17,14 @@ public final class ClientPacketListener {
         ClientPacketManager.register(Packets.sendMetadata, ClientPacketListener::onSendMetadata);
     }
 
-    private static void onOpenGui(Minecraft client, Void data) {
-        client.setScreen(null);
-        client.pauseGame(false);
-        ScreenManager.activate(client, new NetworkBackupManager(client));
+    private static void onOpenGui(Minecraft minecraft, Void data) {
+        minecraft.setScreen(null);
+        minecraft.pauseGame(false);
+        ScreenManager.activate(minecraft, new NetworkBackupManager(minecraft));
         ClientPacketManager.send(Packets.openGui, null);
     }
 
-    private static void onSendMetadata(Minecraft client, SendMetadata.MetadataReceive data) {
+    private static void onSendMetadata(Minecraft minecraft, SendMetadata.MetadataReceive data) {
         NetworkBackupManager backupManager = getBackupManager();
         if (backupManager == null)
             return;

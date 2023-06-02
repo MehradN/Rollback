@@ -1,6 +1,5 @@
 package ir.mehradn.rollback.gui;
 
-import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -16,8 +15,8 @@ import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 public class BackupListTab implements Tab {
+    public final BackupType backupType;
     private final Component title;
-    private final BackupType backupType;
     private final List<AbstractWidget> widgets = new ArrayList<>();
     private final Button rollbackButton;
     private final Button convertButton;
@@ -26,7 +25,6 @@ public class BackupListTab implements Tab {
     private final Button cancelButton;
 
     public BackupListTab(BackupType backupType, String title) {
-        Assertion.argument(backupType.list, "Invalid type!");
         this.backupType = backupType;
         this.title = Component.translatable(title);
 
@@ -40,6 +38,15 @@ public class BackupListTab implements Tab {
             (button) -> { }).size(100, 20).build());
         this.cancelButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"),
             (button) -> { }).size(100, 20).build());
+
+        setEntrySelected(false, false);
+    }
+
+    public void setEntrySelected(boolean canRollback, boolean canModify) {
+        this.rollbackButton.active = canRollback;
+        this.convertButton.active = canModify;
+        this.deleteButton.active = canModify;
+        this.renameButton.active = canModify;
     }
 
     @Override
