@@ -60,7 +60,7 @@ public class RollbackScreen extends Screen {
         removeWidget(this.selectionList);
         this.showSelectionList = false;
         setEntrySelected(false, false);
-        this.selectionList = new BackupSelectionList(this.minecraft, this.width, this.height, y + 8, this.height - 64, 36);
+        this.selectionList = new BackupSelectionList(this.minecraft, this.width, this.height, y + 8, this.height - 68, 36);
         adjustSelectionListBackupType();
     }
 
@@ -75,8 +75,13 @@ public class RollbackScreen extends Screen {
         renderDirtBackground(poseStack);
 
         adjustSelectionListBackupType();
-        if (this.selectionList != null && this.showSelectionList)
+        if (this.selectionList != null && this.showSelectionList) {
             this.selectionList.render(poseStack, mouseX, mouseY, partialTick);
+
+            Component text = Component.translatable("rollback.screen.text.total", this.selectionList.getFileSizeSumAsString());
+            int width = this.font.width(text);
+            drawString(poseStack, this.font, text, this.width / 2 + 154 - width, this.height - 64, 0x808080);
+        }
 
         super.render(poseStack, mouseX, mouseY, partialTick);
     }

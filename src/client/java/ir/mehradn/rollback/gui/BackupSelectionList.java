@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,8 +34,9 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
     private final ScreenManager screenManager;
     private final BackupManager backupManager;
     private final CurrentSaveEntry currentSaveEntry;
-    private boolean shouldReloadEntries;
-    private BackupType backupType;
+    private boolean shouldReloadEntries = true;
+    private BackupType backupType = BackupType.AUTOMATED;
+    private long fileSizeSum = 0;
 
     public BackupSelectionList(Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
         super(minecraft, width, height, top, bottom, itemHeight);
@@ -42,8 +44,6 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         Assertion.state(this.screenManager != null, "Create a screen manager before this!");
         this.backupManager = this.screenManager.backupManager;
         this.currentSaveEntry = new CurrentSaveEntry();
-        this.shouldReloadEntries = true;
-        this.backupType = BackupType.AUTOMATED;
     }
 
     public void suggestReloadingEntries() {
@@ -55,6 +55,10 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
             this.backupType = type;
             suggestReloadingEntries();
         }
+    }
+
+    public String getFileSizeSumAsString() {
+        return FileUtils.byteCountToDisplaySize(this.fileSizeSum);
     }
 
     @Override
@@ -84,11 +88,18 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         clearEntries();
         setSelected(null);
         addEntry(this.currentSaveEntry);
+        centerScrollOn(this.currentSaveEntry);
 
         List<Integer> backups = new ArrayList<>(this.backupManager.getWorld().getBackups(this.backupType).keySet());
         Collections.sort(backups);
-        for (int i = 1; i <= backups.size(); i++)
-            addEntry(new BackupEntry(i, backups.get(backups.size() - i)));
+        this.fileSizeSum = 0;
+        for (int i = 1; i <= backups.size(); i++) {
+            int id = backups.get(backups.size() - i);
+            addEntry(new BackupEntry(i, id));
+            long fileSize = this.backupManager.getWorld().getBackup(id, this.backupType).fileSize;
+            if (fileSize >= 0)
+                this.fileSizeSum += fileSize;
+        }
 
         this.screenManager.rollbackScreen.triggerImmediateNarration(true);
         this.shouldReloadEntries = false;
@@ -240,14 +251,14 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
                 super.render(
                     Component.translatable("rollback.screen.text.day", this.backup.getDaysPlayedAsString()),
                     Component.translatable("rollback.screen.text.creationDate", this.backup.getDateAsString()),
-                    Component.empty(),
+                    Component.translatable("rollback.screen.text.restOfInfo", this.backup.getFileSizeAsString()),
                     poseStack, top, left, mouseX, isMouseOver
                 );
             } else {
                 super.render(
                     Component.literal(this.backup.name),
                     Component.translatable("rollback.screen.text.creationDate", this.backup.getDateAsString()),
-                    Component.translatable("rollback.screen.text.day", this.backup.getDaysPlayedAsString()),
+                    Component.translatable("rollback.screen.text.allOfInfo", this.backup.getDaysPlayedAsString(), this.backup.getFileSizeAsString()),
                     poseStack, top, left, mouseX, isMouseOver
                 );
             }
@@ -257,10 +268,11 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         public @NotNull Component getNarration() {
             String date = this.backup.getDateAsString();
             String days = this.backup.getDaysPlayedAsString();
+            String size = this.backup.getFileSizeAsString();
             if (this.backup.name == null)
-                return Component.translatable("rollback.screen.narrator.unnamedBackup", this.index, date, days);
+                return Component.translatable("rollback.screen.narrator.unnamedBackup", this.index, date, days, size);
             else
-                return Component.translatable("rollback.screen.narrator.nameBackup", this.index, this.backup.name, date, days);
+                return Component.translatable("rollback.screen.narrator.nameBackup", this.index, this.backup.name, date, days, size);
         }
 
         @Override
