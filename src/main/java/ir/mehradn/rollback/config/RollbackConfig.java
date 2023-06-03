@@ -1,7 +1,10 @@
 package ir.mehradn.rollback.config;
 
 import com.google.gson.*;
+import ir.mehradn.rollback.exception.Assertion;
+import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupType;
+import net.minecraft.network.FriendlyByteBuf;
 import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -12,14 +15,14 @@ public abstract class RollbackConfig {
     public static final int MAX_COMMAND = 99;
     public static final int MAX_FREQUENCY = 100;
     public final ConfigEntry<Boolean> backupEnabled;
-    public final ConfigEntry<Integer> maxBackups;
-    public final ConfigEntry<Integer> backupFrequency;
+    public final ConfigEntry<Short> maxBackups;
+    public final ConfigEntry<Short> backupFrequency;
     public final ConfigEntry<TimerMode> timerMode;
     protected List<ConfigEntry<?>> entries;
     private static final Gson GSON = new GsonBuilder().create();
     private boolean locked = false;
 
-    protected RollbackConfig(ConfigEntry<Boolean> backupEnabled, ConfigEntry<Integer> maxBackups, ConfigEntry<Integer> backupFrequency,
+    protected RollbackConfig(ConfigEntry<Boolean> backupEnabled, ConfigEntry<Short> maxBackups, ConfigEntry<Short> backupFrequency,
                              ConfigEntry<TimerMode> timerMode) {
         this.backupEnabled = backupEnabled;
         this.maxBackups = maxBackups;
@@ -55,6 +58,39 @@ public abstract class RollbackConfig {
         return this.entries;
     }
 
+    protected void writeToBuf(FriendlyByteBuf buf) {
+        int size = this.getEntries().size();
+        boolean[] c = new boolean[size];
+        for (int i = 0; i < size; i++)
+            c[i] = !this.getEntries().get(i).needsFallback();
+        Packets.writeBooleanArray(buf, c);
+
+        for (int i = 0; i < size; i++) {
+            if (!c[i])
+                continue;
+            ConfigEntry<?> entry = this.getEntries().get(i);
+            if (entry.type == Boolean.class)
+                buf.writeBoolean((boolean)entry.get());
+            else if (entry.type == Short.class)
+                buf.writeShort((short)entry.get());
+            else if (entry.type.isEnum())
+                buf.writeEnum((Enum<?>)entry.get());
+            else //noinspection DataFlowIssue
+                Assertion.runtime(false);
+        }
+    }
+
+    protected void readFromBuf(FriendlyByteBuf buf) {
+        int size = this.getEntries().size();
+        boolean[] c = Packets.readBooleanArray(buf, size);
+        for (int i = 0; i < size; i++) {
+            if (!c[i])
+                continue;
+            ConfigEntry<?> entry = this.getEntries().get(i);
+            setEntryFromBuf(entry, buf);
+        }
+    }
+
     JsonObject toJson() {
         JsonObject json = new JsonObject();
         for (ConfigEntry<?> entry : this.getEntries())
@@ -73,6 +109,23 @@ public abstract class RollbackConfig {
             entry.set(GSON.fromJson(json, entry.type));
         else
             entry.reset();
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> void setEntryFromBuf(ConfigEntry<T> entry, FriendlyByteBuf buf) {
+        if (entry.type == Boolean.class)
+            entry.set((T)(Object)buf.readBoolean());
+        else if (entry.type == Short.class)
+            entry.set((T)(Object)buf.readShort());
+        else if (entry.type.isEnum())
+            setEnumEntryFromBuf(entry, buf);
+        else //noinspection DataFlowIssue
+            Assertion.runtime(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S, T extends Enum<T>> void setEnumEntryFromBuf(ConfigEntry<S> entry, FriendlyByteBuf buf) {
+        entry.set((S)buf.readEnum((Class<T>)entry.type));
     }
 
     public enum TimerMode {

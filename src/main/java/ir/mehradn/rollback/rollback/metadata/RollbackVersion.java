@@ -1,25 +1,30 @@
 package ir.mehradn.rollback.rollback.metadata;
 
 import com.google.gson.*;
+import net.minecraft.network.FriendlyByteBuf;
 import java.lang.reflect.Type;
 
-public class RollbackVersion {
+public class RollbackVersion implements RollbackMetadata {
     public static final RollbackVersion LATEST_VERSION = new RollbackVersion(0, 9);
     public static final RollbackVersion DEFAULT_VERSION = new RollbackVersion(0, 1);
-    private final int major;
-    private final int minor;
+    public final short major;
+    public final short minor;
 
     public RollbackVersion(int major, int minor) {
-        this.major = major;
-        this.minor = minor;
+        this.major = (short)major;
+        this.minor = (short)minor;
     }
 
     public static RollbackVersion fromString(String version) {
         String[] versionParts = version.split("\\.");
         return new RollbackVersion(
-            Integer.parseInt(versionParts[0]),
-            Integer.parseInt(versionParts[1])
+            Short.parseShort(versionParts[0]),
+            Short.parseShort(versionParts[1])
         );
+    }
+
+    public static RollbackVersion fromBuf(FriendlyByteBuf buf) {
+        return new RollbackVersion(buf.readShort(), buf.readShort());
     }
 
     public boolean isLessThan(int major, int minor) {
@@ -30,12 +35,30 @@ public class RollbackVersion {
         return isLessThan(version.major, version.minor);
     }
 
+    public boolean equals(int major, int minor) {
+        return (this.major == major && this.minor == minor);
+    }
+
+    public boolean equals(RollbackVersion version) {
+        return equals(version.major, version.minor);
+    }
+
     public boolean isOutdated() {
         return isLessThan(LATEST_VERSION);
     }
 
+    public boolean notMatch() {
+        return !equals(LATEST_VERSION);
+    }
+
     public String toString() {
         return this.major + "." + this.minor;
+    }
+
+    @Override
+    public void writeToBuf(FriendlyByteBuf buf, boolean integrated) {
+        buf.writeShort(this.major);
+        buf.writeShort(this.minor);
     }
 
     public static class Adapter implements JsonSerializer<RollbackVersion>, JsonDeserializer<RollbackVersion> {

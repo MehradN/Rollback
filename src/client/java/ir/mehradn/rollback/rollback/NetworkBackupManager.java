@@ -1,9 +1,9 @@
 package ir.mehradn.rollback.rollback;
 
+import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ClientPacketManager;
-import ir.mehradn.rollback.network.RollbackNetworkConfig;
 import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.network.packets.SendMetadata;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
@@ -28,6 +28,7 @@ public final class NetworkBackupManager implements BackupManager {
     public void loadingFinished(@NotNull SendMetadata.MetadataReceive metadata) {
         this.world = metadata.world();
         this.defaultConfig = metadata.config();
+        this.world.update(this);
         actionFinished();
     }
 

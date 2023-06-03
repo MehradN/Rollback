@@ -17,15 +17,15 @@ public class RollbackDefaultConfig extends RollbackConfig {
         .registerTypeAdapter(RollbackDefaultConfig.class, new Adapter<>(RollbackDefaultConfig.class))
         .create();
     // ConfigEntry<>("backupEnabled", Boolean.class, false, null),
-    // ConfigEntry<>("maxBackups", Integer.class, 5, new ConfigEntry.IntegerTrimmer(1, MAX_AUTOMATED)),
-    // ConfigEntry<>("backupFrequency", Integer.class, 1, new ConfigEntry.IntegerTrimmer(1, MAX_FREQUENCY)),
+    // ConfigEntry<>("maxBackups", Short.class, (short)5, new ConfigEntry.ShortTrimmer(1, MAX_AUTOMATED)),
+    // ConfigEntry<>("backupFrequency", Short.class, (short)1, new ConfigEntry.ShortTrimmer(1, MAX_FREQUENCY)),
     // ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
 
     public RollbackDefaultConfig() {
         super(
             new ConfigEntry<>("backupEnabled", Boolean.class, false, null),
-            new ConfigEntry<>("maxBackups", Integer.class, 5, new ConfigEntry.IntegerTrimmer(1, MAX_AUTOMATED)),
-            new ConfigEntry<>("backupFrequency", Integer.class, 1, new ConfigEntry.IntegerTrimmer(1, MAX_FREQUENCY)),
+            new ConfigEntry<>("maxBackups", Short.class, (short)5, new ConfigEntry.ShortTrimmer(1, MAX_AUTOMATED)),
+            new ConfigEntry<>("backupFrequency", Short.class, (short)1, new ConfigEntry.ShortTrimmer(1, MAX_FREQUENCY)),
             new ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
         );
     }

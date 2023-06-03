@@ -164,6 +164,11 @@ public final class ScreenManager {
         Util.getPlatform().openFile(path.toFile());
     }
 
+    // TODO
+    public void onNotMatchingVersions() {
+
+    }
+
     public void onError(String translatableTitle, String literalInfo) {
         this.onInputScreen = true;
         this.minecraft.forceSetScreen(new RollbackErrorScreen(

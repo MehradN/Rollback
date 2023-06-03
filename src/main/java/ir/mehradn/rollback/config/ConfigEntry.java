@@ -75,18 +75,22 @@ public class ConfigEntry <T> {
         @NotNull T trim(@NotNull T value);
     }
 
-    public static class IntegerTrimmer implements Trimmer<Integer> {
-        private final int min;
-        private final int max;
+    public static class ShortTrimmer implements Trimmer<Short> {
+        private final short min;
+        private final short max;
 
-        public IntegerTrimmer(int min, int max) {
+        public ShortTrimmer(short min, short max) {
             this.min = min;
             this.max = max;
         }
 
+        public ShortTrimmer(int min, int max) {
+            this((short)min, (short)max);
+        }
+
         @Override
-        public @NotNull Integer trim(@NotNull Integer value) {
-            return Mth.clamp(value, this.min, this.max);
+        public @NotNull Short trim(@NotNull Short value) {
+            return (short)Mth.clamp(value, this.min, this.max);
         }
     }
 

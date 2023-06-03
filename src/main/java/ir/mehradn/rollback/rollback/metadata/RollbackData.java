@@ -5,7 +5,7 @@ import ir.mehradn.rollback.rollback.BackupManager;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RollbackData implements UpdatesAfterLoading {
+public class RollbackData implements RollbackMetadata {
     @SerializedName("version") public RollbackVersion version = RollbackVersion.LATEST_VERSION;
     @SerializedName("worlds") public Map<String, RollbackWorld> worlds = new HashMap<>();
 

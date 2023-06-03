@@ -24,7 +24,12 @@ public final class ClientPacketListener {
         ClientPacketManager.send(Packets.openGui, null);
     }
 
-    private static void onSendMetadata(Minecraft minecraft, SendMetadata.MetadataReceive data) {
+    private static void onSendMetadata(Minecraft minecraft, @Nullable SendMetadata.MetadataReceive data) {
+        if (data == null) {
+            if (ScreenManager.getInstance() != null)
+                ScreenManager.getInstance().onNotMatchingVersions();
+            return;
+        }
         NetworkBackupManager backupManager = getBackupManager();
         if (backupManager == null)
             return;
@@ -32,7 +37,8 @@ public final class ClientPacketListener {
     }
 
     private static @Nullable NetworkBackupManager getBackupManager() {
-        if (ScreenManager.getInstance() != null && ScreenManager.getInstance().backupManager instanceof NetworkBackupManager backupManager)
+        ScreenManager screenManager = ScreenManager.getInstance();
+        if (screenManager != null && screenManager.backupManager != null && screenManager.backupManager instanceof NetworkBackupManager backupManager)
             return backupManager;
         return null;
     }

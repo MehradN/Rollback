@@ -1,8 +1,10 @@
 package ir.mehradn.rollback.rollback.metadata;
 
 import com.google.gson.annotations.SerializedName;
+import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
+import net.minecraft.network.FriendlyByteBuf;
 import org.apache.commons.io.FileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,9 +13,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Date;
 
-public class RollbackBackup implements UpdatesAfterLoading {
+public class RollbackBackup implements RollbackMetadata {
     @SerializedName("backup_file") public Path backupPath = null;
     @SerializedName("icon_file") public Path iconPath = null;
     @SerializedName("creation_date") public LocalDateTime creationDate = null;
@@ -45,5 +48,38 @@ public class RollbackBackup implements UpdatesAfterLoading {
             Path path = cbm.getRollbackDirectory().resolve(this.backupPath);
             this.fileSize = Files.size(path);
         } catch (IOException ignored) { }
+    }
+
+    @Override
+    public void writeToBuf(FriendlyByteBuf buf, boolean integrated) {
+        boolean[] c = new boolean[]{
+            integrated && this.iconPath != null,
+            this.name != null,
+            this.creationDate != null
+        };
+        Packets.writeBooleanArray(buf, c);
+
+        if (c[0])
+            Packets.writeString(buf, this.iconPath.toString());
+        if (c[1])
+            Packets.writeString(buf, this.name);
+        if (c[2])
+            buf.writeLong(this.creationDate.toEpochSecond(ZoneOffset.UTC));
+        buf.writeInt(this.daysPlayed);
+        buf.writeLong(this.fileSize);
+    }
+
+    @Override
+    public void readFromBuf(FriendlyByteBuf buf) {
+        boolean[] c = Packets.readBooleanArray(buf, 3);
+
+        if (c[0])
+            this.iconPath = Path.of(Packets.readString(buf));
+        if (c[1])
+            this.name = Packets.readString(buf);
+        if (c[2])
+            this.creationDate = LocalDateTime.ofEpochSecond(buf.readLong(), 0, ZoneOffset.UTC);
+        this.daysPlayed = buf.readInt();
+        this.fileSize = buf.readLong();
     }
 }
