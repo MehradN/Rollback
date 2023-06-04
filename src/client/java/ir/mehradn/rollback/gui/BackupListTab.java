@@ -24,7 +24,7 @@ public class BackupListTab implements Tab {
     private final Button renameButton;
     private final Button cancelButton;
 
-    public BackupListTab(BackupType backupType, String title) {
+    public BackupListTab(RollbackScreen screen, BackupType backupType, String title) {
         this.backupType = backupType;
         this.title = Component.translatable(title);
 
@@ -37,7 +37,7 @@ public class BackupListTab implements Tab {
         this.renameButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rename"),
             (button) -> { }).size(100, 20).build());
         this.cancelButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"),
-            (button) -> { }).size(100, 20).build());
+            screen::onCancel).size(100, 20).build());
 
         setEntrySelected(false, false);
     }

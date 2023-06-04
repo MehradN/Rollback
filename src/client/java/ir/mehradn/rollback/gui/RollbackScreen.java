@@ -5,6 +5,7 @@ import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.tabs.TabManager;
 import net.minecraft.client.gui.components.tabs.TabNavigationBar;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -37,12 +38,12 @@ public class RollbackScreen extends Screen {
 
     @Override
     public void init() {
-        this.automatedTab = new BackupListTab(BackupType.AUTOMATED, "rollback.screen.tab.automated");
-        this.commandTab = new BackupListTab(BackupType.COMMAND, "rollback.screen.tab.command");
+        this.automatedTab = new BackupListTab(this, BackupType.AUTOMATED, "rollback.screen.tab.automated");
+        this.commandTab = new BackupListTab(this, BackupType.COMMAND, "rollback.screen.tab.command");
         setEntrySelected(this.canRollback, this.canModify);
 
         this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width)
-            .addTabs(this.automatedTab, this.commandTab, new ActionTab()).build();
+            .addTabs(this.automatedTab, this.commandTab, new ActionTab(this)).build();
         addRenderableWidget(this.navigationBar);
         this.navigationBar.selectTab(0, false);
         this.repositionElements();
@@ -105,6 +106,10 @@ public class RollbackScreen extends Screen {
             ScreenManager.deactivate();
         else
             super.onClose();
+    }
+
+    void onCancel(Button button) {
+        this.onClose();
     }
 
     private void adjustSelectionListBackupType() {

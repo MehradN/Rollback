@@ -12,22 +12,22 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.BiConsumer;
 
 @Environment(EnvType.CLIENT)
-public final class RenameScreen extends Screen {
+public final class NameScreen extends Screen {
     private final BiConsumer<Boolean, @Nullable String> answerConsumer;
     private final String currentName;
     private Button doneButton;
     private EditBox nameEdit;
 
-    public RenameScreen(@Nullable String currentName, BiConsumer<Boolean, @Nullable String> answerConsumer) {
-        super(Component.translatable("rollback.screen.title.renameScreen"));
+    public NameScreen(Component title, @Nullable String currentName, boolean allowSameName, BiConsumer<Boolean, @Nullable String> answerConsumer) {
+        super(title);
         this.answerConsumer = answerConsumer;
-        this.currentName = (currentName == null ? "" : currentName);
+        this.currentName = (allowSameName ? null : (currentName == null ? "" : currentName));
     }
 
     @Override
     public void init() {
         this.nameEdit = new EditBox(this.font, this.width / 2 - 100, this.height / 2 - 22, 200, 20,
-            Component.translatable("rollback.screen.text.newName"));
+            Component.translatable("rollback.screen.text.name"));
         this.nameEdit.setValue(this.currentName);
         this.nameEdit.setResponder(this::updateDoneButtonStatus);
         addWidget(this.nameEdit);
@@ -67,7 +67,8 @@ public final class RenameScreen extends Screen {
     }
 
     private void updateDoneButtonStatus(String value) {
-        this.doneButton.active = !value.equals(this.currentName);
+        if (this.currentName != null)
+            this.doneButton.active = !value.equals(this.currentName);
     }
 
     private void onDone(Button button) {

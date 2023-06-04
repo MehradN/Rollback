@@ -4,6 +4,7 @@ import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ClientPacketManager;
+import ir.mehradn.rollback.network.packets.CreateBackup;
 import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.network.packets.SendMetadata;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
@@ -18,6 +19,8 @@ public final class NetworkBackupManager implements BackupManager {
     private final Minecraft minecraft;
     @Nullable private RollbackWorld world = null;
     @Nullable private RollbackNetworkConfig defaultConfig = null;
+    private int lastUpdateId = -1;
+    private boolean loadingQueued = false;
     private State state;
 
     public NetworkBackupManager(Minecraft minecraft) {
@@ -26,6 +29,7 @@ public final class NetworkBackupManager implements BackupManager {
     }
 
     public void loadingFinished(@NotNull SendMetadata.MetadataReceive metadata) {
+        this.lastUpdateId = metadata.lastUpdateId();
         this.world = metadata.world();
         this.defaultConfig = metadata.config();
         this.world.update(this);
@@ -34,6 +38,8 @@ public final class NetworkBackupManager implements BackupManager {
 
     public void actionFinished() {
         this.state = State.IDLE;
+        if (this.loadingQueued)
+            loadWorld();
     }
 
     @Override
@@ -55,15 +61,27 @@ public final class NetworkBackupManager implements BackupManager {
 
     @Override
     public void loadWorld() {
+        if (this.state == State.LOADING) {
+            this.loadingQueued = true;
+            return;
+        }
         this.world = null;
         this.defaultConfig = null;
         this.state = State.LOADING;
         ClientPacketManager.send(Packets.fetchMetadata, this.minecraft.hasSingleplayerServer());
     }
 
-    @Override public void deleteWorld() throws BackupManagerException { }
+    @Override
+    public void createBackup(BackupType type, @Nullable String name) {
+        if (name != null && (!type.list || name.isBlank()))
+            name = null;
+        if (name == null)
+            name = "";
+        Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
 
-    @Override public void createBackup(BackupType type, @Nullable String name) throws BackupManagerException { }
+        this.state = State.ACTION;
+        ClientPacketManager.send(Packets.createBackup, new CreateBackup.Properties(this.lastUpdateId, type, name));
+    }
 
     @Override public void deleteBackup(int backupID, BackupType type) throws BackupManagerException { }
 

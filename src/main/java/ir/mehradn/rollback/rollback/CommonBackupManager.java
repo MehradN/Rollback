@@ -1,17 +1,19 @@
 package ir.mehradn.rollback.rollback;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.ConfigType;
+import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BMECause;
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
-import ir.mehradn.rollback.rollback.metadata.RollbackData;
-import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
+import ir.mehradn.rollback.rollback.metadata.*;
 import ir.mehradn.rollback.util.gson.LocalDateTimeAdapter;
+import ir.mehradn.rollback.util.gson.PathAdapter;
 import net.minecraft.FileUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,6 +30,12 @@ import java.util.zip.ZipFile;
 
 public abstract class CommonBackupManager implements BackupManager {
     private final RollbackDefaultConfig defaultConfig;
+    private final Gson GSON = new GsonBuilder()
+        .registerTypeHierarchyAdapter(Path.class, new PathAdapter())
+        .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+        .registerTypeAdapter(RollbackVersion.class, new RollbackVersion.Adapter())
+        .registerTypeAdapter(RollbackWorldConfig.class, new RollbackConfig.Adapter<>(RollbackWorldConfig.class))
+        .create();
     @Nullable private RollbackData data = null;
     @Nullable private RollbackWorld world = null;
 
@@ -56,6 +64,22 @@ public abstract class CommonBackupManager implements BackupManager {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);
             throw new BackupManagerException(BMECause.IO_EXCEPTION, "Failed to save the metadata file!", e);
         }
+    }
+
+    public void deleteWorld() throws BackupManagerException {
+        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
+        String levelID = getLevelID();
+        Rollback.LOGGER.info("Deleting all the backups for world \"{}\"...", levelID);
+
+        Set<Integer> automatedIDs = this.world.automatedBackups.keySet();
+        Set<Integer> commandIDs = this.world.commandBackups.keySet();
+        while (!automatedIDs.isEmpty())
+            deleteBackup(automatedIDs.iterator().next(), BackupType.AUTOMATED);
+        while (!commandIDs.isEmpty())
+            deleteBackup(commandIDs.iterator().next(), BackupType.COMMAND);
+
+        this.data.worlds.remove(levelID);
+        saveWorld();
     }
 
     @Override
@@ -103,23 +127,6 @@ public abstract class CommonBackupManager implements BackupManager {
         this.data.update(this);
         if (save)
             saveWorld();
-    }
-
-    @Override
-    public void deleteWorld() throws BackupManagerException {
-        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        String levelID = getLevelID();
-        Rollback.LOGGER.info("Deleting all the backups for world \"{}\"...", levelID);
-
-        Set<Integer> automatedIDs = this.world.automatedBackups.keySet();
-        Set<Integer> commandIDs = this.world.commandBackups.keySet();
-        while (!automatedIDs.isEmpty())
-            deleteBackup(automatedIDs.iterator().next(), BackupType.AUTOMATED);
-        while (!commandIDs.isEmpty())
-            deleteBackup(commandIDs.iterator().next(), BackupType.COMMAND);
-
-        this.data.worlds.remove(levelID);
-        saveWorld();
     }
 
     @Override

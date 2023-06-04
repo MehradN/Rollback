@@ -11,19 +11,34 @@ import net.minecraft.network.chat.Component;
 public class ActionTab extends GridLayoutTab {
     private static final Component TITLE = Component.translatable("rollback.screen.tab.action");
 
-    public ActionTab() {
+    public ActionTab(RollbackScreen screen) {
         super(TITLE);
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),
             (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeCommand"),
-            (button) -> { }).width(200).build());
+            this::onMakeCommand).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeManual"),
-            (button) -> { }).width(200).build());
+            this::onMakeManual).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.openFolder"),
-            (button) -> { }).width(200).build());
+            this::onOpenFolder).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.cancel"),
-            (button) -> { }).width(200).build());
+            screen::onCancel).width(200).build());
+    }
+
+    private void onMakeCommand(Button button) {
+        if (ScreenManager.getInstance() != null)
+            ScreenManager.getInstance().createBackup();
+    }
+
+    private void onMakeManual(Button button) {
+        if (ScreenManager.getInstance() != null)
+            ScreenManager.getInstance().createManualBackup();
+    }
+
+    private void onOpenFolder(Button button) {
+        if (ScreenManager.getInstance() != null)
+            ScreenManager.getInstance().openBackupFolder();
     }
 }

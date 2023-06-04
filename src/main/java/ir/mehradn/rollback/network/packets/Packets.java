@@ -4,8 +4,11 @@ import net.minecraft.network.FriendlyByteBuf;
 import java.util.BitSet;
 
 public interface Packets {
-    OpenGUI openGui = new OpenGUI();
+    BackupManagerError backupManagerError = new BackupManagerError();
+    CreateBackup createBackup = new CreateBackup();
     FetchMetadata fetchMetadata = new FetchMetadata();
+    NewUpdateId newUpdateId = new NewUpdateId();
+    OpenGUI openGui = new OpenGUI();
     SendMetadata sendMetadata = new SendMetadata();
     int MAX_ENCODED_STRING_LENGTH = 63;
 

@@ -247,21 +247,18 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         @Override
         public void render(PoseStack poseStack, int index, int top, int left, int width, int height,
                            int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
-            if (this.backup.name == null) {
-                super.render(
-                    Component.translatable("rollback.screen.text.day", this.backup.getDaysPlayedAsString()),
-                    Component.translatable("rollback.screen.text.creationDate", this.backup.getDateAsString()),
-                    Component.translatable("rollback.screen.text.restOfInfo", this.backup.getFileSizeAsString()),
-                    poseStack, top, left, mouseX, isMouseOver
-                );
-            } else {
-                super.render(
-                    Component.literal(this.backup.name),
-                    Component.translatable("rollback.screen.text.creationDate", this.backup.getDateAsString()),
-                    Component.translatable("rollback.screen.text.allOfInfo", this.backup.getDaysPlayedAsString(), this.backup.getFileSizeAsString()),
-                    poseStack, top, left, mouseX, isMouseOver
-                );
-            }
+            Component name;
+            if (this.backup.name == null)
+                name = Component.translatable("rollback.screen.text.day", this.backup.getDaysPlayedAsString());
+            else
+                name = Component.literal(this.backup.name);
+
+            super.render(
+                name,
+                Component.translatable("rollback.screen.text.creationDate", this.backup.getDateAsString()),
+                Component.translatable("rollback.screen.text.backupInfo", this.backup.getDaysPlayedAsString(), this.backup.getFileSizeAsString()),
+                poseStack, top, left, mouseX, isMouseOver
+            );
         }
 
         @Override

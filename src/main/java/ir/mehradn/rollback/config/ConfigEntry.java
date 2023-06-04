@@ -47,8 +47,8 @@ public class ConfigEntry <T> {
             this.value = entry.value;
     }
 
-    public boolean needsFallback() {
-        return this.value == null;
+    public boolean hasValue() {
+        return this.value != null;
     }
 
     public Trimmer<T> getTrimmer() {

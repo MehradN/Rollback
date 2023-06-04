@@ -16,6 +16,7 @@ public final class SendMetadata extends Packet<SendMetadata.MetadataSend, SendMe
     public FriendlyByteBuf toBuf(MetadataSend data) {
         FriendlyByteBuf buf = PacketByteBufs.create();
         data.version.writeToBuf(buf, data.integrated);
+        buf.writeInt(data.lastUpdateId);
         data.config.writeToBuf(buf, data.integrated);
         data.world.writeToBuf(buf, data.integrated);
         return buf;
@@ -26,14 +27,15 @@ public final class SendMetadata extends Packet<SendMetadata.MetadataSend, SendMe
         RollbackVersion version = RollbackVersion.fromBuf(buf);
         if (version.notMatch())
             return null;
+        int id = buf.readInt();
         RollbackNetworkConfig config = new RollbackNetworkConfig();
         config.readFromBuf(buf);
         RollbackWorld world = new RollbackWorld();
         world.readFromBuf(buf);
-        return new MetadataReceive(version, world, config);
+        return new MetadataReceive(id, version, world, config);
     }
 
-    public record MetadataSend(boolean integrated, RollbackVersion version, RollbackWorld world, RollbackNetworkConfig config) { }
+    public record MetadataSend(boolean integrated, int lastUpdateId, RollbackVersion version, RollbackWorld world, RollbackNetworkConfig config) { }
 
-    public record MetadataReceive(RollbackVersion version, RollbackWorld world, RollbackNetworkConfig config) { }
+    public record MetadataReceive(int lastUpdateId, RollbackVersion version, RollbackWorld world, RollbackNetworkConfig config) { }
 }

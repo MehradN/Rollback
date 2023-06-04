@@ -61,12 +61,31 @@ public final class ScreenManager {
         }
     }
 
-    public void createBackup(String name, BackupType type) {
+    public void createBackup() {
+        this.onInputScreen = true;
+        this.minecraft.setScreen(new NameScreen(
+            Component.translatable("rollback.screen.title.createScreen"),
+            null, true,
+            (submitted, name) -> {
+                this.onInputScreen = false;
+                if (!submitted)
+                    return;
+                try {
+                    setMessageScreen(Component.translatable("rollback.screen.message.creating"));
+                    this.backupManager.createBackup(BackupType.COMMAND, name);
+                } catch (BackupManagerException e) {
+                    Rollback.LOGGER.error("Failed to create a new manual backup!", e);
+                }
+            }
+        ));
+    }
+
+    public void createManualBackup() {
         try {
             setMessageScreen(Component.translatable("rollback.screen.message.creating"));
-            this.backupManager.createBackup(type, name);
+            this.backupManager.createBackup(BackupType.MANUAL, null);
         } catch (BackupManagerException e) {
-            Rollback.LOGGER.error("Failed to create a new backup!", e);
+            Rollback.LOGGER.error("Failed to create a new manual backup!", e);
         }
     }
 
@@ -82,11 +101,12 @@ public final class ScreenManager {
 
     public void renameBackup(int backupID, BackupType type) {
         this.onInputScreen = true;
-        this.minecraft.setScreen(new RenameScreen(
-            this.backupManager.getWorld().getBackup(backupID, type).name,
-            (renamed, name) -> {
+        this.minecraft.setScreen(new NameScreen(
+            Component.translatable("rollback.screen.title.renameScreen"),
+            this.backupManager.getWorld().getBackup(backupID, type).name, false,
+            (submitted, name) -> {
                 this.onInputScreen = false;
-                if (!renamed)
+                if (!submitted)
                     return;
                 try {
                     setMessageScreen(Component.translatable("rollback.screen.message.renaming"));
@@ -171,6 +191,7 @@ public final class ScreenManager {
 
     public void onError(String translatableTitle, String literalInfo) {
         this.onInputScreen = true;
+        Rollback.LOGGER.error(literalInfo);
         this.minecraft.forceSetScreen(new RollbackErrorScreen(
             Component.translatable(translatableTitle),
             Component.literal(literalInfo),
@@ -190,11 +211,6 @@ public final class ScreenManager {
             loadMetadata();
         if (state == BackupManager.State.IDLE && this.minecraft.screen != this.rollbackScreen)
             this.minecraft.setScreen(this.rollbackScreen);
-    }
-
-    // TODO
-    public void onChange() {
-        this.loadMetadata();
     }
 
     // TODO

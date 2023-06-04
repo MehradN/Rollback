@@ -62,7 +62,7 @@ public abstract class RollbackConfig {
         int size = this.getEntries().size();
         boolean[] c = new boolean[size];
         for (int i = 0; i < size; i++)
-            c[i] = !this.getEntries().get(i).needsFallback();
+            c[i] = this.getEntries().get(i).hasValue();
         Packets.writeBooleanArray(buf, c);
 
         for (int i = 0; i < size; i++) {
@@ -94,7 +94,7 @@ public abstract class RollbackConfig {
     JsonObject toJson() {
         JsonObject json = new JsonObject();
         for (ConfigEntry<?> entry : this.getEntries())
-            if (!entry.needsFallback())
+            if (entry.hasValue())
                 json.add(entry.name, GSON.toJsonTree(entry.get(), entry.type));
         return json;
     }
