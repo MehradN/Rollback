@@ -2,10 +2,7 @@ package ir.mehradn.rollback.event;
 
 import ir.mehradn.rollback.gui.ScreenManager;
 import ir.mehradn.rollback.network.ClientPacketManager;
-import ir.mehradn.rollback.network.packets.BackupManagerError;
-import ir.mehradn.rollback.network.packets.Packets;
-import ir.mehradn.rollback.network.packets.SendMetadata;
-import ir.mehradn.rollback.network.packets.SuccessfulBackup;
+import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.NetworkBackupManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -22,6 +19,9 @@ public final class ClientPacketListener {
         ClientPacketManager.register(Packets.openGui, ClientPacketListener::onOpenGui);
         ClientPacketManager.register(Packets.sendMetadata, ClientPacketListener::onSendMetadata);
         ClientPacketManager.register(Packets.successfulBackup, ClientPacketListener::onSuccessfulBackup);
+        ClientPacketManager.register(Packets.successfulConvert, ClientPacketListener::onSuccessfulConvert);
+        ClientPacketManager.register(Packets.successfulDelete, ClientPacketListener::onSuccessfulDelete);
+        ClientPacketManager.register(Packets.successfulRename, ClientPacketListener::onSuccessfulRename);
     }
 
     private static void onBackupManagerError(Minecraft minecraft, BackupManagerError.Info info) {
@@ -65,6 +65,27 @@ public final class ClientPacketListener {
         ScreenManager.showToast(
             Component.translatable("rollback.toast.successfulBackup.title"),
             Component.translatable("rollback.toast.successfulBackup.info", data.type().toComponent(), data.sizeAsString())
+        );
+    }
+
+    private static void onSuccessfulConvert(Minecraft minecraft, SuccessfulConvert.Info data) {
+        ScreenManager.showToast(
+            Component.translatable("rollback.toast.successfulConvert.title"),
+            Component.translatable("rollback.toast.successfulConvert.info", data.backupId(), data.from().toComponent(), data.to().toComponent())
+        );
+    }
+
+    private static void onSuccessfulDelete(Minecraft minecraft, SuccessfulDelete.Info data) {
+        ScreenManager.showToast(
+            Component.translatable("rollback.toast.successfulDelete.title"),
+            Component.translatable("rollback.toast.successfulDelete.info", data.type().toComponent(), data.backupId())
+        );
+    }
+
+    private static void onSuccessfulRename(Minecraft minecraft, SuccessfulRename.Info data) {
+        ScreenManager.showToast(
+            Component.translatable("rollback.toast.successfulRename.title"),
+            Component.translatable("rollback.toast.successfulRename.info", data.type().toComponent(), data.backupId())
         );
     }
 

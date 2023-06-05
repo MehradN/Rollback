@@ -3,10 +3,7 @@ package ir.mehradn.rollback.event;
 import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
-import ir.mehradn.rollback.network.packets.CreateBackup;
-import ir.mehradn.rollback.network.packets.OpenGUI;
-import ir.mehradn.rollback.network.packets.Packets;
-import ir.mehradn.rollback.network.packets.SendMetadata;
+import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.ServerBackupManager;
 import ir.mehradn.rollback.rollback.metadata.RollbackVersion;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
@@ -16,17 +13,39 @@ import net.minecraft.server.level.ServerPlayer;
 
 public final class ServerPacketListener {
     public static void register() {
+        ServerPacketManager.register(Packets.convertBackup, ServerPacketListener::onConvertBackup);
         ServerPacketManager.register(Packets.createBackup, ServerPacketListener::onCreateBackup);
+        ServerPacketManager.register(Packets.deleteBackup, ServerPacketListener::onDeleteBackup);
         ServerPacketManager.register(Packets.fetchMetadata, ServerPacketListener::onFetchMetadata);
         ServerPacketManager.register(Packets.openGui, ServerPacketListener::onOpenedGui);
+        ServerPacketManager.register(Packets.renameBackup, ServerPacketListener::onRenameBackup);
+        ServerPacketManager.register(Packets.rollbackBackup, ServerPacketListener::onRollbackBackup);
     }
 
-    private static void onCreateBackup(MinecraftServer server, ServerPlayer player, CreateBackup.Properties date) {
+    private static void onConvertBackup(MinecraftServer server, ServerPlayer player, ConvertBackup.Arguments data) {
         ServerBackupManager backupManager = getBackupManager(server);
-        if (!backupManager.setRequester(player, date.lastChangeId()))
+        if (backupManager.setRequester(player, data.lastChangeId()))
             return;
         try {
-            backupManager.createBackup(date.type(), date.name());
+            backupManager.convertBackup(data.backupID(), data.from(), data.to());
+        } catch (BackupManagerException ignored) { }
+    }
+
+    private static void onCreateBackup(MinecraftServer server, ServerPlayer player, CreateBackup.Arguments data) {
+        ServerBackupManager backupManager = getBackupManager(server);
+        if (backupManager.setRequester(player, data.lastChangeId()))
+            return;
+        try {
+            backupManager.createBackup(data.type(), data.name());
+        } catch (BackupManagerException ignored) { }
+    }
+
+    private static void onDeleteBackup(MinecraftServer server, ServerPlayer player, DeleteBackup.Arguments data) {
+        ServerBackupManager backupManager = getBackupManager(server);
+        if (backupManager.setRequester(player, data.lastChangeId()))
+            return;
+        try {
+            backupManager.deleteBackup(data.backupID(), data.type());
         } catch (BackupManagerException ignored) { }
     }
 
@@ -42,6 +61,24 @@ public final class ServerPacketListener {
 
     private static void onOpenedGui(MinecraftServer server, ServerPlayer player, Void data) {
         OpenGUI.awaitingPlayers.remove(player);
+    }
+
+    private static void onRenameBackup(MinecraftServer server, ServerPlayer player, RenameBackup.Arguments data) {
+        ServerBackupManager backupManager = getBackupManager(server);
+        if (backupManager.setRequester(player, data.lastChangeId()))
+            return;
+        try {
+            backupManager.renameBackup(data.backupID(), data.type(), data.name());
+        } catch (BackupManagerException ignored) { }
+    }
+
+    private static void onRollbackBackup(MinecraftServer server, ServerPlayer player, RollbackBackup.Arguments data) {
+        ServerBackupManager backupManager = getBackupManager(server);
+        if (backupManager.setRequester(player, data.lastChangeId()))
+            return;
+        try {
+            backupManager.rollbackToBackup(data.backupID(), data.type());
+        } catch (BackupManagerException ignored) { }
     }
 
     private static ServerBackupManager getBackupManager(MinecraftServer server) {

@@ -7,9 +7,7 @@ import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BMECause;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
-import ir.mehradn.rollback.network.packets.BackupManagerError;
-import ir.mehradn.rollback.network.packets.Packets;
-import ir.mehradn.rollback.network.packets.SuccessfulBackup;
+import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -52,9 +50,9 @@ public final class ServerBackupManager extends CommonBackupManager {
         if (lastUpdateId != this.lastUpdateId) {
             int diff = Math.abs(this.lastUpdateId - lastUpdateId);
             broadcastError("rollback.error.outOfSync", "You were out of sync by " + diff + " updates! Please try again.");
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -82,7 +80,7 @@ public final class ServerBackupManager extends CommonBackupManager {
     }
 
     @Override
-    public void rollbackToBackup(int backupID, BackupType type) {
+    public void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException {
         //noinspection DataFlowIssue
         Assertion.runtime(false, "Rollback is not implemented for servers");
         increaseUpdateId();
@@ -157,16 +155,22 @@ public final class ServerBackupManager extends CommonBackupManager {
     @Override
     protected void broadcastSuccessfulDelete(int backupID, BackupType type) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.deleteBackup", backupID, type));
+        if (this.requester != null)
+            ServerPacketManager.send(this.requester, Packets.successfulDelete, new SuccessfulDelete.Info(backupID, type));
     }
 
     @Override
     protected void broadcastSuccessfulRename(int backupID, BackupType type) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.renameBackup", backupID, type));
+        if (this.requester != null)
+            ServerPacketManager.send(this.requester, Packets.successfulRename, new SuccessfulRename.Info(backupID, type));
     }
 
     @Override
     protected void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.convertBackup", backupID, from, to));
+        if (this.requester != null)
+            ServerPacketManager.send(this.requester, Packets.successfulConvert, new SuccessfulConvert.Info(backupID, from, to));
     }
 
     @Override

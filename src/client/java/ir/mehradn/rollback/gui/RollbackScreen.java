@@ -32,8 +32,10 @@ public class RollbackScreen extends Screen {
     public void setEntrySelected(boolean canRollback, boolean canModify) {
         this.canRollback = canRollback;
         this.canModify = canModify;
-        this.automatedTab.setEntrySelected(canRollback, canModify);
-        this.commandTab.setEntrySelected(canRollback, canModify);
+
+        boolean bl = (this.minecraft == null || this.minecraft.level == null || !canModify);
+        this.automatedTab.setEntrySelected(canRollback && bl, canModify);
+        this.commandTab.setEntrySelected(canRollback && bl, canModify);
     }
 
     @Override
@@ -108,8 +110,14 @@ public class RollbackScreen extends Screen {
             super.onClose();
     }
 
-    void onCancel(Button button) {
+    void onCancel(Button ignoredButton) {
         this.onClose();
+    }
+
+    boolean openFolderActivated() {
+        if (this.minecraft != null)
+            return this.minecraft.hasSingleplayerServer();
+        return true;
     }
 
     private void adjustSelectionListBackupType() {

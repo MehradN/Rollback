@@ -5,12 +5,19 @@ import java.util.BitSet;
 
 public interface Packets {
     BackupManagerError backupManagerError = new BackupManagerError();
+    ConvertBackup convertBackup = new ConvertBackup();
     CreateBackup createBackup = new CreateBackup();
+    DeleteBackup deleteBackup = new DeleteBackup();
     FetchMetadata fetchMetadata = new FetchMetadata();
     NewUpdateId newUpdateId = new NewUpdateId();
     OpenGUI openGui = new OpenGUI();
+    RenameBackup renameBackup = new RenameBackup();
+    RollbackBackup rollbackBackup = new RollbackBackup();
     SendMetadata sendMetadata = new SendMetadata();
     SuccessfulBackup successfulBackup = new SuccessfulBackup();
+    SuccessfulConvert successfulConvert = new SuccessfulConvert();
+    SuccessfulDelete successfulDelete = new SuccessfulDelete();
+    SuccessfulRename successfulRename = new SuccessfulRename();
     int MAX_ENCODED_STRING_LENGTH = 63;
 
     static void writeBooleanArray(FriendlyByteBuf buf, boolean[] array) {

@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.gui;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.BackupManager;
@@ -11,6 +12,8 @@ import net.minecraft.FileUtil;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.client.gui.screens.ConfirmScreen;
+import net.minecraft.client.gui.screens.ErrorScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -93,14 +96,27 @@ public final class ScreenManager {
         }
     }
 
-    // TODO
     public void deleteBackup(int backupID, BackupType type) {
-        try {
-            setMessageScreen(Component.translatable("rollback.screen.message.deleting"));
-            this.backupManager.deleteBackup(backupID, type);
-        } catch (BackupManagerException e) {
-            Rollback.LOGGER.error("Failed to delete the backup!", e);
-        }
+        this.onInputScreen = true;
+        this.minecraft.setScreen(new ConfirmScreen(
+            (confirmed) -> {
+                this.onInputScreen = false;
+                if (!confirmed)
+                    return;
+                try {
+                    setMessageScreen(Component.translatable("rollback.screen.message.deleting"));
+                    this.backupManager.deleteBackup(backupID, type);
+                } catch (BackupManagerException e) {
+                    Rollback.LOGGER.error("Failed to delete the backup!", e);
+                }
+            },
+            Component.translatable("rollback.screen.deleteQuestion"),
+            Component.translatable("rollback.screen.deleteWarning")
+        ) {
+            public void renderBackground(PoseStack poseStack) {
+                renderDirtBackground(poseStack);
+            }
+        });
     }
 
     public void renameBackup(int backupID, BackupType type) {
@@ -137,14 +153,27 @@ public final class ScreenManager {
             }));
     }
 
-    // TODO
     public void rollbackToBackup(int backupID, BackupType type) {
-        try {
-            setMessageScreen(Component.translatable("rollback.screen.message.rolling"));
-            this.backupManager.rollbackToBackup(backupID, type);
-        } catch (BackupManagerException e) {
-            Rollback.LOGGER.error("Failed to rollback to the backup!", e);
-        }
+        this.onInputScreen = true;
+        this.minecraft.setScreen(new ConfirmScreen(
+            (confirmed) -> {
+                this.onInputScreen = false;
+                if (!confirmed)
+                    return;
+                try {
+                    setMessageScreen(Component.translatable("rollback.screen.message.rolling"));
+                    this.backupManager.rollbackToBackup(backupID, type);
+                } catch (BackupManagerException e) {
+                    Rollback.LOGGER.error("Failed to rollback to the backup!", e);
+                }
+            },
+            Component.translatable("rollback.screen.rollbackQuestion"),
+            Component.translatable("rollback.screen.rollbackWarning")
+        ) {
+            public void renderBackground(PoseStack poseStack) {
+                renderDirtBackground(poseStack);
+            }
+        });
     }
 
     // TODO
@@ -166,6 +195,7 @@ public final class ScreenManager {
         }
     }
 
+    // TODO
     public void saveConfigAsDefault() {
         try {
             setMessageScreen(Component.translatable("rollback.screen.message.savingConfig"));
@@ -196,10 +226,19 @@ public final class ScreenManager {
     public void onError(String translatableTitle, String literalInfo) {
         this.onInputScreen = true;
         Rollback.LOGGER.error(literalInfo);
-        this.minecraft.forceSetScreen(new RollbackErrorScreen(
+        this.minecraft.forceSetScreen(new ErrorScreen(
             Component.translatable(translatableTitle),
-            Component.literal(literalInfo),
-            () -> this.onInputScreen = false));
+            Component.literal(literalInfo)
+        ) {
+            public void onClose() {
+                if (ScreenManager.getInstance() != null)
+                    ScreenManager.getInstance().onInputScreen = false;
+            }
+
+            public void renderBackground(PoseStack poseStack) {
+                renderDirtBackground(poseStack);
+            }
+        });
     }
 
     public void onTick() {

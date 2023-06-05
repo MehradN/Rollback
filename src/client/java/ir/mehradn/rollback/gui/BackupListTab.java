@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 @Environment(EnvType.CLIENT)
 public class BackupListTab implements Tab {
     public final BackupType backupType;
+    private final RollbackScreen screen;
     private final Component title;
     private final List<AbstractWidget> widgets = new ArrayList<>();
     private final Button rollbackButton;
@@ -25,19 +26,20 @@ public class BackupListTab implements Tab {
     private final Button cancelButton;
 
     public BackupListTab(RollbackScreen screen, BackupType backupType, String title) {
+        this.screen = screen;
         this.backupType = backupType;
         this.title = Component.translatable(title);
 
         this.rollbackButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rollback"),
-            (button) -> { }).size(152, 20).build());
+            onClick(BackupSelectionList.Entry::playEntry)).size(152, 20).build());
         this.convertButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.convert"),
-            (button) -> { }).size(152, 20).build());
+            onClick(BackupSelectionList.Entry::convertEntry)).size(152, 20).build());
         this.deleteButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.delete"),
-            (button) -> { }).size(100, 20).build());
+            onClick(BackupSelectionList.Entry::deleteEntry)).size(100, 20).build());
         this.renameButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rename"),
-            (button) -> { }).size(100, 20).build());
+            onClick(BackupSelectionList.Entry::renameEntry)).size(100, 20).build());
         this.cancelButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"),
-            screen::onCancel).size(100, 20).build());
+            this.screen::onCancel).size(100, 20).build());
 
         setEntrySelected(false, false);
     }
@@ -74,5 +76,12 @@ public class BackupListTab implements Tab {
     private <T extends AbstractWidget> T addWidget(T widget) {
         this.widgets.add(widget);
         return widget;
+    }
+
+    private Button.OnPress onClick(Consumer<BackupSelectionList.Entry> action) {
+        return (button) -> {
+            if (this.screen.selectionList != null && this.screen.selectionList.getSelected() != null)
+                action.accept(this.screen.selectionList.getSelected());
+        };
     }
 }

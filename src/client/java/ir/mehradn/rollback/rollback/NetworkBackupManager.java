@@ -4,9 +4,7 @@ import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ClientPacketManager;
-import ir.mehradn.rollback.network.packets.CreateBackup;
-import ir.mehradn.rollback.network.packets.Packets;
-import ir.mehradn.rollback.network.packets.SendMetadata;
+import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -80,16 +78,40 @@ public final class NetworkBackupManager implements BackupManager {
         Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
 
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.createBackup, new CreateBackup.Properties(this.lastUpdateId, type, name));
+        ClientPacketManager.send(Packets.createBackup, new CreateBackup.Arguments(this.lastUpdateId, type, name));
     }
 
-    @Override public void deleteBackup(int backupID, BackupType type) throws BackupManagerException { }
+    @Override
+    public void deleteBackup(int backupID, BackupType type) {
+        Assertion.argument(type.manualDeletion, "Invalid type");
+        this.state = State.ACTION;
+        ClientPacketManager.send(Packets.deleteBackup, new DeleteBackup.Arguments(this.lastUpdateId, backupID, type));
+    }
 
-    @Override public void renameBackup(int backupID, BackupType type, @Nullable String name) throws BackupManagerException { }
+    @Override
+    public void renameBackup(int backupID, BackupType type, @Nullable String name) {
+        Assertion.argument(type.list, "Invalid type");
+        if (name == null || name.isBlank())
+            name = "";
+        Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
 
-    @Override public void convertBackup(int backupID, BackupType from, BackupType to) throws BackupManagerException { }
+        this.state = State.ACTION;
+        ClientPacketManager.send(Packets.renameBackup, new RenameBackup.Arguments(this.lastUpdateId, backupID, type, name));
+    }
 
-    @Override public void rollbackToBackup(int backupID, BackupType type) throws BackupManagerException { }
+    @Override
+    public void convertBackup(int backupID, BackupType from, BackupType to) {
+        Assertion.argument(from.convertFrom && to.convertTo && from != to, "Invalid types!");
+        this.state = State.ACTION;
+        ClientPacketManager.send(Packets.convertBackup, new ConvertBackup.Arguments(this.lastUpdateId, backupID, from, to));
+    }
+
+    @Override
+    public void rollbackToBackup(int backupID, BackupType type) {
+        Assertion.argument(type.rollback, "Invalid type");
+        this.state = State.ACTION;
+        ClientPacketManager.send(Packets.rollbackBackup, new RollbackBackup.Arguments(this.lastUpdateId, backupID, type));
+    }
 
     @Override public void saveConfig() throws BackupManagerException { }
 

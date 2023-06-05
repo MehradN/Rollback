@@ -13,6 +13,7 @@ public class ActionTab extends GridLayoutTab {
 
     public ActionTab(RollbackScreen screen) {
         super(TITLE);
+        Button openFolder;
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),
@@ -21,10 +22,12 @@ public class ActionTab extends GridLayoutTab {
             this::onMakeCommand).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeManual"),
             this::onMakeManual).width(200).build());
-        rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.openFolder"),
+        rowHelper.addChild(openFolder = Button.builder(Component.translatable("rollback.screen.button.openFolder"),
             this::onOpenFolder).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.cancel"),
             screen::onCancel).width(200).build());
+
+        openFolder.active = screen.openFolderActivated();
     }
 
     private void onMakeCommand(Button button) {

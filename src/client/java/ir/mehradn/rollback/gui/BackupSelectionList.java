@@ -256,7 +256,10 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
             super.render(
                 name,
                 Component.translatable("rollback.screen.text.creationDate", this.backup.getDateAsString()),
-                Component.translatable("rollback.screen.text.backupInfo", this.backup.getDaysPlayedAsString(), this.backup.getFileSizeAsString()),
+                Component.translatable("rollback.screen.text.backupInfo",
+                    this.backup.getDaysPlayedAsString(),
+                    this.backup.getFileSizeAsString(),
+                    this.backupID),
                 poseStack, top, left, mouseX, isMouseOver
             );
         }
