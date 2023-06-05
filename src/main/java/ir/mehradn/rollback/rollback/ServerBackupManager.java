@@ -9,6 +9,7 @@ import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
 import ir.mehradn.rollback.network.packets.BackupManagerError;
 import ir.mehradn.rollback.network.packets.Packets;
+import ir.mehradn.rollback.network.packets.SuccessfulBackup;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -36,6 +37,14 @@ public final class ServerBackupManager extends CommonBackupManager {
 
     public int getLastUpdateId() {
         return this.lastUpdateId;
+    }
+
+    public void removeRequester() {
+        this.requester = null;
+    }
+
+    public void setCommandSender(ServerPlayer player) {
+        this.requester = player;
     }
 
     public boolean setRequester(ServerPlayer requester, int lastUpdateId) {
@@ -141,6 +150,8 @@ public final class ServerBackupManager extends CommonBackupManager {
     protected void broadcastSuccessfulBackup(BackupType type, long size) {
         String str = FileUtils.byteCountToDisplaySize(size);
         this.server.sendSystemMessage(Component.translatable("rollback.success.createBackup", type, str));
+        if (this.requester != null)
+            ServerPacketManager.send(this.requester, Packets.successfulBackup, new SuccessfulBackup.Info(type, size));
     }
 
     @Override

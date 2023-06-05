@@ -5,6 +5,7 @@ import ir.mehradn.rollback.network.ClientPacketManager;
 import ir.mehradn.rollback.network.packets.BackupManagerError;
 import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.network.packets.SendMetadata;
+import ir.mehradn.rollback.network.packets.SuccessfulBackup;
 import ir.mehradn.rollback.rollback.NetworkBackupManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -20,6 +21,7 @@ public final class ClientPacketListener {
         ClientPacketManager.register(Packets.newUpdateId, ClientPacketListener::onNewUpdateId);
         ClientPacketManager.register(Packets.openGui, ClientPacketListener::onOpenGui);
         ClientPacketManager.register(Packets.sendMetadata, ClientPacketListener::onSendMetadata);
+        ClientPacketManager.register(Packets.successfulBackup, ClientPacketListener::onSuccessfulBackup);
     }
 
     private static void onBackupManagerError(Minecraft minecraft, BackupManagerError.Info info) {
@@ -57,6 +59,13 @@ public final class ClientPacketListener {
         if (backupManager == null)
             return;
         backupManager.loadingFinished(data);
+    }
+
+    private static void onSuccessfulBackup(Minecraft minecraft, SuccessfulBackup.Info data) {
+        ScreenManager.showToast(
+            Component.translatable("rollback.toast.successfulBackup.title"),
+            Component.translatable("rollback.toast.successfulBackup.info", data.type().toComponent(), data.sizeAsString())
+        );
     }
 
     private static @Nullable NetworkBackupManager getBackupManager() {

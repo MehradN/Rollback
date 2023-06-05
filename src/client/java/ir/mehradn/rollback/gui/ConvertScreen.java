@@ -63,7 +63,7 @@ public final class ConvertScreen extends Screen {
     }
 
     private static Component toComponent(BackupType type) {
-        return Component.translatable("rollback.screen.enum." + type);
+        return type.toComponent();
     }
 
     private void onDone(Button button) {

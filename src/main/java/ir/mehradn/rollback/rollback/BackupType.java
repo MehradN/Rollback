@@ -1,6 +1,7 @@
 package ir.mehradn.rollback.rollback;
 
 import ir.mehradn.rollback.exception.Assertion;
+import net.minecraft.network.chat.Component;
 
 public enum BackupType {
     AUTOMATED(false, true, true, true, true, true, false),
@@ -31,6 +32,11 @@ public enum BackupType {
         this.convertTo = convertTo;
     }
 
+    public Component toComponent() {
+        return Component.translatable("rollback." + this);
+    }
+
+    @Override
     public String toString() {
         return super.toString().toLowerCase();
     }

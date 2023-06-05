@@ -52,6 +52,10 @@ public final class ScreenManager {
         instance = null;
     }
 
+    public static void showToast(Component title, Component info) {
+        Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
+    }
+
     public void loadMetadata() {
         try {
             setMessageScreen(Component.translatable("rollback.screen.message.loading"));
@@ -196,10 +200,6 @@ public final class ScreenManager {
             Component.translatable(translatableTitle),
             Component.literal(literalInfo),
             () -> this.onInputScreen = false));
-    }
-
-    public void onSuccess(Component title, Component info) {
-        this.minecraft.getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
     }
 
     public void onTick() {

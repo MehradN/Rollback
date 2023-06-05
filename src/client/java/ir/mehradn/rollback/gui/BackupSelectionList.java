@@ -181,7 +181,7 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
                 this.minecraft.getTextureManager().register(this.iconLocation, this.icon);
                 return;
             }
-            Rollback.LOGGER.error("Failed to load the entry icon!");
+            Rollback.LOGGER.warn("Failed to load the entry icon!");
             this.minecraft.getTextureManager().release(this.iconLocation);
             this.icon = null;
         }

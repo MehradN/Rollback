@@ -46,6 +46,7 @@ public final class AutomatedBackup {
             if (shouldCreateBackup(worldTick)) {
                 Rollback.LOGGER.info("Creating an automated backup...");
                 try {
+                    backupManager.removeRequester();
                     backupManager.createBackup(BackupType.AUTOMATED, null);
                     world.ticksSinceLastMorning = 0;
                     world.ticksSinceLastBackup = 0;

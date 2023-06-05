@@ -27,11 +27,11 @@ public final class RollbackCommand {
             dispatcher.register(Commands.literal("rollback")
                 .requires(RollbackCommand::hasRequirements)
                 .then(Commands.literal("create")
-                    .executes((ctx) -> createBackup(getBackupManager(ctx), null, BackupType.COMMAND))
-                    .then(Commands.argument("name", StringArgumentType.string())
-                        .executes((ctx) -> createBackup(getBackupManager(ctx), StringArgumentType.getString(ctx, "name"), BackupType.COMMAND))))
+                    .executes((ctx) -> createBackup(ctx, null, BackupType.COMMAND))
+                    .then(Commands.argument("name", StringArgumentType.greedyString())
+                        .executes((ctx) -> createBackup(ctx, StringArgumentType.getString(ctx, "name"), BackupType.COMMAND))))
                 .then(Commands.literal("create-manual")
-                    .executes((ctx) -> createBackup(getBackupManager(ctx), null, BackupType.MANUAL)))
+                    .executes((ctx) -> createBackup(ctx, null, BackupType.MANUAL)))
                 .then(Commands.literal("gui")
                     .executes(RollbackCommand::requestOpenGui)));
         });
@@ -41,13 +41,17 @@ public final class RollbackCommand {
         return (source.getPlayer() != null && source.hasPermission(4));
     }
 
-    private static int createBackup(ServerBackupManager backupManager, String name, BackupType type) throws CommandSyntaxException {
+    private static int createBackup(CommandContext<CommandSourceStack> context, String name, BackupType type) throws CommandSyntaxException {
         if (name != null && (!type.list || name.isBlank()))
             name = null;
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
             throw new SimpleCommandExceptionType(Component.literal("The chosen name is too long! (at most 32 characters are allowed)")).create();
+
+        ServerBackupManager backupManager = getBackupManager(context);
         try {
+            backupManager.setCommandSender(context.getSource().getPlayer());
             backupManager.createBackup(type, name);
+            context.getSource().sendSuccess(Component.literal("Created the backup successfully!"), true);
             return 1;
         } catch (BackupManagerException e) {
             return 0;

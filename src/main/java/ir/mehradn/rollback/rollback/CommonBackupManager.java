@@ -160,8 +160,11 @@ public abstract class CommonBackupManager implements BackupManager {
             throw showError("rollback.error.backupCreation", "Failed to create a backup!", e);
         }
 
-        if (!type.list)
+        if (!type.list) {
+            broadcastSuccessfulBackup(type, backupInfo.size());
             return;
+        }
+
         int id = this.world.lastID + 1;
 
         Rollback.LOGGER.debug("Moving the backup...");

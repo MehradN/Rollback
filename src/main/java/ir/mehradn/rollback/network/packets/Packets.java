@@ -10,6 +10,7 @@ public interface Packets {
     NewUpdateId newUpdateId = new NewUpdateId();
     OpenGUI openGui = new OpenGUI();
     SendMetadata sendMetadata = new SendMetadata();
+    SuccessfulBackup successfulBackup = new SuccessfulBackup();
     int MAX_ENCODED_STRING_LENGTH = 63;
 
     static void writeBooleanArray(FriendlyByteBuf buf, boolean[] array) {
