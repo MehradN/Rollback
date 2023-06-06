@@ -8,12 +8,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.function.BiConsumer;
 
 @Environment(EnvType.CLIENT)
-public final class ConvertScreen extends Screen {
+public class ConvertScreen extends Screen {
     private final BiConsumer<Boolean, BackupType> answerConsumer;
     private final BackupType currentType;
     private final ArrayList<BackupType> allowedTypes;
@@ -32,13 +33,13 @@ public final class ConvertScreen extends Screen {
 
     @Override
     public void init() {
-        this.cycleButton = addRenderableWidget(CycleButton.builder(ConvertScreen::toComponent)
+        this.cycleButton = addRenderableWidget(CycleButton.builder(BackupType::toComponent)
             .withValues(this.allowedTypes)
             .create(this.width / 2 - 100, this.height / 2 - 22, 200, 20,
                 Component.translatable("rollback.screen.text.newType")));
-        addRenderableWidget(Button.builder(Component.translatable("rollback.screen.button.done"), this::onDone)
+        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, this::onDone)
             .bounds(this.width / 2 - 100, this.height / 2 + 2, 98, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"), this::onCancel)
+        addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, this::onCancel)
             .bounds(this.width / 2 + 2, this.height / 2 + 2, 98, 20).build());
     }
 
@@ -60,10 +61,6 @@ public final class ConvertScreen extends Screen {
     public void onClose() {
         if (ScreenManager.getInstance() != null)
             ScreenManager.deactivate();
-    }
-
-    private static Component toComponent(BackupType type) {
-        return type.toComponent();
     }
 
     private void onDone(Button button) {

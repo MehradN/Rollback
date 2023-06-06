@@ -1,7 +1,6 @@
 package ir.mehradn.rollback.config;
 
 import com.google.gson.*;
-import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupType;
 import net.minecraft.network.FriendlyByteBuf;
@@ -11,15 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class RollbackConfig {
-    public static final int MAX_AUTOMATED = 10;
-    public static final int MAX_COMMAND = 99;
-    public static final int MAX_FREQUENCY = 100;
     public final ConfigEntry<Boolean> backupEnabled;
     public final ConfigEntry<Short> maxBackups;
     public final ConfigEntry<Short> backupFrequency;
     public final ConfigEntry<TimerMode> timerMode;
+    protected static final short MAX_AUTOMATED = 10;
+    protected static final short MAX_COMMAND = 99;
+    protected static final short MAX_FREQUENCY = 100;
     protected List<ConfigEntry<?>> entries;
-    private static final Gson GSON = new GsonBuilder().create();
     private boolean locked = false;
 
     protected RollbackConfig(ConfigEntry<Boolean> backupEnabled, ConfigEntry<Short> maxBackups, ConfigEntry<Short> backupFrequency,
@@ -43,11 +41,11 @@ public abstract class RollbackConfig {
         return getMaxMaxBackups(type);
     }
 
-    public void copyFrom(RollbackConfig config) {
-        this.backupEnabled.copy(config.backupEnabled);
-        this.maxBackups.copy(config.maxBackups);
-        this.backupFrequency.copy(config.backupFrequency);
-        this.timerMode.copy(config.timerMode);
+    public void mergeFrom(RollbackConfig config) {
+        this.backupEnabled.mergeFrom(config.backupEnabled);
+        this.maxBackups.mergeFrom(config.maxBackups);
+        this.backupFrequency.mergeFrom(config.backupFrequency);
+        this.timerMode.mergeFrom(config.timerMode);
     }
 
     public List<ConfigEntry<?>> getEntries() {
@@ -61,71 +59,41 @@ public abstract class RollbackConfig {
     protected void writeToBuf(FriendlyByteBuf buf) {
         int size = this.getEntries().size();
         boolean[] c = new boolean[size];
+
         for (int i = 0; i < size; i++)
             c[i] = this.getEntries().get(i).hasValue();
         Packets.writeBooleanArray(buf, c);
 
-        for (int i = 0; i < size; i++) {
-            if (!c[i])
-                continue;
-            ConfigEntry<?> entry = this.getEntries().get(i);
-            if (entry.type == Boolean.class)
-                buf.writeBoolean((boolean)entry.get());
-            else if (entry.type == Short.class)
-                buf.writeShort((short)entry.get());
-            else if (entry.type.isEnum())
-                buf.writeEnum((Enum<?>)entry.get());
-            else //noinspection DataFlowIssue
-                Assertion.runtime(false);
-        }
+        for (int i = 0; i < size; i++)
+            if (c[i])
+                getEntries().get(i).writeToBuf(buf);
     }
 
     protected void readFromBuf(FriendlyByteBuf buf) {
         int size = this.getEntries().size();
         boolean[] c = Packets.readBooleanArray(buf, size);
-        for (int i = 0; i < size; i++) {
-            if (!c[i])
-                continue;
-            ConfigEntry<?> entry = this.getEntries().get(i);
-            setEntryFromBuf(entry, buf);
-        }
+
+        for (int i = 0; i < size; i++)
+            if (c[i])
+                getEntries().get(i).readFromBuf(buf);
     }
 
-    JsonObject toJson() {
+    protected JsonObject toJson() {
         JsonObject json = new JsonObject();
         for (ConfigEntry<?> entry : this.getEntries())
             if (entry.hasValue())
-                json.add(entry.name, GSON.toJsonTree(entry.get(), entry.type));
+                json.add(entry.name, entry.toJson());
         return json;
     }
 
-    void fromJson(JsonObject json) {
-        for (ConfigEntry<?> entry : this.getEntries())
-            setEntryFromJson(entry, json.get(entry.name));
-    }
-
-    private <T> void setEntryFromJson(ConfigEntry<T> entry, JsonElement json) {
-        if (json != null)
-            entry.set(GSON.fromJson(json, entry.type));
-        else
-            entry.reset();
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> void setEntryFromBuf(ConfigEntry<T> entry, FriendlyByteBuf buf) {
-        if (entry.type == Boolean.class)
-            entry.set((T)(Object)buf.readBoolean());
-        else if (entry.type == Short.class)
-            entry.set((T)(Object)buf.readShort());
-        else if (entry.type.isEnum())
-            setEnumEntryFromBuf(entry, buf);
-        else //noinspection DataFlowIssue
-            Assertion.runtime(false);
-    }
-
-    @SuppressWarnings("unchecked")
-    private <S, T extends Enum<T>> void setEnumEntryFromBuf(ConfigEntry<S> entry, FriendlyByteBuf buf) {
-        entry.set((S)buf.readEnum((Class<T>)entry.type));
+    protected void fromJson(JsonObject json) {
+        for (ConfigEntry<?> entry : this.getEntries()) {
+            JsonElement obj = json.get(entry.name);
+            if (obj == null)
+                entry.reset();
+            else
+                entry.fromJson(obj);
+        }
     }
 
     public enum TimerMode {

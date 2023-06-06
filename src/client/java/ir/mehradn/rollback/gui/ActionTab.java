@@ -2,46 +2,40 @@ package ir.mehradn.rollback.gui;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.tabs.GridLayoutTab;
 import net.minecraft.client.gui.layouts.GridLayout;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 public class ActionTab extends GridLayoutTab {
-    private static final Component TITLE = Component.translatable("rollback.screen.tab.action");
-
     public ActionTab(RollbackScreen screen) {
-        super(TITLE);
+        super(Component.translatable("rollback.screen.tab.action"));
         Button openFolder;
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),
             (button) -> { }).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeCommand"),
-            this::onMakeCommand).width(200).build());
+            onClick(ScreenManager::createBackup)).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeManual"),
-            this::onMakeManual).width(200).build());
-        rowHelper.addChild(openFolder = Button.builder(Component.translatable("rollback.screen.button.openFolder"),
-            this::onOpenFolder).width(200).build());
-        rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.cancel"),
-            screen::onCancel).width(200).build());
+            onClick(ScreenManager::createManualBackup)).width(200).build());
+        rowHelper.addChild(openFolder = Button.builder(Component.translatable("selectWorld.edit.backupFolder"),
+            onClick(ScreenManager::openBackupFolder)).width(200).build());
+        rowHelper.addChild(Button.builder(CommonComponents.GUI_CANCEL,
+            (btn) -> screen.onClose()).width(200).build());
 
-        openFolder.active = screen.openFolderActivated();
+        openFolder.active = ScreenManager.isIntegrated(Minecraft.getInstance());
     }
 
-    private void onMakeCommand(Button button) {
-        if (ScreenManager.getInstance() != null)
-            ScreenManager.getInstance().createBackup();
-    }
-
-    private void onMakeManual(Button button) {
-        if (ScreenManager.getInstance() != null)
-            ScreenManager.getInstance().createManualBackup();
-    }
-
-    private void onOpenFolder(Button button) {
-        if (ScreenManager.getInstance() != null)
-            ScreenManager.getInstance().openBackupFolder();
+    private static Button.OnPress onClick(Consumer<ScreenManager> action) {
+        return (button) -> {
+            ScreenManager screenManager = ScreenManager.getInstance();
+            if (screenManager != null)
+                action.accept(screenManager);
+        };
     }
 }

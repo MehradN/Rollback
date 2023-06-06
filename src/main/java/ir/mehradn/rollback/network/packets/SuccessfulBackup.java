@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 import org.apache.commons.io.FileUtils;
 
-public class SuccessfulBackup extends Packet<SuccessfulBackup.Info, SuccessfulBackup.Info> {
+public final class SuccessfulBackup extends Packet<SuccessfulBackup.Info, SuccessfulBackup.Info> {
     SuccessfulBackup() {
         super("successful_backup");
     }

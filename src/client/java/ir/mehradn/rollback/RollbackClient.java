@@ -11,9 +11,9 @@ import net.fabricmc.api.Environment;
 public class RollbackClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        Rollback.LOGGER.info("Loading config...");
+        Rollback.LOGGER.info("Setting static suppliers...");
         RollbackDefaultConfig.defaultSupplier = RollbackClientConfig::load;
-        Rollback.LOGGER.info("Registering client packet listeners...");
+        Rollback.LOGGER.info("Registering client events...");
         ClientPacketListener.register();
     }
 }

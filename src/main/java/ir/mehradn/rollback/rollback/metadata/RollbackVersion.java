@@ -5,14 +5,14 @@ import net.minecraft.network.FriendlyByteBuf;
 import java.lang.reflect.Type;
 
 public class RollbackVersion implements RollbackMetadata {
-    public static final RollbackVersion LATEST_VERSION = new RollbackVersion(0, 9);
-    public static final RollbackVersion DEFAULT_VERSION = new RollbackVersion(0, 1);
+    public static final RollbackVersion LATEST_VERSION = new RollbackVersion((short)0, (short)9);
+    public static final RollbackVersion DEFAULT_VERSION = new RollbackVersion((short)0, (short)1);
     public final short major;
     public final short minor;
 
-    public RollbackVersion(int major, int minor) {
-        this.major = (short)major;
-        this.minor = (short)minor;
+    public RollbackVersion(short major, short minor) {
+        this.major = major;
+        this.minor = minor;
     }
 
     public static RollbackVersion fromString(String version) {

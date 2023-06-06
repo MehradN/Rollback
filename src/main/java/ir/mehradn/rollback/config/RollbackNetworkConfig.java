@@ -4,17 +4,17 @@ import ir.mehradn.rollback.rollback.metadata.RollbackMetadata;
 import net.minecraft.network.FriendlyByteBuf;
 
 public class RollbackNetworkConfig extends RollbackConfig implements RollbackMetadata {
-    // ConfigEntry<>("backupEnabled", Boolean.class, false, null),
-    // ConfigEntry<>("maxBackups", Short.class, (short)5, new ConfigEntry.ShortTrimmer(1, MAX_AUTOMATED)),
-    // ConfigEntry<>("backupFrequency", Short.class, (short)1, new ConfigEntry.ShortTrimmer(1, MAX_FREQUENCY)),
-    // ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
+    // ConfigEntry.Boolean("backupEnabled", false)
+    // ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5)
+    // ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1)
+    // ConfigEntry.Enum<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
 
     public RollbackNetworkConfig() {
         super(
-            new ConfigEntry<>("backupEnabled", Boolean.class, false, null),
-            new ConfigEntry<>("maxBackups", Short.class, (short)5, new ConfigEntry.ShortTrimmer(1, MAX_AUTOMATED)),
-            new ConfigEntry<>("backupFrequency", Short.class, (short)1, new ConfigEntry.ShortTrimmer(1, MAX_FREQUENCY)),
-            new ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
+            new ConfigEntry.Boolean("backupEnabled", false),
+            new ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5),
+            new ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1),
+            new ConfigEntry.Enum<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
         );
     }
 

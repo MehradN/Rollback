@@ -8,6 +8,7 @@ import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
+import ir.mehradn.rollback.util.Utils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -17,7 +18,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,9 +34,9 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
     private final ScreenManager screenManager;
     private final BackupManager backupManager;
     private final CurrentSaveEntry currentSaveEntry;
-    private boolean shouldReloadEntries = true;
+    private boolean shouldReloadEntries;
     private BackupType backupType = BackupType.AUTOMATED;
-    private long fileSizeSum = 0;
+    private long fileSizeSum;
 
     public BackupSelectionList(Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
         super(minecraft, width, height, top, bottom, itemHeight);
@@ -44,6 +44,7 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         Assertion.state(this.screenManager != null, "Create a screen manager before this!");
         this.backupManager = this.screenManager.backupManager;
         this.currentSaveEntry = new CurrentSaveEntry();
+        suggestReloadingEntries();
     }
 
     public void suggestReloadingEntries() {
@@ -57,8 +58,8 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         }
     }
 
-    public String getFileSizeSumAsString() {
-        return FileUtils.byteCountToDisplaySize(this.fileSizeSum);
+    public long getTotalSize() {
+        return this.fileSizeSum;
     }
 
     @Override
@@ -181,13 +182,18 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
                 this.minecraft.getTextureManager().register(this.iconLocation, this.icon);
                 return;
             }
-            Rollback.LOGGER.warn("Failed to load the entry icon!");
             this.minecraft.getTextureManager().release(this.iconLocation);
             this.icon = null;
         }
+
+        protected void unsupportedOperation() {
+            //noinspection DataFlowIssue
+            Assertion.runtime(false, "This operation is not supported for this kind of entry!");
+        }
     }
 
-    public final class CurrentSaveEntry extends Entry {
+    @Environment(EnvType.CLIENT)
+    public class CurrentSaveEntry extends Entry {
         public CurrentSaveEntry() {
             super("backup_selection_list/current_save.png");
             buildIconTexture();
@@ -215,13 +221,19 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         }
 
         @Override
-        public void deleteEntry() { }
+        public void deleteEntry() {
+            unsupportedOperation();
+        }
 
         @Override
-        public void convertEntry() { }
+        public void convertEntry() {
+            unsupportedOperation();
+        }
 
         @Override
-        public void renameEntry() { }
+        public void renameEntry() {
+            unsupportedOperation();
+        }
 
         @Override
         protected NativeImage getIconImage() {
@@ -229,7 +241,8 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         }
     }
 
-    public final class BackupEntry extends Entry {
+    @Environment(EnvType.CLIENT)
+    public class BackupEntry extends Entry {
         private final int index;
         private final int backupID;
         private final BackupType backupType;
@@ -258,7 +271,7 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
                 Component.translatable("rollback.screen.text.creationDate", this.backup.getDateAsString()),
                 Component.translatable("rollback.screen.text.backupInfo",
                     this.backup.getDaysPlayedAsString(),
-                    this.backup.getFileSizeAsString(),
+                    Utils.fileSizeToString(this.backup.fileSize),
                     this.backupID),
                 poseStack, top, left, mouseX, isMouseOver
             );
@@ -268,7 +281,7 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         public @NotNull Component getNarration() {
             String date = this.backup.getDateAsString();
             String days = this.backup.getDaysPlayedAsString();
-            String size = this.backup.getFileSizeAsString();
+            String size = Utils.fileSizeToString(this.backup.fileSize);
             if (this.backup.name == null)
                 return Component.translatable("rollback.screen.narrator.unnamedBackup", this.index, date, days, size);
             else
@@ -302,7 +315,6 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
             Path path = this.minecraft.getLevelSource().getBackupPath().resolve("rollbacks").resolve(this.backup.iconPath);
             if (!Files.isRegularFile(path))
                 return null;
-
 
             Rollback.LOGGER.debug("Loading the icon for backup #{}...", this.backupID);
             try (InputStream inputStream = Files.newInputStream(path)) {

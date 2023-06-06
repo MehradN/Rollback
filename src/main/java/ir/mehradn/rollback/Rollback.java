@@ -18,7 +18,6 @@ public class Rollback implements ModInitializer {
         RollbackCommand.register();
         AutomatedBackup.register();
         ServerTickTimer.register();
-        Rollback.LOGGER.info("Registering packet listeners...");
         ServerPacketListener.register();
     }
 }

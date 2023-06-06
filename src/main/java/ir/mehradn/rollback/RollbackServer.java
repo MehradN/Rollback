@@ -9,7 +9,7 @@ import net.fabricmc.api.Environment;
 public class RollbackServer implements DedicatedServerModInitializer {
     @Override
     public void onInitializeServer() {
-        Rollback.LOGGER.info("Loading config...");
+        Rollback.LOGGER.info("Setting static suppliers...");
         RollbackDefaultConfig.defaultSupplier = RollbackDefaultConfig::load;
     }
 }

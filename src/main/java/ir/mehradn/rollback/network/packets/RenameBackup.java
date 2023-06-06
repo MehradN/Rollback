@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class RenameBackup extends Packet<RenameBackup.Arguments, RenameBackup.Arguments> {
+public final class RenameBackup extends Packet<RenameBackup.Arguments, RenameBackup.Arguments> {
     RenameBackup() {
         super("rename_backup");
     }

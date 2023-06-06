@@ -2,21 +2,20 @@ package ir.mehradn.rollback.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import ir.mehradn.rollback.Rollback;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.loader.api.FabricLoader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.Path;
 
 @Environment(EnvType.CLIENT)
 public class RollbackClientConfig extends RollbackDefaultConfig {
-    public final ConfigEntry<Boolean> replaceButton = new ConfigEntry<>("replaceButton", Boolean.class, true, null);
-    public final ConfigEntry<Boolean> promptEnabled = new ConfigEntry<>("promptEnabled", Boolean.class, true, null);
+    // ConfigEntry.Boolean("backupEnabled", false)
+    // ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5)
+    // ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1)
+    // ConfigEntry.Enum<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
+    public final ConfigEntry.Boolean replaceButton = new ConfigEntry.Boolean("replaceButton", true);
+    public final ConfigEntry.Boolean promptEnabled = new ConfigEntry.Boolean("promptEnabled", true);
     private static final Gson GSON = new GsonBuilder()
         .registerTypeAdapter(RollbackClientConfig.class, new Adapter<>(RollbackClientConfig.class))
-        .create();
+        .setPrettyPrinting().create();
 
     public RollbackClientConfig() {
         super();
@@ -25,16 +24,11 @@ public class RollbackClientConfig extends RollbackDefaultConfig {
     }
 
     public static RollbackClientConfig load() {
-        Path configFile = FabricLoader.getInstance().getConfigDir().resolve(Rollback.MOD_ID + ".json");
-        try (FileReader reader = new FileReader(configFile.toFile())) {
-            return GSON.fromJson(reader, RollbackClientConfig.class);
-        } catch (IOException e) {
-            Rollback.LOGGER.warn("Failed to load the config file!", e);
-            return new RollbackClientConfig();
-        }
+        return load(GSON, RollbackClientConfig.class, RollbackClientConfig::new);
     }
 
-    @Override protected Gson getGson() {
+    @Override
+    protected Gson getGson() {
         return GSON;
     }
 }

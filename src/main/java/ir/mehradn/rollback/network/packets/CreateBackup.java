@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class CreateBackup extends Packet<CreateBackup.Arguments, CreateBackup.Arguments> {
+public final class CreateBackup extends Packet<CreateBackup.Arguments, CreateBackup.Arguments> {
     CreateBackup() {
         super("create_backup");
     }

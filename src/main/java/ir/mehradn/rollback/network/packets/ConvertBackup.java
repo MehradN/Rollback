@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class ConvertBackup extends Packet<ConvertBackup.Arguments, ConvertBackup.Arguments> {
+public final class ConvertBackup extends Packet<ConvertBackup.Arguments, ConvertBackup.Arguments> {
     ConvertBackup() {
         super("convert_backup");
     }

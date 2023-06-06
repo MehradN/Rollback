@@ -45,13 +45,13 @@ public final class RollbackCommand {
         if (name != null && (!type.list || name.isBlank()))
             name = null;
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
-            throw new SimpleCommandExceptionType(Component.literal("The chosen name is too long! (at most 32 characters are allowed)")).create();
+            throw new SimpleCommandExceptionType(Component.translatable("rollback.command.nameTooLong", BackupManager.MAX_NAME_LENGTH)).create();
 
         ServerBackupManager backupManager = getBackupManager(context);
         try {
             backupManager.setCommandSender(context.getSource().getPlayer());
             backupManager.createBackup(type, name);
-            context.getSource().sendSuccess(Component.literal("Created the backup successfully!"), true);
+            context.getSource().sendSuccess(Component.translatable("rollback.command.createdBackup"), true);
             return 1;
         } catch (BackupManagerException e) {
             return 0;
@@ -67,7 +67,7 @@ public final class RollbackCommand {
         OpenGUI.awaitingPlayers.add(player);
         ServerTickTimer.addTimer(new TickTimer(100, () -> {
             if (OpenGUI.awaitingPlayers.contains(player)) {
-                source.sendFailure(Component.literal("Failed to open the gui screen. Are you sure you have the mod installed on your client?"));
+                source.sendFailure(Component.translatable("rollback.command.guiFailed"));
                 OpenGUI.awaitingPlayers.remove(player);
             }
         }));

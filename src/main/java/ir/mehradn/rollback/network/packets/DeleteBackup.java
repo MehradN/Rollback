@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class DeleteBackup extends Packet<DeleteBackup.Arguments, DeleteBackup.Arguments> {
+public final class DeleteBackup extends Packet<DeleteBackup.Arguments, DeleteBackup.Arguments> {
     DeleteBackup() {
         super("delete_backup");
     }

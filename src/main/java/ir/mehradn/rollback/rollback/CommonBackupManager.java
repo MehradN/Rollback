@@ -5,11 +5,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import ir.mehradn.rollback.Rollback;
-import ir.mehradn.rollback.config.ConfigType;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
-import ir.mehradn.rollback.exception.BMECause;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.metadata.*;
 import ir.mehradn.rollback.util.gson.LocalDateTimeAdapter;
@@ -29,13 +27,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public abstract class CommonBackupManager implements BackupManager {
-    private final RollbackDefaultConfig defaultConfig;
-    private final Gson GSON = new GsonBuilder()
+    private static final Gson GSON = new GsonBuilder()
         .registerTypeHierarchyAdapter(Path.class, new PathAdapter())
         .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
         .registerTypeAdapter(RollbackVersion.class, new RollbackVersion.Adapter())
         .registerTypeAdapter(RollbackWorldConfig.class, new RollbackConfig.Adapter<>(RollbackWorldConfig.class))
         .create();
+    private final RollbackDefaultConfig defaultConfig;
     @Nullable private RollbackData data = null;
     @Nullable private RollbackWorld world = null;
 
@@ -62,10 +60,11 @@ public abstract class CommonBackupManager implements BackupManager {
             }
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);
-            throw new BackupManagerException(BMECause.IO_EXCEPTION, "Failed to save the metadata file!", e);
+            throw new BackupManagerException(BackupManagerException.Cause.IO_EXCEPTION, "Failed to save the metadata file!", e);
         }
     }
 
+    // TODO: Move to ClientBackupManager
     public void deleteWorld() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         String levelID = getLevelID();
@@ -119,7 +118,7 @@ public abstract class CommonBackupManager implements BackupManager {
             save = true;
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to read the metadata file!", e);
-            throw new BackupManagerException(BMECause.IO_EXCEPTION, "Failed to read the metadata file!", e);
+            throw new BackupManagerException(BackupManagerException.Cause.IO_EXCEPTION, "Failed to read the metadata file!", e);
         }
 
         this.data = data;
@@ -175,7 +174,7 @@ public abstract class CommonBackupManager implements BackupManager {
             Files.move(path1, path2);
         } catch (IOException e) {
             BackupManagerException exception =
-                showError("rollback.error.backupCreation", "Failed to move the backup file!", BMECause.IO_EXCEPTION, e);
+                showError("rollback.error.backupCreation", "Failed to move the backup file!", BackupManagerException.Cause.IO_EXCEPTION, e);
 
             Rollback.LOGGER.debug("Deleting the backup file...");
             try {
@@ -214,7 +213,7 @@ public abstract class CommonBackupManager implements BackupManager {
             if (backup.iconPath != null)
                 Files.deleteIfExists(getRollbackDirectory().resolve(backup.iconPath));
         } catch (IOException e) {
-            throw showError("rollback.error.backupDeletion", "Failed to delete the backup files!", BMECause.IO_EXCEPTION, e);
+            throw showError("rollback.error.backupDeletion", "Failed to delete the backup files!", BackupManagerException.Cause.IO_EXCEPTION, e);
         }
 
         backups.remove(backupID);
@@ -249,7 +248,7 @@ public abstract class CommonBackupManager implements BackupManager {
                 try {
                     Files.deleteIfExists(getRollbackDirectory().resolve(backup.iconPath));
                 } catch (IOException e) {
-                    throw showError("rollback.error.backupConversion", "Failed to delete the icon!", BMECause.IO_EXCEPTION, e);
+                    throw showError("rollback.error.backupConversion", "Failed to delete the icon!", BackupManagerException.Cause.IO_EXCEPTION, e);
                 }
             }
             if (backup.backupPath != null) {
@@ -260,7 +259,8 @@ public abstract class CommonBackupManager implements BackupManager {
                     Path dest = getBackupDirectory().resolve(FileUtil.findAvailableName(getBackupDirectory(), fileName, ".zip"));
                     Files.move(source, dest);
                 } catch (IOException e) {
-                    throw showError("rollback.error.backupConversion", "Failed to move the backup files!", BMECause.IO_EXCEPTION, e);
+                    throw showError("rollback.error.backupConversion", "Failed to move the backup files!", BackupManagerException.Cause.IO_EXCEPTION,
+                        e);
                 }
             }
         }
@@ -285,12 +285,12 @@ public abstract class CommonBackupManager implements BackupManager {
     @Override
     public void saveConfigAsDefault() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        this.defaultConfig.copyFrom(this.world.config);
+        this.defaultConfig.mergeFrom(this.world.config);
         try {
             this.defaultConfig.save();
             broadcastSuccessfulConfig(ConfigType.DEFAULT);
         } catch (IOException e) {
-            throw showError("rollback.error.saveConfig", "Failed to save the config file!", BMECause.IO_EXCEPTION, e);
+            throw showError("rollback.error.saveConfig", "Failed to save the config file!", BackupManagerException.Cause.IO_EXCEPTION, e);
         }
     }
 
@@ -338,7 +338,7 @@ public abstract class CommonBackupManager implements BackupManager {
             }
         } catch (IOException e) {
             throw showError("rollback.error.rollbackToBackup", "Failed to extract the backup to the save directory!",
-                BMECause.IO_EXCEPTION, e);
+                BackupManagerException.Cause.IO_EXCEPTION, e);
         }
     }
 
@@ -352,7 +352,7 @@ public abstract class CommonBackupManager implements BackupManager {
                 backup.iconPath = null;
     }
 
-    private BackupManagerException showError(String title, String info, BMECause cause, Throwable exception) {
+    private BackupManagerException showError(String title, String info, BackupManagerException.Cause cause, Throwable exception) {
         Rollback.LOGGER.error(info, exception);
         broadcastError(title, info);
         return new BackupManagerException(cause, info, exception);
@@ -363,4 +363,15 @@ public abstract class CommonBackupManager implements BackupManager {
         broadcastError(title, info);
         return new BackupManagerException(info, cause);
     }
+
+    public enum ConfigType {
+        WORLD,
+        DEFAULT;
+
+        public String toString() {
+            return super.toString().toLowerCase();
+        }
+    }
+
+    public record BackupInfo(Path backupPath, long size) { }
 }

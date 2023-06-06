@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class RollbackBackup extends Packet<RollbackBackup.Arguments, RollbackBackup.Arguments> {
+public final class RollbackBackup extends Packet<RollbackBackup.Arguments, RollbackBackup.Arguments> {
     RollbackBackup() {
         super("rollback_backup");
     }

@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class SuccessfulRename extends Packet<SuccessfulRename.Info, SuccessfulRename.Info> {
+public final class SuccessfulRename extends Packet<SuccessfulRename.Info, SuccessfulRename.Info> {
     SuccessfulRename() {
         super("successful_rename");
     }

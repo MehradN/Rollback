@@ -3,7 +3,7 @@ package ir.mehradn.rollback.network.packets;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class BackupManagerError extends Packet<BackupManagerError.Info, BackupManagerError.Info> {
+public final class BackupManagerError extends Packet<BackupManagerError.Info, BackupManagerError.Info> {
     private static final int MAX_STRING_LENGTH = 1023;
 
     BackupManagerError() {

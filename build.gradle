@@ -18,6 +18,9 @@ repositories {
 	maven {
 		url = 'https://jitpack.io'
 	}
+	maven {
+		url = 'https://maven.nucleoid.xyz'
+	}
 }
 
 loom {
@@ -48,6 +51,8 @@ dependencies {
 
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	modImplementation include("xyz.nucleoid:server-translations-api:${project.translation_version}")
 }
 
 processResources {
@@ -56,10 +61,6 @@ processResources {
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
 	}
-}
-
-tasks.withType(JavaExec).configureEach {
-	enableAssertions = true
 }
 
 tasks.withType(JavaCompile).configureEach {

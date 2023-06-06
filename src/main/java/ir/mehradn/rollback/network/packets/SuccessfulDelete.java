@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class SuccessfulDelete extends Packet<SuccessfulDelete.Info, SuccessfulDelete.Info> {
+public final class SuccessfulDelete extends Packet<SuccessfulDelete.Info, SuccessfulDelete.Info> {
     SuccessfulDelete() {
         super("successful_delete");
     }

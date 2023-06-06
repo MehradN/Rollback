@@ -2,7 +2,7 @@ package ir.mehradn.rollback.rollback;
 
 import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.Assertion;
-import ir.mehradn.rollback.exception.BackupManagerException;
+import ir.mehradn.rollback.gui.ScreenManager;
 import ir.mehradn.rollback.network.ClientPacketManager;
 import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
-public final class NetworkBackupManager implements BackupManager {
+public class NetworkBackupManager implements BackupManager {
     private final Minecraft minecraft;
     @Nullable private RollbackWorld world = null;
     @Nullable private RollbackNetworkConfig defaultConfig = null;
@@ -32,12 +32,6 @@ public final class NetworkBackupManager implements BackupManager {
         this.defaultConfig = metadata.config();
         this.world.update(this);
         actionFinished();
-    }
-
-    public void actionFinished() {
-        this.state = State.IDLE;
-        if (this.loadingQueued)
-            loadWorld();
     }
 
     @Override
@@ -63,17 +57,16 @@ public final class NetworkBackupManager implements BackupManager {
             this.loadingQueued = true;
             return;
         }
+        this.loadingQueued = false;
         this.world = null;
         this.defaultConfig = null;
         this.state = State.LOADING;
-        ClientPacketManager.send(Packets.fetchMetadata, this.minecraft.hasSingleplayerServer());
+        ClientPacketManager.send(Packets.fetchMetadata, ScreenManager.isIntegrated(this.minecraft));
     }
 
     @Override
     public void createBackup(BackupType type, @Nullable String name) {
-        if (name != null && (!type.list || name.isBlank()))
-            name = null;
-        if (name == null)
+        if (name == null || (!type.list || name.isBlank()))
             name = "";
         Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
 
@@ -113,7 +106,15 @@ public final class NetworkBackupManager implements BackupManager {
         ClientPacketManager.send(Packets.rollbackBackup, new RollbackBackup.Arguments(this.lastUpdateId, backupID, type));
     }
 
-    @Override public void saveConfig() throws BackupManagerException { }
+    // TODO: Implement this
+    @Override public void saveConfig() { }
 
-    @Override public void saveConfigAsDefault() throws BackupManagerException { }
+    // TODO: Implement this
+    @Override public void saveConfigAsDefault() { }
+
+    private void actionFinished() {
+        this.state = State.IDLE;
+        if (this.loadingQueued)
+            loadWorld();
+    }
 }

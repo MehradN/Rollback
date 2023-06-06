@@ -1,10 +1,8 @@
 package ir.mehradn.rollback.rollback;
 
 import ir.mehradn.rollback.config.ConfigEntry;
-import ir.mehradn.rollback.config.ConfigType;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.exception.Assertion;
-import ir.mehradn.rollback.exception.BMECause;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
 import ir.mehradn.rollback.network.packets.*;
@@ -22,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public final class ServerBackupManager extends CommonBackupManager {
+public class ServerBackupManager extends CommonBackupManager {
     private final MinecraftServer server;
     private int lastUpdateId;
     private ServerPlayer requester = null;
@@ -122,7 +120,7 @@ public final class ServerBackupManager extends CommonBackupManager {
     @Override
     protected void saveEverything() throws BackupManagerException {
         if (!this.server.saveEverything(true, true, true))
-            throw new BackupManagerException(BMECause.MINECRAFT_FAILURE, "Failed to save everything on the server!");
+            throw new BackupManagerException(BackupManagerException.Cause.MINECRAFT_FAILURE, "Failed to save everything on the server!");
     }
 
     @Override
@@ -133,7 +131,7 @@ public final class ServerBackupManager extends CommonBackupManager {
             Path path = ((LevelStorageAccessExpanded)storageAccess).getLatestBackupPath();
             return new BackupInfo(path, size);
         } catch (IOException e) {
-            throw new BackupManagerException(BMECause.IO_EXCEPTION, "Failed to create a backup!", e);
+            throw new BackupManagerException(BackupManagerException.Cause.IO_EXCEPTION, "Failed to create a backup!", e);
         }
     }
 
@@ -182,7 +180,7 @@ public final class ServerBackupManager extends CommonBackupManager {
 
         MutableComponent component = Component.translatable("rollback.success.updateConfig." + configType);
         for (ConfigEntry<?> entry : config.getEntries())
-            component.append("\n" + entry.name + " = " + entry.getAsString());
+            component.append("\n" + entry.name + " = " + entry.get().toString());
         this.server.sendSystemMessage(component);
     }
 

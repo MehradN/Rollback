@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.tabs.Tab;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -26,26 +27,26 @@ public class BackupListTab implements Tab {
     private final Button cancelButton;
 
     public BackupListTab(RollbackScreen screen, BackupType backupType, String title) {
-        this.screen = screen;
         this.backupType = backupType;
+        this.screen = screen;
         this.title = Component.translatable(title);
 
         this.rollbackButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rollback"),
             onClick(BackupSelectionList.Entry::playEntry)).size(152, 20).build());
         this.convertButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.convert"),
             onClick(BackupSelectionList.Entry::convertEntry)).size(152, 20).build());
-        this.deleteButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.delete"),
+        this.deleteButton = addWidget(Button.builder(Component.translatable("selectWorld.delete"),
             onClick(BackupSelectionList.Entry::deleteEntry)).size(100, 20).build());
         this.renameButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rename"),
             onClick(BackupSelectionList.Entry::renameEntry)).size(100, 20).build());
-        this.cancelButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"),
-            this.screen::onCancel).size(100, 20).build());
+        this.cancelButton = addWidget(Button.builder(CommonComponents.GUI_CANCEL,
+            (btn) -> screen.onClose()).size(100, 20).build());
 
         setEntrySelected(false, false);
     }
 
-    public void setEntrySelected(boolean canRollback, boolean canModify) {
-        this.rollbackButton.active = canRollback;
+    public void setEntrySelected(boolean canPlay, boolean canModify) {
+        this.rollbackButton.active = canPlay;
         this.convertButton.active = canModify;
         this.deleteButton.active = canModify;
         this.renameButton.active = canModify;

@@ -15,29 +15,23 @@ public class RollbackDefaultConfig extends RollbackConfig {
     public static Supplier<RollbackDefaultConfig> defaultSupplier;
     private static final Gson GSON = new GsonBuilder()
         .registerTypeAdapter(RollbackDefaultConfig.class, new Adapter<>(RollbackDefaultConfig.class))
-        .create();
-    // ConfigEntry<>("backupEnabled", Boolean.class, false, null),
-    // ConfigEntry<>("maxBackups", Short.class, (short)5, new ConfigEntry.ShortTrimmer(1, MAX_AUTOMATED)),
-    // ConfigEntry<>("backupFrequency", Short.class, (short)1, new ConfigEntry.ShortTrimmer(1, MAX_FREQUENCY)),
-    // ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
+        .setPrettyPrinting().create();
+    // ConfigEntry.Boolean("backupEnabled", false)
+    // ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5)
+    // ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1)
+    // ConfigEntry.Enum<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
 
     public RollbackDefaultConfig() {
         super(
-            new ConfigEntry<>("backupEnabled", Boolean.class, false, null),
-            new ConfigEntry<>("maxBackups", Short.class, (short)5, new ConfigEntry.ShortTrimmer(1, MAX_AUTOMATED)),
-            new ConfigEntry<>("backupFrequency", Short.class, (short)1, new ConfigEntry.ShortTrimmer(1, MAX_FREQUENCY)),
-            new ConfigEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE, null)
+            new ConfigEntry.Boolean("backupEnabled", false),
+            new ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5),
+            new ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1),
+            new ConfigEntry.Enum<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
         );
     }
 
     public static RollbackDefaultConfig load() {
-        Path configFile = FabricLoader.getInstance().getConfigDir().resolve(Rollback.MOD_ID + ".json");
-        try (FileReader reader = new FileReader(configFile.toFile())) {
-            return GSON.fromJson(reader, RollbackDefaultConfig.class);
-        } catch (IOException e) {
-            Rollback.LOGGER.warn("Failed to load the config file!", e);
-            return new RollbackDefaultConfig();
-        }
+        return load(GSON, RollbackDefaultConfig.class, RollbackDefaultConfig::new);
     }
 
     public void save() throws IOException {
@@ -51,6 +45,16 @@ public class RollbackDefaultConfig extends RollbackConfig {
         } catch (IOException e) {
             Rollback.LOGGER.error("Failed to save the config file!", e);
             throw e;
+        }
+    }
+
+    protected static <T extends RollbackDefaultConfig> T load(Gson gson, Class<T> type, Supplier<T> constructor) {
+        Path configFile = FabricLoader.getInstance().getConfigDir().resolve(Rollback.MOD_ID + ".json");
+        try (FileReader reader = new FileReader(configFile.toFile())) {
+            return gson.fromJson(reader, type);
+        } catch (IOException e) {
+            Rollback.LOGGER.warn("Failed to load the config file!", e);
+            return constructor.get();
         }
     }
 

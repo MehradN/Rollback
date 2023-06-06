@@ -6,6 +6,7 @@ import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.FileUtil;
@@ -23,10 +24,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Environment(EnvType.CLIENT)
-public final class ScreenManager {
+public class ScreenManager {
     public final BackupManager backupManager;
+    public final RollbackScreen rollbackScreen;
     @Nullable private static ScreenManager instance = null;
-    final RollbackScreen rollbackScreen;
     private final Minecraft minecraft;
     private final Screen lastScreen;
     private boolean onInputScreen = false;
@@ -55,8 +56,26 @@ public final class ScreenManager {
         instance = null;
     }
 
-    public static void showToast(Component title, Component info) {
-        Minecraft.getInstance().getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
+    public static void showToast(Minecraft minecraft, Component title, Component info) {
+        minecraft.getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
+    }
+
+    public static boolean isInGame(Minecraft minecraft) {
+        return (minecraft.level != null);
+    }
+
+    public static boolean isIntegrated(Minecraft minecraft) {
+        return minecraft.hasSingleplayerServer();
+    }
+
+    public static boolean isAutomatedBackupEnabled(BackupManager backupManager) {
+        return backupManager.getWorld().config.backupEnabled.get();
+    }
+
+    public static boolean isAutomatedBackupEnabled() {
+        if (instance == null)
+            return false;
+        return isAutomatedBackupEnabled(instance.backupManager);
     }
 
     public void loadMetadata() {
@@ -98,7 +117,9 @@ public final class ScreenManager {
 
     public void deleteBackup(int backupID, BackupType type) {
         this.onInputScreen = true;
-        this.minecraft.setScreen(new ConfirmScreen(
+        this.minecraft.setScreen(new DirtConfirmScreen(
+            Component.translatable("rollback.screen.deleteQuestion"),
+            Component.empty(),
             (confirmed) -> {
                 this.onInputScreen = false;
                 if (!confirmed)
@@ -109,14 +130,8 @@ public final class ScreenManager {
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to delete the backup!", e);
                 }
-            },
-            Component.translatable("rollback.screen.deleteQuestion"),
-            Component.translatable("rollback.screen.deleteWarning")
-        ) {
-            public void renderBackground(PoseStack poseStack) {
-                renderDirtBackground(poseStack);
             }
-        });
+        ));
     }
 
     public void renameBackup(int backupID, BackupType type) {
@@ -134,7 +149,8 @@ public final class ScreenManager {
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to rename the backup!", e);
                 }
-            }));
+            }
+        ));
     }
 
     public void convertBackup(int backupID, BackupType from) {
@@ -150,12 +166,15 @@ public final class ScreenManager {
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to convert the backup!", e);
                 }
-            }));
+            }
+        ));
     }
 
     public void rollbackToBackup(int backupID, BackupType type) {
         this.onInputScreen = true;
-        this.minecraft.setScreen(new ConfirmScreen(
+        this.minecraft.setScreen(new DirtConfirmScreen(
+            Component.translatable("rollback.screen.rollbackQuestion"),
+            Component.translatable("rollback.screen.rollbackWarning"),
             (confirmed) -> {
                 this.onInputScreen = false;
                 if (!confirmed)
@@ -166,23 +185,17 @@ public final class ScreenManager {
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to rollback to the backup!", e);
                 }
-            },
-            Component.translatable("rollback.screen.rollbackQuestion"),
-            Component.translatable("rollback.screen.rollbackWarning")
-        ) {
-            public void renderBackground(PoseStack poseStack) {
-                renderDirtBackground(poseStack);
             }
-        });
+        ));
     }
 
-    // TODO
+    // TODO: Implement rest of this
     public void playCurrentSave() {
-        if (this.minecraft.level != null)
+        if (isInGame(this.minecraft))
             deactivate();
     }
 
-    // TODO
+    // TODO: Implement this
     public void openConfig() {
     }
 
@@ -195,7 +208,7 @@ public final class ScreenManager {
         }
     }
 
-    // TODO
+    // TODO: Add confirmation screen
     public void saveConfigAsDefault() {
         try {
             setMessageScreen(Component.translatable("rollback.screen.message.savingConfig"));
@@ -218,7 +231,7 @@ public final class ScreenManager {
         Util.getPlatform().openFile(path.toFile());
     }
 
-    // TODO
+    // TODO: Implement this
     public void onNotMatchingVersions() {
 
     }
@@ -226,19 +239,14 @@ public final class ScreenManager {
     public void onError(String translatableTitle, String literalInfo) {
         this.onInputScreen = true;
         Rollback.LOGGER.error(literalInfo);
-        this.minecraft.forceSetScreen(new ErrorScreen(
+        this.minecraft.forceSetScreen(new DirtErrorScreen(
             Component.translatable(translatableTitle),
-            Component.literal(literalInfo)
-        ) {
-            public void onClose() {
-                if (ScreenManager.getInstance() != null)
-                    ScreenManager.getInstance().onInputScreen = false;
+            Component.literal(literalInfo),
+            () -> {
+                if (ScreenManager.instance != null)
+                    ScreenManager.instance.onInputScreen = false;
             }
-
-            public void renderBackground(PoseStack poseStack) {
-                renderDirtBackground(poseStack);
-            }
-        });
+        ));
     }
 
     public void onTick() {
@@ -252,19 +260,51 @@ public final class ScreenManager {
             this.minecraft.setScreen(this.rollbackScreen);
     }
 
-    // TODO
+    // TODO: Implement rest of this
     public Component currentSaveLastPlayed() {
         if (this.minecraft.level != null)
             return Component.translatable("rollback.screen.text.playingNow");
         return Component.empty();
     }
 
-    // TODO
+    // TODO: Implement this
     public @Nullable NativeImage loadCurrentSaveIcon() {
         return null;
     }
 
     private void setMessageScreen(Component message) {
         this.minecraft.forceSetScreen(new GenericDirtMessageScreen(message));
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static class DirtConfirmScreen extends ConfirmScreen {
+        public DirtConfirmScreen(Component title, Component info, BooleanConsumer onConfirm) {
+            super(onConfirm, title, info);
+        }
+
+        @Override
+        public void renderBackground(PoseStack poseStack) {
+            renderDirtBackground(poseStack);
+        }
+    }
+
+    @Environment(EnvType.CLIENT)
+    private static class DirtErrorScreen extends ErrorScreen {
+        private final Runnable onClose;
+
+        public DirtErrorScreen(Component title, Component message, Runnable onClose) {
+            super(title, message);
+            this.onClose = onClose;
+        }
+
+        @Override
+        public void renderBackground(PoseStack poseStack) {
+            renderDirtBackground(poseStack);
+        }
+
+        @Override
+        public void onClose() {
+            this.onClose.run();
+        }
     }
 }

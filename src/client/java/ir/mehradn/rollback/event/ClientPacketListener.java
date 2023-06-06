@@ -50,9 +50,10 @@ public final class ClientPacketListener {
     }
 
     private static void onSendMetadata(Minecraft minecraft, @Nullable SendMetadata.MetadataReceive data) {
+        if (ScreenManager.getInstance() == null)
+            return;
         if (data == null) {
-            if (ScreenManager.getInstance() != null)
-                ScreenManager.getInstance().onNotMatchingVersions();
+            ScreenManager.getInstance().onNotMatchingVersions();
             return;
         }
         NetworkBackupManager backupManager = getBackupManager();
@@ -63,6 +64,7 @@ public final class ClientPacketListener {
 
     private static void onSuccessfulBackup(Minecraft minecraft, SuccessfulBackup.Info data) {
         ScreenManager.showToast(
+            minecraft,
             Component.translatable("rollback.toast.successfulBackup.title"),
             Component.translatable("rollback.toast.successfulBackup.info", data.type().toComponent(), data.sizeAsString())
         );
@@ -70,6 +72,7 @@ public final class ClientPacketListener {
 
     private static void onSuccessfulConvert(Minecraft minecraft, SuccessfulConvert.Info data) {
         ScreenManager.showToast(
+            minecraft,
             Component.translatable("rollback.toast.successfulConvert.title"),
             Component.translatable("rollback.toast.successfulConvert.info", data.backupId(), data.from().toComponent(), data.to().toComponent())
         );
@@ -77,6 +80,7 @@ public final class ClientPacketListener {
 
     private static void onSuccessfulDelete(Minecraft minecraft, SuccessfulDelete.Info data) {
         ScreenManager.showToast(
+            minecraft,
             Component.translatable("rollback.toast.successfulDelete.title"),
             Component.translatable("rollback.toast.successfulDelete.info", data.type().toComponent(), data.backupId())
         );
@@ -84,6 +88,7 @@ public final class ClientPacketListener {
 
     private static void onSuccessfulRename(Minecraft minecraft, SuccessfulRename.Info data) {
         ScreenManager.showToast(
+            minecraft,
             Component.translatable("rollback.toast.successfulRename.title"),
             Component.translatable("rollback.toast.successfulRename.info", data.type().toComponent(), data.backupId())
         );

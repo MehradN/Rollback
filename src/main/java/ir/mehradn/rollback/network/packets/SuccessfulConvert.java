@@ -4,7 +4,7 @@ import ir.mehradn.rollback.rollback.BackupType;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class SuccessfulConvert extends Packet<SuccessfulConvert.Info, SuccessfulConvert.Info> {
+public final class SuccessfulConvert extends Packet<SuccessfulConvert.Info, SuccessfulConvert.Info> {
     SuccessfulConvert() {
         super("successful_convert");
     }

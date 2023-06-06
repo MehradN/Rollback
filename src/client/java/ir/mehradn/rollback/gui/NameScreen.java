@@ -7,21 +7,24 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.BiConsumer;
 
 @Environment(EnvType.CLIENT)
-public final class NameScreen extends Screen {
+public class NameScreen extends Screen {
     private final BiConsumer<Boolean, @Nullable String> answerConsumer;
     private final String currentName;
+    private final boolean allowSameName;
     private Button doneButton;
     private EditBox nameEdit;
 
-    public NameScreen(Component title, @Nullable String currentName, boolean allowSameName, BiConsumer<Boolean, @Nullable String> answerConsumer) {
+    public NameScreen(Component title, @Nullable String currentName, boolean allowSameName, BiConsumer<Boolean, String> answerConsumer) {
         super(title);
         this.answerConsumer = answerConsumer;
-        this.currentName = (allowSameName ? null : (currentName == null ? "" : currentName));
+        this.currentName = (currentName == null ? "" : currentName);
+        this.allowSameName = allowSameName;
     }
 
     @Override
@@ -31,9 +34,9 @@ public final class NameScreen extends Screen {
         this.nameEdit.setValue(this.currentName);
         this.nameEdit.setResponder(this::updateDoneButtonStatus);
         addWidget(this.nameEdit);
-        this.doneButton = addRenderableWidget(Button.builder(Component.translatable("rollback.screen.button.done"), this::onDone)
+        this.doneButton = addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, this::onDone)
             .bounds(this.width / 2 - 101, this.height / 2 + 4, 99, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("rollback.screen.button.cancel"), this::onCancel)
+        addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, this::onCancel)
             .bounds(this.width / 2 + 2, this.height / 2 + 4, 99, 20).build());
         this.updateDoneButtonStatus(this.currentName);
     }
@@ -67,8 +70,7 @@ public final class NameScreen extends Screen {
     }
 
     private void updateDoneButtonStatus(String value) {
-        if (this.currentName != null)
-            this.doneButton.active = !value.equals(this.currentName);
+        this.doneButton.active = this.allowSameName || !value.equals(this.currentName);
     }
 
     private void onDone(Button button) {
@@ -76,6 +78,6 @@ public final class NameScreen extends Screen {
     }
 
     private void onCancel(Button button) {
-        this.answerConsumer.accept(false, null);
+        this.answerConsumer.accept(false, "");
     }
 }

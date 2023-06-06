@@ -55,7 +55,7 @@ public final class ServerPacketListener {
         RollbackVersion version = RollbackVersion.LATEST_VERSION;
         RollbackWorld world = backupManager.getWorld();
         RollbackNetworkConfig config = new RollbackNetworkConfig();
-        config.copyFrom(backupManager.getDefaultConfig());
+        config.mergeFrom(backupManager.getDefaultConfig());
         ServerPacketManager.send(player, Packets.sendMetadata, new SendMetadata.MetadataSend(data, id, version, world, config));
     }
 

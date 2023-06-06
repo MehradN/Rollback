@@ -5,7 +5,6 @@ import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
 import net.minecraft.network.FriendlyByteBuf;
-import org.apache.commons.io.FileUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,10 +26,6 @@ public class RollbackBackup implements RollbackMetadata {
 
     public String getDaysPlayedAsString() {
         return (this.daysPlayed == -1 ? "???" : String.valueOf(this.daysPlayed));
-    }
-
-    public String getFileSizeAsString() {
-        return (this.fileSize == -1 ? "???" : FileUtils.byteCountToDisplaySize(this.fileSize));
     }
 
     public String getDateAsString() {
