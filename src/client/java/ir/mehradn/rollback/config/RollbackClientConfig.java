@@ -27,6 +27,12 @@ public class RollbackClientConfig extends RollbackDefaultConfig {
         return load(GSON, RollbackClientConfig.class, RollbackClientConfig::new);
     }
 
+    public void copyFrom(RollbackClientConfig config) {
+        super.copyFrom(config);
+        this.replaceButton.copyFrom(config.replaceButton);
+        this.promptEnabled.copyFrom(config.promptEnabled);
+    }
+
     @Override
     protected Gson getGson() {
         return GSON;

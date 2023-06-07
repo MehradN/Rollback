@@ -52,7 +52,7 @@ public class MetadataUpdater {
                 boolean value = world.getAsJsonPrimitive("automated").getAsBoolean();
                 world.remove("automated");
                 JsonObject config = new JsonObject();
-                config.addProperty("backup_enabled", value);
+                config.addProperty("backupEnabled", value);
                 world.add("config", config);
             }
 

@@ -41,11 +41,23 @@ public abstract class RollbackConfig {
         return getMaxMaxBackups(type);
     }
 
+    public void reset() {
+        for (ConfigEntry<?> entry : this.getEntries())
+            entry.reset();
+    }
+
     public void mergeFrom(RollbackConfig config) {
         this.backupEnabled.mergeFrom(config.backupEnabled);
         this.maxBackups.mergeFrom(config.maxBackups);
         this.backupFrequency.mergeFrom(config.backupFrequency);
         this.timerMode.mergeFrom(config.timerMode);
+    }
+
+    public void copyFrom(RollbackConfig config) {
+        this.backupEnabled.copyFrom(config.backupEnabled);
+        this.maxBackups.copyFrom(config.maxBackups);
+        this.backupFrequency.copyFrom(config.backupFrequency);
+        this.timerMode.copyFrom(config.timerMode);
     }
 
     public List<ConfigEntry<?>> getEntries() {

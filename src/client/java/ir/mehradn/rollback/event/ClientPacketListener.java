@@ -19,6 +19,7 @@ public final class ClientPacketListener {
         ClientPacketManager.register(Packets.openGui, ClientPacketListener::onOpenGui);
         ClientPacketManager.register(Packets.sendMetadata, ClientPacketListener::onSendMetadata);
         ClientPacketManager.register(Packets.successfulBackup, ClientPacketListener::onSuccessfulBackup);
+        ClientPacketManager.register(Packets.successfulConfig, ClientPacketListener::onSuccessfulConfig);
         ClientPacketManager.register(Packets.successfulConvert, ClientPacketListener::onSuccessfulConvert);
         ClientPacketManager.register(Packets.successfulDelete, ClientPacketListener::onSuccessfulDelete);
         ClientPacketManager.register(Packets.successfulRename, ClientPacketListener::onSuccessfulRename);
@@ -67,6 +68,14 @@ public final class ClientPacketListener {
             minecraft,
             Component.translatable("rollback.toast.successfulBackup.title"),
             Component.translatable("rollback.toast.successfulBackup.info", data.type().toComponent(), data.sizeAsString())
+        );
+    }
+
+    private static void onSuccessfulConfig(Minecraft minecraft, Boolean data) {
+        ScreenManager.showToast(
+            minecraft,
+            Component.translatable("rollback.toast.successfulConfig." + (data ? "default" : "world")),
+            Component.empty()
         );
     }
 

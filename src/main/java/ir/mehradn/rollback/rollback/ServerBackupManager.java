@@ -6,6 +6,7 @@ import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
 import ir.mehradn.rollback.network.packets.*;
+import ir.mehradn.rollback.rollback.metadata.RollbackWorldConfig;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -51,6 +52,16 @@ public class ServerBackupManager extends CommonBackupManager {
             return true;
         }
         return false;
+    }
+
+    public void saveToConfig(RollbackWorldConfig config) throws BackupManagerException {
+        this.getWorld().config.copyFrom(config);
+        saveConfig();
+    }
+
+    public void saveToDefaultConfig(RollbackWorldConfig config) throws BackupManagerException {
+        this.getWorld().config.copyFrom(config);
+        saveConfigAsDefault();
     }
 
     @Override
@@ -172,16 +183,14 @@ public class ServerBackupManager extends CommonBackupManager {
     }
 
     @Override
-    protected void broadcastSuccessfulConfig(ConfigType configType) {
-        RollbackConfig config = switch (configType) {
-            case WORLD -> getDefaultConfig();
-            case DEFAULT -> getWorld().config;
-        };
-
-        MutableComponent component = Component.translatable("rollback.success.updateConfig." + configType);
+    protected void broadcastSuccessfulConfig(boolean defaultConfig) {
+        RollbackConfig config = (defaultConfig ? getDefaultConfig() : getWorld().config);
+        MutableComponent component = Component.translatable("rollback.success.updateConfig." + (defaultConfig ? "default" : "world"));
         for (ConfigEntry<?> entry : config.getEntries())
             component.append("\n" + entry.name + " = " + entry.get().toString());
         this.server.sendSystemMessage(component);
+        if (this.requester != null)
+            ServerPacketManager.send(this.requester, Packets.successfulConfig, defaultConfig);
     }
 
     private void increaseUpdateId() {

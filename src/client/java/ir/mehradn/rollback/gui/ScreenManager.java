@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
+import ir.mehradn.rollback.gui.config.WorldConfigScreen;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
@@ -189,14 +190,13 @@ public class ScreenManager {
         ));
     }
 
-    // TODO: Implement rest of this
-    public void playCurrentSave() {
-        if (isInGame(this.minecraft))
-            deactivate();
-    }
-
-    // TODO: Implement this
     public void openConfig() {
+        this.onInputScreen = true;
+        this.minecraft.setScreen(new WorldConfigScreen(
+            this.backupManager.getWorld().config,
+            this.backupManager,
+            () -> this.onInputScreen = false
+        ));
     }
 
     public void saveConfig() {
@@ -208,7 +208,6 @@ public class ScreenManager {
         }
     }
 
-    // TODO: Add confirmation screen
     public void saveConfigAsDefault() {
         try {
             setMessageScreen(Component.translatable("rollback.screen.message.savingConfig"));
@@ -216,6 +215,12 @@ public class ScreenManager {
         } catch (BackupManagerException e) {
             Rollback.LOGGER.error("Failed to save the config as default!", e);
         }
+    }
+
+    // TODO: Implement rest of this
+    public void playCurrentSave() {
+        if (isInGame(this.minecraft))
+            deactivate();
     }
 
     public void openBackupFolder() {
@@ -277,7 +282,7 @@ public class ScreenManager {
     }
 
     @Environment(EnvType.CLIENT)
-    private static class DirtConfirmScreen extends ConfirmScreen {
+    public static class DirtConfirmScreen extends ConfirmScreen {
         public DirtConfirmScreen(Component title, Component info, BooleanConsumer onConfirm) {
             super(onConfirm, title, info);
         }
@@ -289,7 +294,7 @@ public class ScreenManager {
     }
 
     @Environment(EnvType.CLIENT)
-    private static class DirtErrorScreen extends ErrorScreen {
+    public static class DirtErrorScreen extends ErrorScreen {
         private final Runnable onClose;
 
         public DirtErrorScreen(Component title, Component message, Runnable onClose) {

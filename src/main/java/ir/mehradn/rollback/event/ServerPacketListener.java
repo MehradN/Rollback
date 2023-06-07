@@ -20,6 +20,7 @@ public final class ServerPacketListener {
         ServerPacketManager.register(Packets.openGui, ServerPacketListener::onOpenedGui);
         ServerPacketManager.register(Packets.renameBackup, ServerPacketListener::onRenameBackup);
         ServerPacketManager.register(Packets.rollbackBackup, ServerPacketListener::onRollbackBackup);
+        ServerPacketManager.register(Packets.saveConfig, ServerPacketListener::onSaveConfig);
     }
 
     private static void onConvertBackup(MinecraftServer server, ServerPlayer player, ConvertBackup.Arguments data) {
@@ -78,6 +79,18 @@ public final class ServerPacketListener {
             return;
         try {
             backupManager.rollbackToBackup(data.backupID(), data.type());
+        } catch (BackupManagerException ignored) { }
+    }
+
+    private static void onSaveConfig(MinecraftServer server, ServerPlayer player, SaveConfig.Arguments data) {
+        ServerBackupManager backupManager = getBackupManager(server);
+        if (backupManager.setRequester(player, data.lastChangeId()))
+            return;
+        try {
+            if (data.saveAsDefault())
+                backupManager.saveToDefaultConfig(data.config());
+            else
+                backupManager.saveToConfig(data.config());
         } catch (BackupManagerException ignored) { }
     }
 

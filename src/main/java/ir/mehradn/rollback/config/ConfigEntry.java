@@ -5,7 +5,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import ir.mehradn.rollback.exception.Assertion;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,14 +45,48 @@ public abstract class ConfigEntry <T> {
 
     public void mergeFrom(ConfigEntry<T> entry) {
         if (entry.value != null)
-            this.value = entry.value;
+            set(entry.value);
+    }
+
+    public void copyFrom(ConfigEntry<T> entry) {
+        if (entry.value == null)
+            reset();
+        else
+            set(entry.value);
     }
 
     public boolean hasValue() {
         return this.value != null;
     }
 
-    public abstract Component getTranslated();
+    public boolean isNotDefault() {
+        return this.value != this.defaultValue;
+    }
+
+    public Component getTranslatedTitle() {
+        return Component.translatable("rollback.config.title." + this.name);
+    }
+
+    public Component getTranslatedDescription() {
+        return Component.translatable("rollback.config.description." + this.name);
+    }
+
+    public abstract Component getTranslatedValue(T value);
+
+    public Component getTranslatedValue() {
+        return getTranslatedValue(get());
+    }
+
+    public Component getTranslatedEntry(T value) {
+        MutableComponent text = CommonComponents.optionNameValue(getTranslatedTitle(), getTranslatedValue(value));
+        if (!hasValue())
+            text.append(Component.translatable("rollback.screen.text.configDefault"));
+        return text;
+    }
+
+    public Component getTranslatedEntry() {
+        return getTranslatedEntry(get());
+    }
 
     public abstract void writeToBuf(FriendlyByteBuf buf);
 
@@ -68,8 +104,8 @@ public abstract class ConfigEntry <T> {
         }
 
         @Override
-        public Component getTranslated() {
-            return Component.translatable("rollback.config.bool." + this.name + "." + get().toString());
+        public Component getTranslatedValue(java.lang.Boolean value) {
+            return Component.translatable("rollback.config.bool." + this.name + "." + value.toString());
         }
 
         @Override
@@ -100,8 +136,8 @@ public abstract class ConfigEntry <T> {
     }
 
     public static class Short extends ConfigEntry<java.lang.Short> {
-        private final short min;
-        private final short max;
+        public final short min;
+        public final short max;
 
         public Short(String name, short min, short max, java.lang.@Nullable Short defaultValue) {
             super(name, defaultValue);
@@ -110,8 +146,8 @@ public abstract class ConfigEntry <T> {
             this.max = max;
         }
 
-        @Override public Component getTranslated() {
-            return Component.literal(get().toString());
+        @Override public Component getTranslatedValue(java.lang.Short value) {
+            return Component.literal(value.toString());
         }
 
         @Override
@@ -154,8 +190,8 @@ public abstract class ConfigEntry <T> {
         }
 
         @Override
-        public Component getTranslated() {
-            return Component.translatable("rollback.config.enum." + this.name + "." + get().toString());
+        public Component getTranslatedValue(T value) {
+            return Component.translatable("rollback.config.enum." + this.name + "." + value.toString());
         }
 
         @Override

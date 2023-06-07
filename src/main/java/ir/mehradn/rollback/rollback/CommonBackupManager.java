@@ -279,16 +279,18 @@ public abstract class CommonBackupManager implements BackupManager {
     public void saveConfig() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         saveWorld();
-        broadcastSuccessfulConfig(ConfigType.WORLD);
+        broadcastSuccessfulConfig(false);
     }
 
     @Override
     public void saveConfigAsDefault() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         this.defaultConfig.mergeFrom(this.world.config);
+        this.world.config.reset();
         try {
+            saveWorld();
             this.defaultConfig.save();
-            broadcastSuccessfulConfig(ConfigType.DEFAULT);
+            broadcastSuccessfulConfig(true);
         } catch (IOException e) {
             throw showError("rollback.error.saveConfig", "Failed to save the config file!", BackupManagerException.Cause.IO_EXCEPTION, e);
         }
@@ -312,7 +314,7 @@ public abstract class CommonBackupManager implements BackupManager {
 
     protected abstract void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to);
 
-    protected abstract void broadcastSuccessfulConfig(ConfigType configType);
+    protected abstract void broadcastSuccessfulConfig(boolean defaultConfig);
 
     protected void extractBackup(int backupID, BackupType type) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
@@ -362,15 +364,6 @@ public abstract class CommonBackupManager implements BackupManager {
         Rollback.LOGGER.error(info, cause);
         broadcastError(title, info);
         return new BackupManagerException(info, cause);
-    }
-
-    public enum ConfigType {
-        WORLD,
-        DEFAULT;
-
-        public String toString() {
-            return super.toString().toLowerCase();
-        }
     }
 
     public record BackupInfo(Path backupPath, long size) { }

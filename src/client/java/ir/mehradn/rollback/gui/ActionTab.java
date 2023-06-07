@@ -18,7 +18,7 @@ public class ActionTab extends GridLayoutTab {
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),
-            (button) -> { }).width(200).build());
+            onClick(ScreenManager::openConfig)).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeCommand"),
             onClick(ScreenManager::createBackup)).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeManual"),

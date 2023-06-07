@@ -106,11 +106,17 @@ public class NetworkBackupManager implements BackupManager {
         ClientPacketManager.send(Packets.rollbackBackup, new RollbackBackup.Arguments(this.lastUpdateId, backupID, type));
     }
 
-    // TODO: Implement this
-    @Override public void saveConfig() { }
+    @Override
+    public void saveConfig() {
+        this.state = State.ACTION;
+        ClientPacketManager.send(Packets.saveConfig, new SaveConfig.Arguments(this.lastUpdateId, this.getWorld().config, false));
+    }
 
-    // TODO: Implement this
-    @Override public void saveConfigAsDefault() { }
+    @Override
+    public void saveConfigAsDefault() {
+        this.state = State.ACTION;
+        ClientPacketManager.send(Packets.saveConfig, new SaveConfig.Arguments(this.lastUpdateId, this.getWorld().config, true));
+    }
 
     private void actionFinished() {
         this.state = State.IDLE;

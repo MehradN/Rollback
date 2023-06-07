@@ -13,8 +13,10 @@ public interface Packets {
     OpenGUI openGui = new OpenGUI();
     RenameBackup renameBackup = new RenameBackup();
     RollbackBackup rollbackBackup = new RollbackBackup();
+    SaveConfig saveConfig = new SaveConfig();
     SendMetadata sendMetadata = new SendMetadata();
     SuccessfulBackup successfulBackup = new SuccessfulBackup();
+    SuccessfulConfig successfulConfig = new SuccessfulConfig();
     SuccessfulConvert successfulConvert = new SuccessfulConvert();
     SuccessfulDelete successfulDelete = new SuccessfulDelete();
     SuccessfulRename successfulRename = new SuccessfulRename();
