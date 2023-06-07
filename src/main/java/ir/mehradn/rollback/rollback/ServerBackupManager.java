@@ -24,7 +24,6 @@ import java.nio.file.Path;
 public class ServerBackupManager extends CommonBackupManager {
     private final MinecraftServer server;
     private int lastUpdateId;
-    private ServerPlayer requester = null;
 
     public ServerBackupManager(MinecraftServer server) {
         super();
@@ -36,16 +35,7 @@ public class ServerBackupManager extends CommonBackupManager {
         return this.lastUpdateId;
     }
 
-    public void removeRequester() {
-        this.requester = null;
-    }
-
-    public void setCommandSender(ServerPlayer player) {
-        this.requester = player;
-    }
-
-    public boolean setRequester(ServerPlayer requester, int lastUpdateId) {
-        this.requester = requester;
+    public boolean validateUpdateId(int lastUpdateId) {
         if (lastUpdateId != this.lastUpdateId) {
             int diff = Math.abs(this.lastUpdateId - lastUpdateId);
             broadcastError("rollback.error.outOfSync", "You were out of sync by " + diff + " updates! Please try again.");
@@ -149,37 +139,32 @@ public class ServerBackupManager extends CommonBackupManager {
     @Override
     protected void broadcastError(String translatableTitle, String literalInfo) {
         this.server.sendSystemMessage(Component.translatable(translatableTitle).append("\n" + literalInfo));
-        if (this.requester != null)
-            ServerPacketManager.send(this.requester, Packets.backupManagerError, new BackupManagerError.Info(translatableTitle, literalInfo));
+        broadcast(Packets.backupManagerError, new BackupManagerError.Info(translatableTitle, literalInfo));
     }
 
     @Override
     protected void broadcastSuccessfulBackup(BackupType type, long size) {
         String str = FileUtils.byteCountToDisplaySize(size);
         this.server.sendSystemMessage(Component.translatable("rollback.success.createBackup", type, str));
-        if (this.requester != null)
-            ServerPacketManager.send(this.requester, Packets.successfulBackup, new SuccessfulBackup.Info(type, size));
+        broadcast(Packets.successfulBackup, new SuccessfulBackup.Info(type, size));
     }
 
     @Override
     protected void broadcastSuccessfulDelete(int backupID, BackupType type) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.deleteBackup", backupID, type));
-        if (this.requester != null)
-            ServerPacketManager.send(this.requester, Packets.successfulDelete, new SuccessfulDelete.Info(backupID, type));
+        broadcast(Packets.successfulDelete, new SuccessfulDelete.Info(backupID, type));
     }
 
     @Override
     protected void broadcastSuccessfulRename(int backupID, BackupType type) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.renameBackup", backupID, type));
-        if (this.requester != null)
-            ServerPacketManager.send(this.requester, Packets.successfulRename, new SuccessfulRename.Info(backupID, type));
+        broadcast(Packets.successfulRename, new SuccessfulRename.Info(backupID, type));
     }
 
     @Override
     protected void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.convertBackup", backupID, from, to));
-        if (this.requester != null)
-            ServerPacketManager.send(this.requester, Packets.successfulConvert, new SuccessfulConvert.Info(backupID, from, to));
+        broadcast(Packets.successfulConvert, new SuccessfulConvert.Info(backupID, from, to));
     }
 
     @Override
@@ -189,13 +174,18 @@ public class ServerBackupManager extends CommonBackupManager {
         for (ConfigEntry<?> entry : config.getEntries())
             component.append("\n" + entry.name + " = " + entry.get().toString());
         this.server.sendSystemMessage(component);
-        if (this.requester != null)
-            ServerPacketManager.send(this.requester, Packets.successfulConfig, defaultConfig);
+        broadcast(Packets.successfulConfig, defaultConfig);
     }
 
     private void increaseUpdateId() {
         this.lastUpdateId++;
         for (ServerPlayer player : PlayerLookup.all(this.server))
             ServerPacketManager.send(player, Packets.newUpdateId, null);
+    }
+
+    private <T> void broadcast(Packet<T, ?> packet, T data) {
+        for (ServerPlayer player : PlayerLookup.all(this.server))
+            if (getDefaultConfig().hasCommandPermission(player))
+                ServerPacketManager.send(player, packet, data);
     }
 }

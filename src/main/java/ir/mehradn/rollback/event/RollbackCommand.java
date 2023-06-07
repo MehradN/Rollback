@@ -51,7 +51,6 @@ public final class RollbackCommand {
 
         ServerBackupManager backupManager = getBackupManager(context);
         try {
-            backupManager.setCommandSender(context.getSource().getPlayer());
             backupManager.createBackup(type, name);
             context.getSource().sendSuccess(Component.translatable("rollback.command.createdBackup"), true);
             return 1;

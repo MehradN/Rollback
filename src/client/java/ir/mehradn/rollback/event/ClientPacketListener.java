@@ -6,7 +6,6 @@ import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.NetworkBackupManager;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
@@ -28,12 +27,11 @@ public final class ClientPacketListener {
     private static void onBackupManagerError(Minecraft minecraft, BackupManagerError.Info info) {
         if (ScreenManager.getInstance() != null) {
             ScreenManager.getInstance().onError(info.translatableTitle(), info.literalInfo());
-        } else if (minecraft.player != null) {
-            minecraft.player.sendSystemMessage(
-                Component.translatable(info.translatableTitle())
-                    .withStyle(ChatFormatting.BOLD)
-                    .append(Component.literal(info.literalInfo()))
-                    .withStyle(ChatFormatting.RED)
+        } else {
+            ScreenManager.showToast(
+                minecraft,
+                Component.translatable(info.translatableTitle()),
+                Component.literal(info.literalInfo())
             );
         }
     }

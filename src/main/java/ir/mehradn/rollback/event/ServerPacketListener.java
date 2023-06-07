@@ -29,7 +29,7 @@ public final class ServerPacketListener {
             return;
 
         ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.setRequester(player, data.lastChangeId()))
+        if (backupManager.validateUpdateId(data.lastChangeId()))
             return;
         try {
             backupManager.convertBackup(data.backupID(), data.from(), data.to());
@@ -41,7 +41,7 @@ public final class ServerPacketListener {
             return;
 
         ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.setRequester(player, data.lastChangeId()))
+        if (backupManager.validateUpdateId(data.lastChangeId()))
             return;
         try {
             backupManager.createBackup(data.type(), data.name());
@@ -53,7 +53,7 @@ public final class ServerPacketListener {
             return;
 
         ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.setRequester(player, data.lastChangeId()))
+        if (backupManager.validateUpdateId(data.lastChangeId()))
             return;
         try {
             backupManager.deleteBackup(data.backupID(), data.type());
@@ -82,7 +82,7 @@ public final class ServerPacketListener {
             return;
 
         ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.setRequester(player, data.lastChangeId()))
+        if (backupManager.validateUpdateId(data.lastChangeId()))
             return;
         try {
             backupManager.renameBackup(data.backupID(), data.type(), data.name());
@@ -94,7 +94,7 @@ public final class ServerPacketListener {
             return;
 
         ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.setRequester(player, data.lastChangeId()))
+        if (backupManager.validateUpdateId(data.lastChangeId()))
             return;
         try {
             backupManager.rollbackToBackup(data.backupID(), data.type());
@@ -106,7 +106,7 @@ public final class ServerPacketListener {
             return;
 
         ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.setRequester(player, data.lastChangeId()))
+        if (backupManager.validateUpdateId(data.lastChangeId()))
             return;
         try {
             if (data.saveAsDefault())
