@@ -1,5 +1,6 @@
 package ir.mehradn.rollback.event;
 
+import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
@@ -24,6 +25,9 @@ public final class ServerPacketListener {
     }
 
     private static void onConvertBackup(MinecraftServer server, ServerPlayer player, ConvertBackup.Arguments data) {
+        if (checkPermission(server, player))
+            return;
+
         ServerBackupManager backupManager = getBackupManager(server);
         if (backupManager.setRequester(player, data.lastChangeId()))
             return;
@@ -33,6 +37,9 @@ public final class ServerPacketListener {
     }
 
     private static void onCreateBackup(MinecraftServer server, ServerPlayer player, CreateBackup.Arguments data) {
+        if (checkPermission(server, player))
+            return;
+
         ServerBackupManager backupManager = getBackupManager(server);
         if (backupManager.setRequester(player, data.lastChangeId()))
             return;
@@ -42,6 +49,9 @@ public final class ServerPacketListener {
     }
 
     private static void onDeleteBackup(MinecraftServer server, ServerPlayer player, DeleteBackup.Arguments data) {
+        if (checkPermission(server, player))
+            return;
+
         ServerBackupManager backupManager = getBackupManager(server);
         if (backupManager.setRequester(player, data.lastChangeId()))
             return;
@@ -51,6 +61,9 @@ public final class ServerPacketListener {
     }
 
     private static void onFetchMetadata(MinecraftServer server, ServerPlayer player, Boolean data) {
+        if (checkPermission(server, player))
+            return;
+
         ServerBackupManager backupManager = getBackupManager(server);
         int id = backupManager.getLastUpdateId();
         RollbackVersion version = RollbackVersion.LATEST_VERSION;
@@ -65,6 +78,9 @@ public final class ServerPacketListener {
     }
 
     private static void onRenameBackup(MinecraftServer server, ServerPlayer player, RenameBackup.Arguments data) {
+        if (checkPermission(server, player))
+            return;
+
         ServerBackupManager backupManager = getBackupManager(server);
         if (backupManager.setRequester(player, data.lastChangeId()))
             return;
@@ -74,6 +90,9 @@ public final class ServerPacketListener {
     }
 
     private static void onRollbackBackup(MinecraftServer server, ServerPlayer player, RollbackBackup.Arguments data) {
+        if (checkPermission(server, player))
+            return;
+
         ServerBackupManager backupManager = getBackupManager(server);
         if (backupManager.setRequester(player, data.lastChangeId()))
             return;
@@ -83,6 +102,9 @@ public final class ServerPacketListener {
     }
 
     private static void onSaveConfig(MinecraftServer server, ServerPlayer player, SaveConfig.Arguments data) {
+        if (checkPermission(server, player))
+            return;
+
         ServerBackupManager backupManager = getBackupManager(server);
         if (backupManager.setRequester(player, data.lastChangeId()))
             return;
@@ -96,5 +118,10 @@ public final class ServerPacketListener {
 
     private static ServerBackupManager getBackupManager(MinecraftServer server) {
         return ((MinecraftServerExpanded)server).getBackupManager();
+    }
+
+    private static boolean checkPermission(MinecraftServer server, ServerPlayer player) {
+        RollbackDefaultConfig config = getBackupManager(server).getDefaultConfig();
+        return !config.hasCommandPermission(player);
     }
 }

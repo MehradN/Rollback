@@ -10,6 +10,7 @@ import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.rollback.metadata.*;
+import ir.mehradn.rollback.util.GlobalSuppliers;
 import ir.mehradn.rollback.util.gson.LocalDateTimeAdapter;
 import ir.mehradn.rollback.util.gson.PathAdapter;
 import net.minecraft.FileUtil;
@@ -38,7 +39,7 @@ public abstract class CommonBackupManager implements BackupManager {
     @Nullable private RollbackWorld world = null;
 
     public CommonBackupManager() {
-        this.defaultConfig = RollbackDefaultConfig.defaultSupplier.get();
+        this.defaultConfig = GlobalSuppliers.buildDefaultConfig();
     }
 
     public abstract Path getBackupDirectory();

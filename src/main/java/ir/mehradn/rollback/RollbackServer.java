@@ -1,6 +1,7 @@
 package ir.mehradn.rollback;
 
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
+import ir.mehradn.rollback.util.GlobalSuppliers;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -10,6 +11,6 @@ public class RollbackServer implements DedicatedServerModInitializer {
     @Override
     public void onInitializeServer() {
         Rollback.LOGGER.info("Setting static suppliers...");
-        RollbackDefaultConfig.defaultSupplier = RollbackDefaultConfig::load;
+        GlobalSuppliers.setDefaultConfigSupplier(RollbackDefaultConfig::load);
     }
 }

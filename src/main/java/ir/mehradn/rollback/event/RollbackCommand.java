@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import ir.mehradn.rollback.Rollback;
+import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.ServerPacketManager;
 import ir.mehradn.rollback.network.packets.OpenGUI;
@@ -38,7 +39,8 @@ public final class RollbackCommand {
     }
 
     private static boolean hasRequirements(CommandSourceStack source) {
-        return (source.getPlayer() != null && source.hasPermission(4));
+        RollbackDefaultConfig config = ((MinecraftServerExpanded)source.getServer()).getBackupManager().getDefaultConfig();
+        return (source.getPlayer() != null && config.hasCommandPermission(source.getPlayer()));
     }
 
     private static int createBackup(CommandContext<CommandSourceStack> context, String name, BackupType type) throws CommandSyntaxException {

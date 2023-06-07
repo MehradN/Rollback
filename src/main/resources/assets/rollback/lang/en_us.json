@@ -54,7 +54,7 @@
   "rollback.screen.narrator.unnamedBackup": "Selected backup %d, created: %s, day: %s, size: %s",
   "rollback.screen.tooltip.resetConfig": "Reset to the default value",
   "rollback.config.title.backupEnabled": "Automated Backups",
-  "rollback.config.description.backupEnabled": "Whether or not to create backups automatically.",
+  "rollback.config.description.backupEnabled": "If enabled, the mod creates automated backups at the defined intervals.",
   "rollback.config.bool.backupEnabled.true": "Enabled",
   "rollback.config.bool.backupEnabled.false": "Disabled",
   "rollback.config.title.maxBackups": "Maximum Backups",
@@ -66,11 +66,15 @@
   "rollback.config.enum.timerMode.daylightCycle": "Daylight Cycle",
   "rollback.config.enum.timerMode.inGameTime": "In-Game Time",
   "rollback.config.title.replaceButton": "Replace Re-Create",
-  "rollback.config.description.replaceButton": "Whether or not to replace the re-create button in the select world screen.",
+  "rollback.config.description.replaceButton": "If enabled, the \"re-create\" button in the Select World Screen gets replaced with a \"rollback\" button.",
   "rollback.config.bool.replaceButton.true": "Yes",
   "rollback.config.bool.replaceButton.false": "No",
   "rollback.config.title.promptEnabled": "Prompt",
-  "rollback.config.description.promptEnabled": "Whether or not to suggest enabling automated backups",
+  "rollback.config.description.promptEnabled": "If enabled, the game will suggest you to enable Automated Backups for single-player worlds.",
   "rollback.config.bool.promptEnabled.true": "Enabled",
-  "rollback.config.bool.promptEnabled.false": "Disabled"
+  "rollback.config.bool.promptEnabled.false": "Disabled",
+  "rollback.config.title.commandAccess": "Single-Player Command Access",
+  "rollback.config.description.commandAccess": "If set to always, you can access the mod in single-player worlds without enabling cheats.",
+  "rollback.config.bool.commandAccess.true": "Always",
+  "rollback.config.bool.commandAccess.false": "On Cheats"
 }

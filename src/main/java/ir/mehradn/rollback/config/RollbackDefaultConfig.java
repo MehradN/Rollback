@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import ir.mehradn.rollback.Rollback;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.level.ServerPlayer;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,7 +13,6 @@ import java.nio.file.Path;
 import java.util.function.Supplier;
 
 public class RollbackDefaultConfig extends RollbackConfig {
-    public static Supplier<RollbackDefaultConfig> defaultSupplier;
     private static final Gson GSON = new GsonBuilder()
         .registerTypeAdapter(RollbackDefaultConfig.class, new Adapter<>(RollbackDefaultConfig.class))
         .setPrettyPrinting().create();
@@ -46,6 +46,10 @@ public class RollbackDefaultConfig extends RollbackConfig {
             Rollback.LOGGER.error("Failed to save the config file!", e);
             throw e;
         }
+    }
+
+    public boolean hasCommandPermission(ServerPlayer player) {
+        return player.hasPermissions(4);
     }
 
     protected static <T extends RollbackDefaultConfig> T load(Gson gson, Class<T> type, Supplier<T> constructor) {
