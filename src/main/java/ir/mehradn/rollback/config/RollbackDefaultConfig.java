@@ -2,6 +2,7 @@ package ir.mehradn.rollback.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import ir.mehradn.rollback.Rollback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.level.ServerPlayer;
@@ -55,7 +56,10 @@ public class RollbackDefaultConfig extends RollbackConfig {
     protected static <T extends RollbackDefaultConfig> T load(Gson gson, Class<T> type, Supplier<T> constructor) {
         Path configFile = FabricLoader.getInstance().getConfigDir().resolve(Rollback.MOD_ID + ".json");
         try (FileReader reader = new FileReader(configFile.toFile())) {
-            return gson.fromJson(reader, type);
+            JsonObject json = GSON.fromJson(reader, JsonObject.class);
+            ConfigUpdater configUpdater = new ConfigUpdater(json);
+            configUpdater.update();
+            return gson.fromJson(json, type);
         } catch (IOException e) {
             Rollback.LOGGER.warn("Failed to load the config file!", e);
             return constructor.get();

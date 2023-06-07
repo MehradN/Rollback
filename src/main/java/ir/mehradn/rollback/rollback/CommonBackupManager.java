@@ -3,7 +3,6 @@ package ir.mehradn.rollback.rollback;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
@@ -106,7 +105,7 @@ public abstract class CommonBackupManager implements BackupManager {
 
         RollbackData data;
         try (FileReader reader = new FileReader(metadataPath.toFile())) {
-            JsonObject json = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonObject json = GSON.fromJson(reader, JsonObject.class);
             MetadataUpdater updater = new MetadataUpdater(json);
             if (updater.getVersion().isOutdated()) {
                 updater.update();
