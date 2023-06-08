@@ -26,9 +26,9 @@ import java.nio.file.Path;
 
 @Environment(EnvType.CLIENT)
 public class ScreenManager {
+    @Nullable private static ScreenManager instance = null;
     public final BackupManager backupManager;
     public final RollbackScreen rollbackScreen;
-    @Nullable private static ScreenManager instance = null;
     private final Minecraft minecraft;
     private final Screen lastScreen;
     private boolean onInputScreen = false;

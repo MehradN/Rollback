@@ -108,10 +108,10 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
 
     @Environment(EnvType.CLIENT)
     public abstract class Entry extends ObjectSelectionList.Entry<Entry> implements AutoCloseable {
-        protected final Minecraft minecraft;
-        protected final ScreenManager screenManager;
         private static final ResourceLocation WORLD_SELECTION = new ResourceLocation("textures/gui/world_selection.png");
         private static final ResourceLocation UNKNOWN_SERVER = new ResourceLocation("textures/misc/unknown_server.png");
+        protected final Minecraft minecraft;
+        protected final ScreenManager screenManager;
         private final ResourceLocation iconLocation;
         @Nullable private DynamicTexture icon;
 

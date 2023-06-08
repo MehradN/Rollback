@@ -3,125 +3,118 @@ package ir.mehradn.rollback.event;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.network.ServerPacketManager;
 import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.ServerBackupManager;
 import ir.mehradn.rollback.rollback.metadata.RollbackVersion;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
-import net.minecraft.server.MinecraftServer;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class ServerPacketListener {
     public static void register() {
-        ServerPacketManager.register(Packets.convertBackup, ServerPacketListener::onConvertBackup);
-        ServerPacketManager.register(Packets.createBackup, ServerPacketListener::onCreateBackup);
-        ServerPacketManager.register(Packets.deleteBackup, ServerPacketListener::onDeleteBackup);
-        ServerPacketManager.register(Packets.fetchMetadata, ServerPacketListener::onFetchMetadata);
-        ServerPacketManager.register(Packets.openGui, ServerPacketListener::onOpenedGui);
-        ServerPacketManager.register(Packets.renameBackup, ServerPacketListener::onRenameBackup);
-        ServerPacketManager.register(Packets.rollbackBackup, ServerPacketListener::onRollbackBackup);
-        ServerPacketManager.register(Packets.saveConfig, ServerPacketListener::onSaveConfig);
+        ServerPlayNetworking.registerGlobalReceiver(ConvertBackup.TYPE, ServerPacketListener::onConvertBackup);
+        ServerPlayNetworking.registerGlobalReceiver(CreateBackup.TYPE, ServerPacketListener::onCreateBackup);
+        ServerPlayNetworking.registerGlobalReceiver(DeleteBackup.TYPE, ServerPacketListener::onDeleteBackup);
+        ServerPlayNetworking.registerGlobalReceiver(FetchMetadata.TYPE, ServerPacketListener::onFetchMetadata);
+        ServerPlayNetworking.registerGlobalReceiver(OpenGUI.TYPE, ServerPacketListener::onOpenedGui);
+        ServerPlayNetworking.registerGlobalReceiver(RenameBackup.TYPE, ServerPacketListener::onRenameBackup);
+        ServerPlayNetworking.registerGlobalReceiver(RollbackBackup.TYPE, ServerPacketListener::onRollbackBackup);
+        ServerPlayNetworking.registerGlobalReceiver(SaveConfig.TYPE, ServerPacketListener::onSaveConfig);
     }
 
-    private static void onConvertBackup(MinecraftServer server, ServerPlayer player, ConvertBackup.Arguments data) {
-        if (checkPermission(server, player))
+    private static void onConvertBackup(ConvertBackup packet, ServerPlayer player, PacketSender responseSender) {
+        if (checkPermission(player))
             return;
-
-        ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.validateUpdateId(data.lastChangeId()))
+        ServerBackupManager backupManager = getBackupManager(player);
+        if (backupManager.validateUpdateId(packet.lastUpdateId))
             return;
         try {
-            backupManager.convertBackup(data.backupID(), data.from(), data.to());
+            backupManager.convertBackup(packet.backupId, packet.from, packet.to);
         } catch (BackupManagerException ignored) { }
     }
 
-    private static void onCreateBackup(MinecraftServer server, ServerPlayer player, CreateBackup.Arguments data) {
-        if (checkPermission(server, player))
+    private static void onCreateBackup(CreateBackup packet, ServerPlayer player, PacketSender responseSender) {
+        if (checkPermission(player))
             return;
-
-        ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.validateUpdateId(data.lastChangeId()))
+        ServerBackupManager backupManager = getBackupManager(player);
+        if (backupManager.validateUpdateId(packet.lastUpdateId))
             return;
         try {
-            backupManager.createBackup(data.type(), data.name());
+            backupManager.createBackup(packet.type, packet.name);
         } catch (BackupManagerException ignored) { }
     }
 
-    private static void onDeleteBackup(MinecraftServer server, ServerPlayer player, DeleteBackup.Arguments data) {
-        if (checkPermission(server, player))
+    private static void onDeleteBackup(DeleteBackup packet, ServerPlayer player, PacketSender responseSender) {
+        if (checkPermission(player))
             return;
-
-        ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.validateUpdateId(data.lastChangeId()))
+        ServerBackupManager backupManager = getBackupManager(player);
+        if (backupManager.validateUpdateId(packet.lastUpdateId))
             return;
         try {
-            backupManager.deleteBackup(data.backupID(), data.type());
+            backupManager.deleteBackup(packet.backupId, packet.type);
         } catch (BackupManagerException ignored) { }
     }
 
-    private static void onFetchMetadata(MinecraftServer server, ServerPlayer player, Boolean data) {
-        if (checkPermission(server, player))
+    private static void onFetchMetadata(FetchMetadata packet, ServerPlayer player, PacketSender responseSender) {
+        if (checkPermission(player))
             return;
-
-        ServerBackupManager backupManager = getBackupManager(server);
+        ServerBackupManager backupManager = getBackupManager(player);
         int id = backupManager.getLastUpdateId();
         RollbackVersion version = RollbackVersion.LATEST_VERSION;
         RollbackWorld world = backupManager.getWorld();
         RollbackNetworkConfig config = new RollbackNetworkConfig();
         config.mergeFrom(backupManager.getDefaultConfig());
-        ServerPacketManager.send(player, Packets.sendMetadata, new SendMetadata.MetadataSend(data, id, version, world, config));
+        ServerPlayNetworking.send(player, new SendMetadata(version, id, config, world).setIntegrated(packet.integrated));
     }
 
-    private static void onOpenedGui(MinecraftServer server, ServerPlayer player, Void data) {
+    private static void onOpenedGui(OpenGUI packet, ServerPlayer player, PacketSender responseSender) {
         OpenGUI.awaitingPlayers.remove(player);
     }
 
-    private static void onRenameBackup(MinecraftServer server, ServerPlayer player, RenameBackup.Arguments data) {
-        if (checkPermission(server, player))
+    private static void onRenameBackup(RenameBackup packet, ServerPlayer player, PacketSender responseSender) {
+        if (checkPermission(player))
             return;
-
-        ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.validateUpdateId(data.lastChangeId()))
+        ServerBackupManager backupManager = getBackupManager(player);
+        if (backupManager.validateUpdateId(packet.lastUpdateId))
             return;
         try {
-            backupManager.renameBackup(data.backupID(), data.type(), data.name());
+            backupManager.renameBackup(packet.backupId, packet.type, packet.name);
         } catch (BackupManagerException ignored) { }
     }
 
-    private static void onRollbackBackup(MinecraftServer server, ServerPlayer player, RollbackBackup.Arguments data) {
-        if (checkPermission(server, player))
+    private static void onRollbackBackup(RollbackBackup packet, ServerPlayer player, PacketSender responseSender) {
+        if (checkPermission(player))
             return;
-
-        ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.validateUpdateId(data.lastChangeId()))
+        ServerBackupManager backupManager = getBackupManager(player);
+        if (backupManager.validateUpdateId(packet.lastUpdateId))
             return;
         try {
-            backupManager.rollbackToBackup(data.backupID(), data.type());
+            backupManager.rollbackToBackup(packet.backupId, packet.type);
         } catch (BackupManagerException ignored) { }
     }
 
-    private static void onSaveConfig(MinecraftServer server, ServerPlayer player, SaveConfig.Arguments data) {
-        if (checkPermission(server, player))
+    private static void onSaveConfig(SaveConfig packet, ServerPlayer player, PacketSender responseSender) {
+        if (checkPermission(player))
             return;
-
-        ServerBackupManager backupManager = getBackupManager(server);
-        if (backupManager.validateUpdateId(data.lastChangeId()))
+        ServerBackupManager backupManager = getBackupManager(player);
+        if (backupManager.validateUpdateId(packet.lastUpdateId))
             return;
         try {
-            if (data.saveAsDefault())
-                backupManager.saveToDefaultConfig(data.config());
+            if (packet.saveAsDefault)
+                backupManager.saveToDefaultConfig(packet.worldConfig);
             else
-                backupManager.saveToConfig(data.config());
+                backupManager.saveToConfig(packet.worldConfig);
         } catch (BackupManagerException ignored) { }
     }
 
-    private static ServerBackupManager getBackupManager(MinecraftServer server) {
-        return ((MinecraftServerExpanded)server).getBackupManager();
+    private static ServerBackupManager getBackupManager(ServerPlayer player) {
+        return ((MinecraftServerExpanded)player.server).getBackupManager();
     }
 
-    private static boolean checkPermission(MinecraftServer server, ServerPlayer player) {
-        RollbackDefaultConfig config = getBackupManager(server).getDefaultConfig();
+    private static boolean checkPermission(ServerPlayer player) {
+        RollbackDefaultConfig config = getBackupManager(player).getDefaultConfig();
         return !config.hasCommandPermission(player);
     }
 }

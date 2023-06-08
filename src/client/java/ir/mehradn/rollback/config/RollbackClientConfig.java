@@ -9,6 +9,9 @@ import net.minecraft.server.level.ServerPlayer;
 
 @Environment(EnvType.CLIENT)
 public class RollbackClientConfig extends RollbackDefaultConfig {
+    private static final Gson GSON = new GsonBuilder()
+        .registerTypeAdapter(RollbackClientConfig.class, new Adapter<>(RollbackClientConfig.class))
+        .setPrettyPrinting().create();
     // ConfigEntry.Boolean("backupEnabled", false)
     // ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5)
     // ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1)
@@ -16,9 +19,6 @@ public class RollbackClientConfig extends RollbackDefaultConfig {
     public final ConfigEntry.Boolean replaceButton = new ConfigEntry.Boolean("replaceButton", true);
     public final ConfigEntry.Boolean promptEnabled = new ConfigEntry.Boolean("promptEnabled", true);
     public final ConfigEntry.Boolean commandAccess = new ConfigEntry.Boolean("commandAccess", false);
-    private static final Gson GSON = new GsonBuilder()
-        .registerTypeAdapter(RollbackClientConfig.class, new Adapter<>(RollbackClientConfig.class))
-        .setPrettyPrinting().create();
 
     public RollbackClientConfig() {
         super();

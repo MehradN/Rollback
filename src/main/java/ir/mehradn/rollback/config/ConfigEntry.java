@@ -181,8 +181,8 @@ public abstract class ConfigEntry <T> {
     }
 
     public static class Enum <T extends java.lang.Enum<T>> extends ConfigEntry<T> {
-        public final Class<T> enumClass;
         private static final Gson GSON = new Gson();
+        public final Class<T> enumClass;
 
         public Enum(String name, Class<T> enumClass, @Nullable T defaultValue) {
             super(name, defaultValue);

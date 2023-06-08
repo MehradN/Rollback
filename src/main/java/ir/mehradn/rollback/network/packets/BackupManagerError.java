@@ -1,29 +1,38 @@
 package ir.mehradn.rollback.network.packets;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import ir.mehradn.rollback.Rollback;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class BackupManagerError extends Packet<BackupManagerError.Info, BackupManagerError.Info> {
+public final class BackupManagerError implements FabricPacket {
     private static final int MAX_STRING_LENGTH = 1023;
+    public static final PacketType<BackupManagerError> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "on_error"),
+        BackupManagerError::new
+    );
+    public final String translatableTitle;
+    public final String literalInfo;
 
-    BackupManagerError() {
-        super("on_error");
+    public BackupManagerError(String translatableTitle, String literalInfo) {
+        this.translatableTitle = translatableTitle;
+        this.literalInfo = literalInfo;
+    }
+
+    public BackupManagerError(FriendlyByteBuf buf) {
+        this.translatableTitle = buf.readUtf(MAX_STRING_LENGTH);
+        this.literalInfo = buf.readUtf(MAX_STRING_LENGTH);
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Info data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeUtf(data.translatableTitle, MAX_STRING_LENGTH);
-        buf.writeUtf(data.literalInfo, MAX_STRING_LENGTH);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeUtf(this.translatableTitle, MAX_STRING_LENGTH);
+        buf.writeUtf(this.literalInfo, MAX_STRING_LENGTH);
     }
 
     @Override
-    public Info fromBuf(FriendlyByteBuf buf) {
-        String title = buf.readUtf(MAX_STRING_LENGTH);
-        String info = buf.readUtf(MAX_STRING_LENGTH);
-        return new Info(title, info);
+    public PacketType<?> getType() {
+        return TYPE;
     }
-
-    public record Info(String translatableTitle, String literalInfo) { }
 }

@@ -1,30 +1,42 @@
 package ir.mehradn.rollback.network.packets;
 
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class SuccessfulConvert extends Packet<SuccessfulConvert.Info, SuccessfulConvert.Info> {
-    SuccessfulConvert() {
-        super("successful_convert");
+public final class SuccessfulConvert implements FabricPacket {
+    public static final PacketType<SuccessfulConvert> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "successful_convert"),
+        SuccessfulConvert::new
+    );
+    public final int backupId;
+    public final BackupType from;
+    public final BackupType to;
+
+    public SuccessfulConvert(int backupId, BackupType from, BackupType to) {
+        this.backupId = backupId;
+        this.from = from;
+        this.to = to;
+    }
+
+    public SuccessfulConvert(FriendlyByteBuf buf) {
+        this.backupId = buf.readInt();
+        this.from = buf.readEnum(BackupType.class);
+        this.to = buf.readEnum(BackupType.class);
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Info data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(data.backupId);
-        buf.writeEnum(data.from);
-        buf.writeEnum(data.to);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeInt(this.backupId);
+        buf.writeEnum(this.from);
+        buf.writeEnum(this.to);
     }
 
     @Override
-    public Info fromBuf(FriendlyByteBuf buf) {
-        int id = buf.readInt();
-        BackupType from = buf.readEnum(BackupType.class);
-        BackupType to = buf.readEnum(BackupType.class);
-        return new Info(id, from, to);
+    public PacketType<?> getType() {
+        return TYPE;
     }
-
-    public record Info(int backupId, BackupType from, BackupType to) { }
 }

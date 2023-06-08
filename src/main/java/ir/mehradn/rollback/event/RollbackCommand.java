@@ -6,16 +6,16 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
+import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.network.ServerPacketManager;
 import ir.mehradn.rollback.network.packets.OpenGUI;
-import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.rollback.ServerBackupManager;
 import ir.mehradn.rollback.util.TickTimer;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -62,6 +62,7 @@ public final class RollbackCommand {
     private static int requestOpenGui(CommandContext<CommandSourceStack> context) {
         CommandSourceStack source = context.getSource();
         ServerPlayer player = source.getPlayer();
+        Assertion.runtime(player != null);
         if (OpenGUI.awaitingPlayers.contains(player))
             return 0;
 
@@ -72,7 +73,7 @@ public final class RollbackCommand {
                 OpenGUI.awaitingPlayers.remove(player);
             }
         }));
-        ServerPacketManager.send(player, Packets.openGui, null);
+        ServerPlayNetworking.send(player, new OpenGUI());
         return 1;
     }
 

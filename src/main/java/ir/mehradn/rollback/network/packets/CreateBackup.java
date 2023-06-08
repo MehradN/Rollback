@@ -1,30 +1,43 @@
 package ir.mehradn.rollback.network.packets;
 
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import ir.mehradn.rollback.util.Utils;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class CreateBackup extends Packet<CreateBackup.Arguments, CreateBackup.Arguments> {
-    CreateBackup() {
-        super("create_backup");
+public final class CreateBackup implements FabricPacket {
+    public static final PacketType<CreateBackup> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "create_backup"),
+        CreateBackup::new
+    );
+    public final int lastUpdateId;
+    public final BackupType type;
+    public final String name;
+
+    public CreateBackup(int lastUpdateId, BackupType type, String name) {
+        this.lastUpdateId = lastUpdateId;
+        this.type = type;
+        this.name = name;
+    }
+
+    public CreateBackup(FriendlyByteBuf buf) {
+        this.lastUpdateId = buf.readInt();
+        this.type = buf.readEnum(BackupType.class);
+        this.name = Utils.readString(buf);
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Arguments data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(data.lastChangeId);
-        buf.writeEnum(data.type);
-        Packets.writeString(buf, data.name);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeInt(this.lastUpdateId);
+        buf.writeEnum(this.type);
+        Utils.writeString(buf, this.name);
     }
 
     @Override
-    public Arguments fromBuf(FriendlyByteBuf buf) {
-        int id = buf.readInt();
-        BackupType type = buf.readEnum(BackupType.class);
-        String name = Packets.readString(buf);
-        return new Arguments(id, type, name);
+    public PacketType<?> getType() {
+        return TYPE;
     }
-
-    public record Arguments(int lastChangeId, BackupType type, String name) { }
 }

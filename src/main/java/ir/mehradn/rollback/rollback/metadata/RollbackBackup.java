@@ -1,9 +1,9 @@
 package ir.mehradn.rollback.rollback.metadata;
 
 import com.google.gson.annotations.SerializedName;
-import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.CommonBackupManager;
+import ir.mehradn.rollback.util.Utils;
 import net.minecraft.network.FriendlyByteBuf;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,13 +16,13 @@ import java.time.ZoneOffset;
 import java.util.Date;
 
 public class RollbackBackup implements RollbackMetadata {
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat();
     @SerializedName("backup_file") public Path backupPath = null;
     @SerializedName("icon_file") public Path iconPath = null;
     @SerializedName("creation_date") public LocalDateTime creationDate = null;
     @SerializedName("days_played") public int daysPlayed = -1;
     @SerializedName("file_size") public long fileSize = -1;
     @SerializedName("name") public String name = null;
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat();
 
     public String getDaysPlayedAsString() {
         return (this.daysPlayed == -1 ? "???" : String.valueOf(this.daysPlayed));
@@ -52,12 +52,12 @@ public class RollbackBackup implements RollbackMetadata {
             this.name != null,
             this.creationDate != null
         };
-        Packets.writeBooleanArray(buf, c);
+        Utils.writeBooleanArray(buf, c);
 
         if (c[0])
-            Packets.writeString(buf, this.iconPath.toString());
+            Utils.writeString(buf, this.iconPath.toString());
         if (c[1])
-            Packets.writeString(buf, this.name);
+            Utils.writeString(buf, this.name);
         if (c[2])
             buf.writeLong(this.creationDate.toEpochSecond(ZoneOffset.UTC));
         buf.writeInt(this.daysPlayed);
@@ -66,12 +66,12 @@ public class RollbackBackup implements RollbackMetadata {
 
     @Override
     public void readFromBuf(FriendlyByteBuf buf) {
-        boolean[] c = Packets.readBooleanArray(buf, 3);
+        boolean[] c = Utils.readBooleanArray(buf, 3);
 
         if (c[0])
-            this.iconPath = Path.of(Packets.readString(buf));
+            this.iconPath = Path.of(Utils.readString(buf));
         if (c[1])
-            this.name = Packets.readString(buf);
+            this.name = Utils.readString(buf);
         if (c[2])
             this.creationDate = LocalDateTime.ofEpochSecond(buf.readLong(), 0, ZoneOffset.UTC);
         this.daysPlayed = buf.readInt();

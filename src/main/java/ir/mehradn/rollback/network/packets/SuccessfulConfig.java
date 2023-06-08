@@ -1,22 +1,33 @@
 package ir.mehradn.rollback.network.packets;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import ir.mehradn.rollback.Rollback;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public class SuccessfulConfig extends Packet<Boolean, Boolean> {
-    SuccessfulConfig() {
-        super("successful_config");
+public class SuccessfulConfig implements FabricPacket {
+    public static final PacketType<SuccessfulConfig> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "successful_config"),
+        SuccessfulConfig::new
+    );
+    public final boolean defaultConfig;
+
+    public SuccessfulConfig(boolean defaultConfig) {
+        this.defaultConfig = defaultConfig;
+    }
+
+    public SuccessfulConfig(FriendlyByteBuf buf) {
+        this.defaultConfig = buf.readBoolean();
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Boolean data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeBoolean(data);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeBoolean(this.defaultConfig);
     }
 
     @Override
-    public Boolean fromBuf(FriendlyByteBuf buf) {
-        return buf.readBoolean();
+    public PacketType<?> getType() {
+        return TYPE;
     }
 }

@@ -3,11 +3,11 @@ package ir.mehradn.rollback.rollback;
 import ir.mehradn.rollback.config.RollbackNetworkConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.gui.ScreenManager;
-import ir.mehradn.rollback.network.ClientPacketManager;
 import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorld;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,10 +26,11 @@ public class NetworkBackupManager implements BackupManager {
         this.state = State.INITIAL;
     }
 
-    public void loadingFinished(@NotNull SendMetadata.MetadataReceive metadata) {
-        this.lastUpdateId = metadata.lastUpdateId();
-        this.world = metadata.world();
-        this.defaultConfig = metadata.config();
+    public void loadingFinished(@NotNull SendMetadata packet) {
+        Assertion.argument(packet.worldMetadata != null && packet.defaultConfig != null);
+        this.lastUpdateId = packet.lastUpdateId;
+        this.world = packet.worldMetadata;
+        this.defaultConfig = packet.defaultConfig;
         this.world.update(this);
         actionFinished();
     }
@@ -61,7 +62,7 @@ public class NetworkBackupManager implements BackupManager {
         this.world = null;
         this.defaultConfig = null;
         this.state = State.LOADING;
-        ClientPacketManager.send(Packets.fetchMetadata, ScreenManager.isIntegrated(this.minecraft));
+        ClientPlayNetworking.send(new FetchMetadata(ScreenManager.isIntegrated(this.minecraft)));
     }
 
     @Override
@@ -71,14 +72,14 @@ public class NetworkBackupManager implements BackupManager {
         Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
 
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.createBackup, new CreateBackup.Arguments(this.lastUpdateId, type, name));
+        ClientPlayNetworking.send(new CreateBackup(this.lastUpdateId, type, name));
     }
 
     @Override
     public void deleteBackup(int backupID, BackupType type) {
         Assertion.argument(type.manualDeletion, "Invalid type");
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.deleteBackup, new DeleteBackup.Arguments(this.lastUpdateId, backupID, type));
+        ClientPlayNetworking.send(new DeleteBackup(this.lastUpdateId, backupID, type));
     }
 
     @Override
@@ -89,33 +90,33 @@ public class NetworkBackupManager implements BackupManager {
         Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
 
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.renameBackup, new RenameBackup.Arguments(this.lastUpdateId, backupID, type, name));
+        ClientPlayNetworking.send(new RenameBackup(this.lastUpdateId, backupID, type, name));
     }
 
     @Override
     public void convertBackup(int backupID, BackupType from, BackupType to) {
         Assertion.argument(from.convertFrom && to.convertTo && from != to, "Invalid types!");
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.convertBackup, new ConvertBackup.Arguments(this.lastUpdateId, backupID, from, to));
+        ClientPlayNetworking.send(new ConvertBackup(this.lastUpdateId, backupID, from, to));
     }
 
     @Override
     public void rollbackToBackup(int backupID, BackupType type) {
         Assertion.argument(type.rollback, "Invalid type");
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.rollbackBackup, new RollbackBackup.Arguments(this.lastUpdateId, backupID, type));
+        ClientPlayNetworking.send(new RollbackBackup(this.lastUpdateId, backupID, type));
     }
 
     @Override
     public void saveConfig() {
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.saveConfig, new SaveConfig.Arguments(this.lastUpdateId, this.getWorld().config, false));
+        ClientPlayNetworking.send(new SaveConfig(this.lastUpdateId, false, this.getWorld().config));
     }
 
     @Override
     public void saveConfigAsDefault() {
         this.state = State.ACTION;
-        ClientPacketManager.send(Packets.saveConfig, new SaveConfig.Arguments(this.lastUpdateId, this.getWorld().config, true));
+        ClientPlayNetworking.send(new SaveConfig(this.lastUpdateId, true, this.getWorld().config));
     }
 
     private void actionFinished() {

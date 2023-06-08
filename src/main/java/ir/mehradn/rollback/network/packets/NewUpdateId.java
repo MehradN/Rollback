@@ -1,20 +1,26 @@
 package ir.mehradn.rollback.network.packets;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import ir.mehradn.rollback.Rollback;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class NewUpdateId extends Packet<Void, Void> {
-    NewUpdateId() {
-        super("new_update_id");
-    }
+public final class NewUpdateId implements FabricPacket {
+    public static final PacketType<NewUpdateId> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "new_update_id"),
+        NewUpdateId::new
+    );
+
+    public NewUpdateId() { }
+
+    public NewUpdateId(FriendlyByteBuf buf) { }
 
     @Override
-    public FriendlyByteBuf toBuf(Void data) {
-        return PacketByteBufs.empty();
-    }
+    public void write(FriendlyByteBuf buf) { }
 
     @Override
-    public Void fromBuf(FriendlyByteBuf buf) {
-        return null;
+    public PacketType<?> getType() {
+        return TYPE;
     }
 }

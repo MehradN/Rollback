@@ -1,8 +1,8 @@
 package ir.mehradn.rollback.config;
 
 import com.google.gson.*;
-import ir.mehradn.rollback.network.packets.Packets;
 import ir.mehradn.rollback.rollback.BackupType;
+import ir.mehradn.rollback.util.Utils;
 import net.minecraft.network.FriendlyByteBuf;
 import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Type;
@@ -10,13 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public abstract class RollbackConfig {
+    protected static final short MAX_AUTOMATED = 10;
+    protected static final short MAX_COMMAND = 99;
+    protected static final short MAX_FREQUENCY = 100;
     public final ConfigEntry<Boolean> backupEnabled;
     public final ConfigEntry<Short> maxBackups;
     public final ConfigEntry<Short> backupFrequency;
     public final ConfigEntry<TimerMode> timerMode;
-    protected static final short MAX_AUTOMATED = 10;
-    protected static final short MAX_COMMAND = 99;
-    protected static final short MAX_FREQUENCY = 100;
     protected List<ConfigEntry<?>> entries;
     private boolean locked = false;
 
@@ -74,7 +74,7 @@ public abstract class RollbackConfig {
 
         for (int i = 0; i < size; i++)
             c[i] = this.getEntries().get(i).hasValue();
-        Packets.writeBooleanArray(buf, c);
+        Utils.writeBooleanArray(buf, c);
 
         for (int i = 0; i < size; i++)
             if (c[i])
@@ -83,7 +83,7 @@ public abstract class RollbackConfig {
 
     protected void readFromBuf(FriendlyByteBuf buf) {
         int size = this.getEntries().size();
-        boolean[] c = Packets.readBooleanArray(buf, size);
+        boolean[] c = Utils.readBooleanArray(buf, size);
 
         for (int i = 0; i < size; i++)
             if (c[i])

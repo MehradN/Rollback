@@ -1,24 +1,29 @@
 package ir.mehradn.rollback.network.packets;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import ir.mehradn.rollback.Rollback;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import java.util.HashSet;
 
-public final class OpenGUI extends Packet<Void, Void> {
+public final class OpenGUI implements FabricPacket {
+    public static final PacketType<OpenGUI> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "open_gui"),
+        OpenGUI::new
+    );
     public static final HashSet<ServerPlayer> awaitingPlayers = new HashSet<>();
 
-    OpenGUI() {
-        super("open_gui");
-    }
+    public OpenGUI() { }
+
+    public OpenGUI(FriendlyByteBuf buf) { }
 
     @Override
-    public FriendlyByteBuf toBuf(Void data) {
-        return PacketByteBufs.empty();
-    }
+    public void write(FriendlyByteBuf buf) { }
 
     @Override
-    public Void fromBuf(FriendlyByteBuf buf) {
-        return null;
+    public PacketType<?> getType() {
+        return TYPE;
     }
 }

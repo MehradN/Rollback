@@ -4,12 +4,13 @@ import ir.mehradn.rollback.config.ConfigEntry;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.network.ServerPacketManager;
 import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorldConfig;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
@@ -139,32 +140,32 @@ public class ServerBackupManager extends CommonBackupManager {
     @Override
     protected void broadcastError(String translatableTitle, String literalInfo) {
         this.server.sendSystemMessage(Component.translatable(translatableTitle).append("\n" + literalInfo));
-        broadcast(Packets.backupManagerError, new BackupManagerError.Info(translatableTitle, literalInfo));
+        broadcast(new BackupManagerError(translatableTitle, literalInfo));
     }
 
     @Override
     protected void broadcastSuccessfulBackup(BackupType type, long size) {
         String str = FileUtils.byteCountToDisplaySize(size);
         this.server.sendSystemMessage(Component.translatable("rollback.success.createBackup", type, str));
-        broadcast(Packets.successfulBackup, new SuccessfulBackup.Info(type, size));
+        broadcast(new SuccessfulBackup(type, size));
     }
 
     @Override
     protected void broadcastSuccessfulDelete(int backupID, BackupType type) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.deleteBackup", backupID, type));
-        broadcast(Packets.successfulDelete, new SuccessfulDelete.Info(backupID, type));
+        broadcast(new SuccessfulDelete(backupID, type));
     }
 
     @Override
     protected void broadcastSuccessfulRename(int backupID, BackupType type) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.renameBackup", backupID, type));
-        broadcast(Packets.successfulRename, new SuccessfulRename.Info(backupID, type));
+        broadcast(new SuccessfulRename(backupID, type));
     }
 
     @Override
     protected void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to) {
         this.server.sendSystemMessage(Component.translatable("rollback.success.convertBackup", backupID, from, to));
-        broadcast(Packets.successfulConvert, new SuccessfulConvert.Info(backupID, from, to));
+        broadcast(new SuccessfulConvert(backupID, from, to));
     }
 
     @Override
@@ -174,18 +175,18 @@ public class ServerBackupManager extends CommonBackupManager {
         for (ConfigEntry<?> entry : config.getEntries())
             component.append("\n" + entry.name + " = " + entry.get().toString());
         this.server.sendSystemMessage(component);
-        broadcast(Packets.successfulConfig, defaultConfig);
+        broadcast(new SuccessfulConfig(defaultConfig));
     }
 
     private void increaseUpdateId() {
         this.lastUpdateId++;
         for (ServerPlayer player : PlayerLookup.all(this.server))
-            ServerPacketManager.send(player, Packets.newUpdateId, null);
+            ServerPlayNetworking.send(player, new NewUpdateId());
     }
 
-    private <T> void broadcast(Packet<T, ?> packet, T data) {
+    private <T extends FabricPacket> void broadcast(T packet) {
         for (ServerPlayer player : PlayerLookup.all(this.server))
             if (getDefaultConfig().hasCommandPermission(player))
-                ServerPacketManager.send(player, packet, data);
+                ServerPlayNetworking.send(player, packet);
     }
 }

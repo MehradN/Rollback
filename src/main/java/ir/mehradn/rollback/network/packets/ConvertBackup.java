@@ -1,32 +1,46 @@
 package ir.mehradn.rollback.network.packets;
 
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class ConvertBackup extends Packet<ConvertBackup.Arguments, ConvertBackup.Arguments> {
-    ConvertBackup() {
-        super("convert_backup");
+public final class ConvertBackup implements FabricPacket {
+    public static final PacketType<ConvertBackup> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "convert_backup"),
+        ConvertBackup::new
+    );
+    public final int lastUpdateId;
+    public final int backupId;
+    public final BackupType from;
+    public final BackupType to;
+
+    public ConvertBackup(int lastUpdateId, int backupId, BackupType from, BackupType to) {
+        this.lastUpdateId = lastUpdateId;
+        this.backupId = backupId;
+        this.from = from;
+        this.to = to;
+    }
+
+    public ConvertBackup(FriendlyByteBuf buf) {
+        this.lastUpdateId = buf.readInt();
+        this.backupId = buf.readInt();
+        this.from = buf.readEnum(BackupType.class);
+        this.to = buf.readEnum(BackupType.class);
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Arguments data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(data.lastChangeId);
-        buf.writeInt(data.backupID);
-        buf.writeEnum(data.from);
-        buf.writeEnum(data.to);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeInt(this.lastUpdateId);
+        buf.writeInt(this.backupId);
+        buf.writeEnum(this.from);
+        buf.writeEnum(this.to);
     }
 
     @Override
-    public Arguments fromBuf(FriendlyByteBuf buf) {
-        int changeId = buf.readInt();
-        int backupId = buf.readInt();
-        BackupType from = buf.readEnum(BackupType.class);
-        BackupType to = buf.readEnum(BackupType.class);
-        return new Arguments(changeId, backupId, from, to);
+    public PacketType<?> getType() {
+        return TYPE;
     }
-
-    public record Arguments(int lastChangeId, int backupID, BackupType from, BackupType to) { }
 }

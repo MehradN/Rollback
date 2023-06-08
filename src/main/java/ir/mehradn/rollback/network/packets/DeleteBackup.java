@@ -1,30 +1,42 @@
 package ir.mehradn.rollback.network.packets;
 
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class DeleteBackup extends Packet<DeleteBackup.Arguments, DeleteBackup.Arguments> {
-    DeleteBackup() {
-        super("delete_backup");
+public final class DeleteBackup implements FabricPacket {
+    public static final PacketType<DeleteBackup> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "delete_backup"),
+        DeleteBackup::new
+    );
+    public final int lastUpdateId;
+    public final int backupId;
+    public final BackupType type;
+
+    public DeleteBackup(int lastUpdateId, int backupId, BackupType type) {
+        this.lastUpdateId = lastUpdateId;
+        this.backupId = backupId;
+        this.type = type;
+    }
+
+    public DeleteBackup(FriendlyByteBuf buf) {
+        this.lastUpdateId = buf.readInt();
+        this.backupId = buf.readInt();
+        this.type = buf.readEnum(BackupType.class);
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Arguments data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(data.lastChangeId);
-        buf.writeInt(data.backupID);
-        buf.writeEnum(data.type);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeInt(this.lastUpdateId);
+        buf.writeInt(this.backupId);
+        buf.writeEnum(this.type);
     }
 
     @Override
-    public Arguments fromBuf(FriendlyByteBuf buf) {
-        int changeId = buf.readInt();
-        int backupId = buf.readInt();
-        BackupType type = buf.readEnum(BackupType.class);
-        return new Arguments(changeId, backupId, type);
+    public PacketType<?> getType() {
+        return TYPE;
     }
-
-    public record Arguments(int lastChangeId, int backupID, BackupType type) { }
 }

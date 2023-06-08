@@ -1,109 +1,114 @@
 package ir.mehradn.rollback.event;
 
 import ir.mehradn.rollback.gui.ScreenManager;
-import ir.mehradn.rollback.network.ClientPacketManager;
 import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.NetworkBackupManager;
+import ir.mehradn.rollback.util.Utils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 @Environment(EnvType.CLIENT)
 public final class ClientPacketListener {
     public static void register() {
-        ClientPacketManager.register(Packets.backupManagerError, ClientPacketListener::onBackupManagerError);
-        ClientPacketManager.register(Packets.newUpdateId, ClientPacketListener::onNewUpdateId);
-        ClientPacketManager.register(Packets.openGui, ClientPacketListener::onOpenGui);
-        ClientPacketManager.register(Packets.sendMetadata, ClientPacketListener::onSendMetadata);
-        ClientPacketManager.register(Packets.successfulBackup, ClientPacketListener::onSuccessfulBackup);
-        ClientPacketManager.register(Packets.successfulConfig, ClientPacketListener::onSuccessfulConfig);
-        ClientPacketManager.register(Packets.successfulConvert, ClientPacketListener::onSuccessfulConvert);
-        ClientPacketManager.register(Packets.successfulDelete, ClientPacketListener::onSuccessfulDelete);
-        ClientPacketManager.register(Packets.successfulRename, ClientPacketListener::onSuccessfulRename);
+        ClientPlayNetworking.registerGlobalReceiver(BackupManagerError.TYPE, ClientPacketListener::onBackupManagerError);
+        ClientPlayNetworking.registerGlobalReceiver(NewUpdateId.TYPE, ClientPacketListener::onNewUpdateId);
+        ClientPlayNetworking.registerGlobalReceiver(OpenGUI.TYPE, ClientPacketListener::onOpenGui);
+        ClientPlayNetworking.registerGlobalReceiver(SendMetadata.TYPE, ClientPacketListener::onSendMetadata);
+        ClientPlayNetworking.registerGlobalReceiver(SuccessfulBackup.TYPE, ClientPacketListener::onSuccessfulBackup);
+        ClientPlayNetworking.registerGlobalReceiver(SuccessfulConfig.TYPE, ClientPacketListener::onSuccessfulConfig);
+        ClientPlayNetworking.registerGlobalReceiver(SuccessfulConvert.TYPE, ClientPacketListener::onSuccessfulConvert);
+        ClientPlayNetworking.registerGlobalReceiver(SuccessfulDelete.TYPE, ClientPacketListener::onSuccessfulDelete);
+        ClientPlayNetworking.registerGlobalReceiver(SuccessfulRename.TYPE, ClientPacketListener::onSuccessfulRename);
     }
 
-    private static void onBackupManagerError(Minecraft minecraft, BackupManagerError.Info info) {
+    private static void onBackupManagerError(BackupManagerError packet, LocalPlayer player, PacketSender responseSender) {
         if (ScreenManager.getInstance() != null) {
-            ScreenManager.getInstance().onError(info.translatableTitle(), info.literalInfo());
+            ScreenManager.getInstance().onError(packet.translatableTitle, packet.literalInfo);
         } else {
             ScreenManager.showToast(
-                minecraft,
-                Component.translatable(info.translatableTitle()),
-                Component.literal(info.literalInfo())
+                Minecraft.getInstance(),
+                Component.translatable(packet.translatableTitle),
+                Component.literal(packet.literalInfo)
             );
         }
     }
 
-    private static void onNewUpdateId(Minecraft minecraft, Void data) {
+    private static void onNewUpdateId(NewUpdateId packet, LocalPlayer player, PacketSender responseSender) {
         if (ScreenManager.getInstance() != null)
             ScreenManager.getInstance().loadMetadata();
     }
 
-    private static void onOpenGui(Minecraft minecraft, Void data) {
+    private static void onOpenGui(OpenGUI packet, LocalPlayer player, PacketSender responseSender) {
+        Minecraft minecraft = Minecraft.getInstance();
         minecraft.setScreen(null);
         minecraft.pauseGame(false);
         ScreenManager.activate(minecraft, new NetworkBackupManager(minecraft));
-        ClientPacketManager.send(Packets.openGui, null);
+        ClientPlayNetworking.send(new OpenGUI());
     }
 
-    private static void onSendMetadata(Minecraft minecraft, @Nullable SendMetadata.MetadataReceive data) {
+    private static void onSendMetadata(SendMetadata packet, LocalPlayer player, PacketSender responseSender) {
         if (ScreenManager.getInstance() == null)
             return;
-        if (data == null) {
+        if (packet.version.notMatch()) {
             ScreenManager.getInstance().onNotMatchingVersions();
             return;
         }
         NetworkBackupManager backupManager = getBackupManager();
         if (backupManager == null)
             return;
-        backupManager.loadingFinished(data);
+        backupManager.loadingFinished(packet);
     }
 
-    private static void onSuccessfulBackup(Minecraft minecraft, SuccessfulBackup.Info data) {
+    private static void onSuccessfulBackup(SuccessfulBackup packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
-            minecraft,
+            Minecraft.getInstance(),
             Component.translatable("rollback.toast.successfulBackup.title"),
-            Component.translatable("rollback.toast.successfulBackup.info", data.type().toComponent(), data.sizeAsString())
+            Component.translatable("rollback.toast.successfulBackup.info", packet.type.toComponent(), Utils.fileSizeToString(packet.fileSize))
         );
     }
 
-    private static void onSuccessfulConfig(Minecraft minecraft, Boolean data) {
+    private static void onSuccessfulConfig(SuccessfulConfig packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
-            minecraft,
-            Component.translatable("rollback.toast.successfulConfig." + (data ? "default" : "world")),
+            Minecraft.getInstance(),
+            Component.translatable("rollback.toast.successfulConfig." + (packet.defaultConfig ? "default" : "world")),
             Component.empty()
         );
     }
 
-    private static void onSuccessfulConvert(Minecraft minecraft, SuccessfulConvert.Info data) {
+    private static void onSuccessfulConvert(SuccessfulConvert packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
-            minecraft,
+            Minecraft.getInstance(),
             Component.translatable("rollback.toast.successfulConvert.title"),
-            Component.translatable("rollback.toast.successfulConvert.info", data.backupId(), data.from().toComponent(), data.to().toComponent())
+            Component.translatable("rollback.toast.successfulConvert.info", packet.backupId, packet.from.toComponent(), packet.to.toComponent())
         );
     }
 
-    private static void onSuccessfulDelete(Minecraft minecraft, SuccessfulDelete.Info data) {
+    private static void onSuccessfulDelete(SuccessfulDelete packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
-            minecraft,
+            Minecraft.getInstance(),
             Component.translatable("rollback.toast.successfulDelete.title"),
-            Component.translatable("rollback.toast.successfulDelete.info", data.type().toComponent(), data.backupId())
+            Component.translatable("rollback.toast.successfulDelete.info", packet.type.toComponent(), packet.backupId)
         );
     }
 
-    private static void onSuccessfulRename(Minecraft minecraft, SuccessfulRename.Info data) {
+    private static void onSuccessfulRename(SuccessfulRename packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
-            minecraft,
+            Minecraft.getInstance(),
             Component.translatable("rollback.toast.successfulRename.title"),
-            Component.translatable("rollback.toast.successfulRename.info", data.type().toComponent(), data.backupId())
+            Component.translatable("rollback.toast.successfulRename.info", packet.type.toComponent(), packet.backupId)
         );
     }
 
     private static @Nullable NetworkBackupManager getBackupManager() {
         ScreenManager screenManager = ScreenManager.getInstance();
-        if (screenManager != null && screenManager.backupManager != null && screenManager.backupManager instanceof NetworkBackupManager backupManager)
+        if (screenManager != null && screenManager.backupManager != null &&
+            screenManager.backupManager instanceof NetworkBackupManager backupManager)
             return backupManager;
         return null;
     }

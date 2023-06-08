@@ -1,22 +1,33 @@
 package ir.mehradn.rollback.network.packets;
 
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import ir.mehradn.rollback.Rollback;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class FetchMetadata extends Packet<Boolean, Boolean> {
-    FetchMetadata() {
-        super("fetch_metadata");
+public final class FetchMetadata implements FabricPacket {
+    public static final PacketType<FetchMetadata> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "fetch_metadata"),
+        FetchMetadata::new
+    );
+    public final boolean integrated;
+
+    public FetchMetadata(boolean integrated) {
+        this.integrated = integrated;
+    }
+
+    public FetchMetadata(FriendlyByteBuf buf) {
+        this.integrated = buf.readBoolean();
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Boolean data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeBoolean(data);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeBoolean(this.integrated);
     }
 
     @Override
-    public Boolean fromBuf(FriendlyByteBuf buf) {
-        return buf.readBoolean();
+    public PacketType<?> getType() {
+        return TYPE;
     }
 }

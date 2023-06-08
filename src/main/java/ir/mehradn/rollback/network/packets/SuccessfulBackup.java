@@ -1,32 +1,38 @@
 package ir.mehradn.rollback.network.packets;
 
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
-import org.apache.commons.io.FileUtils;
+import net.minecraft.resources.ResourceLocation;
 
-public final class SuccessfulBackup extends Packet<SuccessfulBackup.Info, SuccessfulBackup.Info> {
-    SuccessfulBackup() {
-        super("successful_backup");
+public final class SuccessfulBackup implements FabricPacket {
+    public static final PacketType<SuccessfulBackup> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "successful_backup"),
+        SuccessfulBackup::new
+    );
+    public final BackupType type;
+    public final long fileSize;
+
+    public SuccessfulBackup(BackupType type, long fileSize) {
+        this.type = type;
+        this.fileSize = fileSize;
+    }
+
+    public SuccessfulBackup(FriendlyByteBuf buf) {
+        this.type = buf.readEnum(BackupType.class);
+        this.fileSize = buf.readLong();
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Info data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeEnum(data.type);
-        buf.writeLong(data.size);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeEnum(this.type);
+        buf.writeLong(this.fileSize);
     }
 
-    @Override public Info fromBuf(FriendlyByteBuf buf) {
-        BackupType type = buf.readEnum(BackupType.class);
-        long size = buf.readLong();
-        return new Info(type, size);
-    }
-
-    public record Info(BackupType type, long size) {
-        public String sizeAsString() {
-            return FileUtils.byteCountToDisplaySize(this.size);
-        }
+    @Override
+    public PacketType<?> getType() {
+        return TYPE;
     }
 }

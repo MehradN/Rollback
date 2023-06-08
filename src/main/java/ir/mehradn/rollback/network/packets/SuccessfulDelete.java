@@ -1,28 +1,38 @@
 package ir.mehradn.rollback.network.packets;
 
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
-public final class SuccessfulDelete extends Packet<SuccessfulDelete.Info, SuccessfulDelete.Info> {
-    SuccessfulDelete() {
-        super("successful_delete");
+public final class SuccessfulDelete implements FabricPacket {
+    public static final PacketType<SuccessfulDelete> TYPE = PacketType.create(
+        new ResourceLocation(Rollback.MOD_ID, "successful_delete"),
+        SuccessfulDelete::new
+    );
+    public final int backupId;
+    public final BackupType type;
+
+    public SuccessfulDelete(int backupId, BackupType type) {
+        this.backupId = backupId;
+        this.type = type;
+    }
+
+    public SuccessfulDelete(FriendlyByteBuf buf) {
+        this.backupId = buf.readInt();
+        this.type = buf.readEnum(BackupType.class);
     }
 
     @Override
-    public FriendlyByteBuf toBuf(Info data) {
-        FriendlyByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(data.backupId);
-        buf.writeEnum(data.type);
-        return buf;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeInt(this.backupId);
+        buf.writeEnum(this.type);
     }
 
     @Override
-    public Info fromBuf(FriendlyByteBuf buf) {
-        int id = buf.readInt();
-        BackupType type = buf.readEnum(BackupType.class);
-        return new Info(id, type);
+    public PacketType<?> getType() {
+        return TYPE;
     }
-
-    public record Info(int backupId, BackupType type) { }
 }
