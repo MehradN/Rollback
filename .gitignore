@@ -30,8 +30,7 @@ bin/
 
 # fabric
 
-server-run/
-client-run/
+run/
 
 # java
 
