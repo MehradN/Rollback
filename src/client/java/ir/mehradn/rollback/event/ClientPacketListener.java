@@ -26,6 +26,7 @@ public final class ClientPacketListener {
         ClientPlayNetworking.registerGlobalReceiver(SuccessfulConvert.TYPE, ClientPacketListener::onSuccessfulConvert);
         ClientPlayNetworking.registerGlobalReceiver(SuccessfulDelete.TYPE, ClientPacketListener::onSuccessfulDelete);
         ClientPlayNetworking.registerGlobalReceiver(SuccessfulRename.TYPE, ClientPacketListener::onSuccessfulRename);
+        ClientPlayNetworking.registerGlobalReceiver(TakeScreenshot.TYPE, ClientPacketListener::onTakeScreenshot);
     }
 
     private static void onBackupManagerError(BackupManagerError packet, LocalPlayer player, PacketSender responseSender) {
@@ -59,10 +60,11 @@ public final class ClientPacketListener {
     }
 
     private static void onSendMetadata(SendMetadata packet, LocalPlayer player, PacketSender responseSender) {
-        if (ScreenManager.getInstance() == null)
+        ScreenManager screenManager = ScreenManager.getInstance();
+        if (screenManager == null)
             return;
         if (packet.version.notMatch()) {
-            ScreenManager.getInstance().onNotMatchingVersions();
+            screenManager.onNotMatchingVersions();
             return;
         }
         NetworkBackupManager backupManager = getBackupManager();
@@ -109,6 +111,10 @@ public final class ClientPacketListener {
             Component.translatable("rollback.toast.successfulRename.title"),
             Component.translatable("rollback.toast.successfulRename.info", packet.type.toComponent(), packet.backupId)
         );
+    }
+
+    private static void onTakeScreenshot(TakeScreenshot packet, LocalPlayer player, PacketSender responseSender) {
+        ScreenManager.takeScreenshot(Minecraft.getInstance(), packet.backupId, packet.backupType, packet.iconPath);
     }
 
     private static @Nullable NetworkBackupManager getBackupManager() {

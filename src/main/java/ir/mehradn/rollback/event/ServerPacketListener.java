@@ -22,6 +22,7 @@ public final class ServerPacketListener {
         ServerPlayNetworking.registerGlobalReceiver(RenameBackup.TYPE, ServerPacketListener::onRenameBackup);
         ServerPlayNetworking.registerGlobalReceiver(RollbackBackup.TYPE, ServerPacketListener::onRollbackBackup);
         ServerPlayNetworking.registerGlobalReceiver(SaveConfig.TYPE, ServerPacketListener::onSaveConfig);
+        ServerPlayNetworking.registerGlobalReceiver(TakeScreenshot.TYPE, ServerPacketListener::onTakeScreenshot);
     }
 
     private static void onConvertBackup(ConvertBackup packet, ServerPlayer player, PacketSender responseSender) {
@@ -106,6 +107,13 @@ public final class ServerPacketListener {
                 backupManager.saveToDefaultConfig(packet.worldConfig);
             else
                 backupManager.saveToConfig(packet.worldConfig);
+        } catch (BackupManagerException ignored) { }
+    }
+
+    private static void onTakeScreenshot(TakeScreenshot packet, ServerPlayer player, PacketSender responseSender) {
+        ServerBackupManager backupManager = getBackupManager(player);
+        try {
+            backupManager.setIconPath(packet.backupId, packet.backupType, packet.iconPath);
         } catch (BackupManagerException ignored) { }
     }
 

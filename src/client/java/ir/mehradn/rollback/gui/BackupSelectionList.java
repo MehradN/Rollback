@@ -312,7 +312,7 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
         protected @Nullable NativeImage getIconImage() {
             if (this.backup.iconPath == null)
                 return null;
-            Path path = this.minecraft.getLevelSource().getBackupPath().resolve("rollbacks").resolve(this.backup.iconPath);
+            Path path = ScreenManager.getRollbackDirectory(this.minecraft).resolve(this.backup.iconPath);
             if (!Files.isRegularFile(path))
                 return null;
 

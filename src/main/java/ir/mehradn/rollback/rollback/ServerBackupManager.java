@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.networking.v1.FabricPacket;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
+import net.minecraft.FileUtil;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
@@ -23,6 +24,7 @@ import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ServerBackupManager extends CommonBackupManager {
@@ -58,11 +60,25 @@ public class ServerBackupManager extends CommonBackupManager {
         saveConfigAsDefault();
     }
 
+    public void setIconPath(int backupId, BackupType type, Path iconPath) throws BackupManagerException {
+        this.getWorld().getBackup(backupId, type).iconPath = iconPath;
+        saveWorld();
+        increaseUpdateId();
+    }
+
     @Override
     public void createBackup(BackupType type, @Nullable String name) throws BackupManagerException {
         super.createBackup(type, name);
         increaseUpdateId();
         backupWarning();
+
+        try {
+            Path iconDirectory = getRollbackDirectory().resolve("icons");
+            Files.createDirectories(iconDirectory);
+            String fileName = FileUtil.findAvailableName(iconDirectory, getLevelID() + "_" + this.getWorld().lastID, ".png");
+            Path iconPath = getRollbackDirectory().relativize(iconDirectory.resolve(fileName));
+            broadcast(new TakeScreenshot(this.getWorld().lastID, type, iconPath));
+        } catch (IOException ignored) { }
     }
 
     @Override

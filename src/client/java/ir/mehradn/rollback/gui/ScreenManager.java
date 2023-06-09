@@ -5,12 +5,15 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.gui.config.WorldConfigScreen;
+import ir.mehradn.rollback.network.packets.TakeScreenshot;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.util.Utils;
+import ir.mehradn.rollback.util.mixin.GameRendererExpanded;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.FileUtil;
 import net.minecraft.Util;
@@ -59,6 +62,10 @@ public class ScreenManager {
         instance = null;
     }
 
+    public static Path getRollbackDirectory(Minecraft minecraft) {
+        return minecraft.getLevelSource().getBackupPath().resolve("rollbacks");
+    }
+
     public static boolean isInGame(Minecraft minecraft) {
         return (minecraft.level != null);
     }
@@ -79,6 +86,16 @@ public class ScreenManager {
 
     public static void showToast(Minecraft minecraft, Component title, Component info) {
         minecraft.getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
+    }
+
+    public static void takeScreenshot(Minecraft minecraft, int backupId, BackupType type, Path iconPath) {
+        Rollback.LOGGER.info("Creating an backup icon...");
+        Path path = getRollbackDirectory(minecraft).resolve(iconPath);
+        if (minecraft.isPaused())
+            ((GameRendererExpanded)minecraft.gameRenderer).queueScreenshotWithoutGui(path);
+        else
+            ((GameRendererExpanded)minecraft.gameRenderer).takeScreenshotWithGui(path);
+        ClientPlayNetworking.send(new TakeScreenshot(backupId, type, iconPath));
     }
 
     public void loadMetadata() {

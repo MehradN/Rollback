@@ -1,6 +1,7 @@
 {
   "rollback.success.createBackup": "Created a new backup. (type: %s, size: %d)",
   "rollback.success.deleteBackup": "Deleted the backup #%d. (type: %s)",
+  "rollback.success.renameBackup": "Renamed the backup #%d (type: %s)",
   "rollback.success.convertBackup": "Converted the backup #%d. (from %s to %s)",
   "rollback.success.updateConfig.world": "Updated the world config successfully:",
   "rollback.success.updateConfig.default": "Updated the default config successfully:",
