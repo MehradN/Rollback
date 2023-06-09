@@ -12,5 +12,8 @@
   "rollback.error.outOfSync": "You were out of sync with the servers!",
   "rollback.command.nameTooLong": "The chosen name is too long! (at most %d characters are allowed)",
   "rollback.command.createdBackup": "Created the backup successfully!",
-  "rollback.command.guiFailed": "Failed to open the gui screen. Are you sure you have the mod installed on your client?"
+  "rollback.command.guiFailed": "Failed to open the gui screen. Are you sure you have the mod installed on your client?",
+  "rollback.backupWarning.line1": "You have created %d command backups! (Total file size of %s)",
+  "rollback.backupWarning.line2": "Command backups will start to get automatically deleted once you have more than %d of them.",
+  "rollback.backupWarning.line3": "Please consider deleting/converting some of them."
 }

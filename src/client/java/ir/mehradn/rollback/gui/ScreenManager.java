@@ -7,18 +7,20 @@ import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.gui.config.WorldConfigScreen;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
+import ir.mehradn.rollback.util.Utils;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.ChatFormatting;
 import net.minecraft.FileUtil;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.ConfirmScreen;
-import net.minecraft.client.gui.screens.ErrorScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
@@ -57,10 +59,6 @@ public class ScreenManager {
         instance = null;
     }
 
-    public static void showToast(Minecraft minecraft, Component title, Component info) {
-        minecraft.getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
-    }
-
     public static boolean isInGame(Minecraft minecraft) {
         return (minecraft.level != null);
     }
@@ -77,6 +75,10 @@ public class ScreenManager {
         if (instance == null)
             return false;
         return isAutomatedBackupEnabled(instance.backupManager);
+    }
+
+    public static void showToast(Minecraft minecraft, Component title, Component info) {
+        minecraft.getToasts().addToast(new SystemToast(SystemToast.SystemToastIds.WORLD_BACKUP, title, info));
     }
 
     public void loadMetadata() {
@@ -217,12 +219,6 @@ public class ScreenManager {
         }
     }
 
-    // TODO: Implement rest of this
-    public void playCurrentSave() {
-        if (isInGame(this.minecraft))
-            deactivate();
-    }
-
     public void openBackupFolder() {
         LevelStorageSource levelStorageSource = this.minecraft.getLevelSource();
         Path path = levelStorageSource.getBackupPath();
@@ -236,22 +232,42 @@ public class ScreenManager {
         Util.getPlatform().openFile(path.toFile());
     }
 
-    // TODO: Implement this
-    public void onNotMatchingVersions() {
-
-    }
-
     public void onError(String translatableTitle, String literalInfo) {
         this.onInputScreen = true;
         Rollback.LOGGER.error(literalInfo);
         this.minecraft.forceSetScreen(new DirtErrorScreen(
-            Component.translatable(translatableTitle),
-            Component.literal(literalInfo),
+            Component.translatable(translatableTitle).withStyle(ChatFormatting.RED),
+            Component.literal(literalInfo).withStyle(ChatFormatting.RED),
             () -> {
                 if (ScreenManager.instance != null)
                     ScreenManager.instance.onInputScreen = false;
             }
         ));
+    }
+
+    public void onWarning(int count, long size) {
+        MutableComponent title = Component.translatable("rollback.screen.backupWarning.title", count, Utils.fileSizeToString(size))
+            .withStyle(ChatFormatting.YELLOW);
+        MutableComponent info = Component.empty();
+        if (count >= 90)
+            info.append(Component.translatable("rollback.screen.backupWarning.info.1", 99));
+        info.append(Component.translatable("rollback.screen.backupWarning.info.2"))
+            .withStyle(ChatFormatting.YELLOW);
+
+        this.onInputScreen = true;
+        this.minecraft.setScreen(new DirtErrorScreen(
+            title,
+            info,
+            () -> {
+                if (ScreenManager.instance != null)
+                    ScreenManager.instance.onInputScreen = false;
+            }
+        ));
+    }
+
+    // TODO: Implement this
+    public void onNotMatchingVersions() {
+
     }
 
     public void onTick() {
@@ -277,6 +293,12 @@ public class ScreenManager {
         return null;
     }
 
+    // TODO: Implement rest of this
+    public void playCurrentSave() {
+        if (isInGame(this.minecraft))
+            deactivate();
+    }
+
     private void setMessageScreen(Component message) {
         this.minecraft.forceSetScreen(new GenericDirtMessageScreen(message));
     }
@@ -290,26 +312,6 @@ public class ScreenManager {
         @Override
         public void renderBackground(PoseStack poseStack) {
             renderDirtBackground(poseStack);
-        }
-    }
-
-    @Environment(EnvType.CLIENT)
-    public static class DirtErrorScreen extends ErrorScreen {
-        private final Runnable onClose;
-
-        public DirtErrorScreen(Component title, Component message, Runnable onClose) {
-            super(title, message);
-            this.onClose = onClose;
-        }
-
-        @Override
-        public void renderBackground(PoseStack poseStack) {
-            renderDirtBackground(poseStack);
-        }
-
-        @Override
-        public void onClose() {
-            this.onClose.run();
         }
     }
 }

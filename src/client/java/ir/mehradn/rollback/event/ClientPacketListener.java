@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 public final class ClientPacketListener {
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(BackupManagerError.TYPE, ClientPacketListener::onBackupManagerError);
+        ClientPlayNetworking.registerGlobalReceiver(BackupWarning.TYPE, ClientPacketListener::onBackupWarning);
         ClientPlayNetworking.registerGlobalReceiver(NewUpdateId.TYPE, ClientPacketListener::onNewUpdateId);
         ClientPlayNetworking.registerGlobalReceiver(OpenGUI.TYPE, ClientPacketListener::onOpenGui);
         ClientPlayNetworking.registerGlobalReceiver(SendMetadata.TYPE, ClientPacketListener::onSendMetadata);
@@ -37,6 +38,11 @@ public final class ClientPacketListener {
                 Component.literal(packet.literalInfo)
             );
         }
+    }
+
+    private static void onBackupWarning(BackupWarning packet, LocalPlayer player, PacketSender responseSender) {
+        if (ScreenManager.getInstance() != null)
+            ScreenManager.getInstance().onWarning(packet.backupCount, packet.totalSize);
     }
 
     private static void onNewUpdateId(NewUpdateId packet, LocalPlayer player, PacketSender responseSender) {

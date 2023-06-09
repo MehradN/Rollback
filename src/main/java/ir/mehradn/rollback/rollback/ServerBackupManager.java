@@ -5,12 +5,15 @@ import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.packets.*;
+import ir.mehradn.rollback.rollback.metadata.RollbackBackup;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorldConfig;
+import ir.mehradn.rollback.util.Utils;
 import ir.mehradn.rollback.util.mixin.LevelStorageAccessExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import net.fabricmc.fabric.api.networking.v1.FabricPacket;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
@@ -59,6 +62,7 @@ public class ServerBackupManager extends CommonBackupManager {
     public void createBackup(BackupType type, @Nullable String name) throws BackupManagerException {
         super.createBackup(type, name);
         increaseUpdateId();
+        backupWarning();
     }
 
     @Override
@@ -171,11 +175,49 @@ public class ServerBackupManager extends CommonBackupManager {
     @Override
     protected void broadcastSuccessfulConfig(boolean defaultConfig) {
         RollbackConfig config = (defaultConfig ? getDefaultConfig() : getWorld().config);
-        MutableComponent component = Component.translatable("rollback.success.updateConfig." + (defaultConfig ? "default" : "world"));
+        MutableComponent text = Component.translatable("rollback.success.updateConfig." + (defaultConfig ? "default" : "world"));
         for (ConfigEntry<?> entry : config.getEntries())
-            component.append("\n" + entry.name + " = " + entry.get().toString());
-        this.server.sendSystemMessage(component);
+            text.append("\n" + entry.name + " = " + entry.get().toString());
+        this.server.sendSystemMessage(text);
         broadcast(new SuccessfulConfig(defaultConfig));
+    }
+
+    private boolean shouldSendBackupWarning(int count) {
+        if (count < 20)
+            return false;
+        if (count < 50)
+            return (count % 10 == 0);
+        if (count < 80)
+            return (count % 5 == 0);
+        return true;
+    }
+
+    private long totalBackupSize() {
+        long sum = 0;
+        for (RollbackBackup backup : getWorld().getBackups(BackupType.COMMAND).values())
+            if (backup.fileSize > 0)
+                sum += backup.fileSize;
+        return sum;
+    }
+
+    private void backupWarning() {
+        int count = getWorld().getBackups(BackupType.COMMAND).size();
+        if (!shouldSendBackupWarning(count))
+            return;
+
+        long size = totalBackupSize();
+        broadcast(new BackupWarning(count, size));
+
+        MutableComponent text = Component.translatable("rollback.backupWarning.line1", count, Utils.fileSizeToString(size));
+        if (count >= 90)
+            text.append("\n").append(Component.translatable("rollback.backupWarning.line2", 99));
+        text.append("\n").append(Component.translatable("rollback.backupWarning.line3"));
+        text.withStyle(ChatFormatting.YELLOW);
+
+        this.server.sendSystemMessage(text);
+        for (ServerPlayer player : PlayerLookup.all(this.server))
+            if (getDefaultConfig().hasCommandPermission(player))
+                player.sendSystemMessage(text);
     }
 
     private void increaseUpdateId() {
