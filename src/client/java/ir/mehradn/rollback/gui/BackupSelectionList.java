@@ -35,7 +35,7 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
     private final BackupManager backupManager;
     private final CurrentSaveEntry currentSaveEntry;
     private boolean shouldReloadEntries;
-    private BackupType backupType = BackupType.AUTOMATED;
+    private BackupType backupType = BackupType.ROLLBACK;
     private long fileSizeSum;
 
     public BackupSelectionList(Minecraft minecraft, int width, int height, int top, int bottom, int itemHeight) {
@@ -283,9 +283,10 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
             String days = this.backup.getDaysPlayedAsString();
             String size = Utils.fileSizeToString(this.backup.fileSize);
             if (this.backup.name == null)
-                return Component.translatable("rollback.screen.narrator.unnamedBackup", this.index, date, days, size);
+                return Component.translatable("rollback.screen.narrator.backup.unnamed." + this.backupType, this.index, date, days, size);
             else
-                return Component.translatable("rollback.screen.narrator.nameBackup", this.index, this.backup.name, date, days, size);
+                return Component.translatable("rollback.screen.narrator.backup.named." + this.backupType,
+                    this.index, this.backup.name, date, days, size);
         }
 
         @Override

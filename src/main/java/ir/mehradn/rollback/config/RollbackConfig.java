@@ -43,13 +43,13 @@ public abstract class RollbackConfig extends MehradConfig {
     }
 
     public static int getMaxMaxBackups(BackupType type) {
-        if (type == BackupType.AUTOMATED)
+        if (type == BackupType.ROLLBACK)
             return MAX_AUTOMATED;
         return MAX_COMMAND;
     }
 
     public int getMaxBackupsForType(BackupType type) {
-        if (type == BackupType.AUTOMATED)
+        if (type == BackupType.ROLLBACK)
             return this.maxBackups.get();
         return getMaxMaxBackups(type);
     }

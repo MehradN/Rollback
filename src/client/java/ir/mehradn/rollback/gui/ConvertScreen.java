@@ -27,7 +27,7 @@ public class ConvertScreen extends Screen {
 
         this.allowedTypes = new ArrayList<>();
         for (BackupType type : BackupType.values())
-            if (type.convertTo && type != currentType)
+            if (type.creation && type != currentType)
                 this.allowedTypes.add(type);
     }
 
@@ -37,9 +37,9 @@ public class ConvertScreen extends Screen {
             .withValues(this.allowedTypes)
             .create(this.width / 2 - 100, this.height / 2 - 22, 200, 20,
                 Component.translatable("rollback.screen.text.newType")));
-        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, this::onDone)
-            .bounds(this.width / 2 - 100, this.height / 2 + 2, 98, 20).build());
         addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, this::onCancel)
+            .bounds(this.width / 2 - 100, this.height / 2 + 2, 98, 20).build());
+        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, this::onDone)
             .bounds(this.width / 2 + 2, this.height / 2 + 2, 98, 20).build());
     }
 

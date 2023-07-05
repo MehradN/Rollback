@@ -67,7 +67,7 @@ public class NetworkBackupManager implements BackupManager {
 
     @Override
     public void createBackup(BackupType type, @Nullable String name) {
-        if (name == null || (!type.list || name.isBlank()))
+        if (name == null || (!type.listing || name.isBlank()))
             name = "";
         Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
 
@@ -77,14 +77,14 @@ public class NetworkBackupManager implements BackupManager {
 
     @Override
     public void deleteBackup(int backupID, BackupType type) {
-        Assertion.argument(type.manualDeletion, "Invalid type");
+        Assertion.argument(type.deletion, "Invalid type");
         this.state = State.ACTION;
         ClientPlayNetworking.send(new DeleteBackup(this.lastUpdateId, backupID, type));
     }
 
     @Override
     public void renameBackup(int backupID, BackupType type, @Nullable String name) {
-        Assertion.argument(type.list, "Invalid type");
+        Assertion.argument(type.listing, "Invalid type");
         if (name == null || name.isBlank())
             name = "";
         Assertion.argument(name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
@@ -95,14 +95,14 @@ public class NetworkBackupManager implements BackupManager {
 
     @Override
     public void convertBackup(int backupID, BackupType from, BackupType to) {
-        Assertion.argument(from.convertFrom && to.convertTo && from != to, "Invalid types!");
+        Assertion.argument(from.listing && to.creation && from != to, "Invalid types!");
         this.state = State.ACTION;
         ClientPlayNetworking.send(new ConvertBackup(this.lastUpdateId, backupID, from, to));
     }
 
     @Override
     public void rollbackToBackup(int backupID, BackupType type) {
-        Assertion.argument(type.rollback, "Invalid type");
+        Assertion.argument(type.listing, "Invalid type");
         this.state = State.ACTION;
         ClientPlayNetworking.send(new RollbackBackup(this.lastUpdateId, backupID, type));
     }

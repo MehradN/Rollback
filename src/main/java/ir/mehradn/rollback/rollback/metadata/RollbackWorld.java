@@ -19,17 +19,17 @@ public class RollbackWorld implements RollbackMetadata {
     @SerializedName("backups") public Map<Integer, RollbackBackup> commandBackups = new HashMap<>();
 
     public RollbackBackup getBackup(int backupID, BackupType type) {
-        Assertion.argument(type.list, "Invalid type!");
+        Assertion.argument(type.listing, "Invalid type!");
         Map<Integer, RollbackBackup> backups = getBackups(type);
         Assertion.argument(backups.containsKey(backupID), "Invalid backupID!");
         return backups.get(backupID);
     }
 
     public Map<Integer, RollbackBackup> getBackups(BackupType type) {
-        Assertion.argument(type.list, "Invalid type!");
+        Assertion.argument(type.listing, "Invalid type!");
         return switch (type) {
-            case AUTOMATED -> this.automatedBackups;
-            case COMMAND -> this.commandBackups;
+            case ROLLBACK -> this.automatedBackups;
+            case BACKUP -> this.commandBackups;
             default -> new HashMap<>();
         };
     }

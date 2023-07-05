@@ -72,9 +72,9 @@ public abstract class CommonBackupManager implements BackupManager {
         Set<Integer> automatedIDs = this.world.automatedBackups.keySet();
         Set<Integer> commandIDs = this.world.commandBackups.keySet();
         while (!automatedIDs.isEmpty())
-            deleteBackup(automatedIDs.iterator().next(), BackupType.AUTOMATED);
+            deleteBackup(automatedIDs.iterator().next(), BackupType.ROLLBACK);
         while (!commandIDs.isEmpty())
-            deleteBackup(commandIDs.iterator().next(), BackupType.COMMAND);
+            deleteBackup(commandIDs.iterator().next(), BackupType.BACKUP);
 
         this.data.worlds.remove(levelID);
         saveWorld();
@@ -130,13 +130,14 @@ public abstract class CommonBackupManager implements BackupManager {
     @Override
     public void createBackup(BackupType type, @Nullable String name) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        if (name != null && (!type.list || name.isBlank()))
+        Assertion.state(type.creation, "Invalid Type!");
+        if (name != null && (!type.listing || name.isBlank()))
             name = null;
-        Assertion.argument(name == null || name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
+        Assertion.argument(name == null || name.length() <= MAX_NAME_LENGTH, "Backup name is too long!");
         Rollback.LOGGER.info("Creating a {} backup...", type);
         String levelID = getLevelID();
 
-        if (type.automatedDeletion) {
+        if (type.deletion) {
             Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
             while (backups.size() >= this.world.config.getMaxBackupsForType(type))
                 deleteBackup(Collections.min(backups.keySet()), type);
@@ -158,7 +159,7 @@ public abstract class CommonBackupManager implements BackupManager {
             throw showError("rollback.error.backupCreation", "Failed to create a backup!", e);
         }
 
-        if (!type.list) {
+        if (!type.listing) {
             broadcastSuccessfulBackup(type, backupInfo.size());
             return;
         }
@@ -200,7 +201,7 @@ public abstract class CommonBackupManager implements BackupManager {
     @Override
     public void deleteBackup(int backupID, BackupType type) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        Assertion.argument(type.automatedDeletion, "Invalid type!");
+        Assertion.argument(type.deletion, "Invalid type!");
         Rollback.LOGGER.info("Deleting the backup #{} type {}...", backupID, type);
         Map<Integer, RollbackBackup> backups = this.world.getBackups(type);
         RollbackBackup backup = this.world.getBackup(backupID, type);
@@ -223,7 +224,7 @@ public abstract class CommonBackupManager implements BackupManager {
     @Override
     public void renameBackup(int backupID, BackupType type, @Nullable String name) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        Assertion.argument(type.list, "Invalid type");
+        Assertion.argument(type.listing, "Invalid type");
         if (name != null && name.isBlank())
             name = null;
         Assertion.argument(name != null && name.length() <= MAX_NAME_LENGTH, "Backup name is too long");
@@ -237,7 +238,7 @@ public abstract class CommonBackupManager implements BackupManager {
     @Override
     public void convertBackup(int backupID, BackupType from, BackupType to) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        Assertion.argument(from.convertFrom && to.convertTo && from != to, "Invalid types!");
+        Assertion.argument(from.listing && to.creation && from != to, "Invalid types!");
         Rollback.LOGGER.info("Converting the backup #{} from {} to {}", backupID, from, to);
         RollbackBackup backup = this.world.getBackup(backupID, from);
 
@@ -266,7 +267,7 @@ public abstract class CommonBackupManager implements BackupManager {
 
         Rollback.LOGGER.debug("Updating the metadata,,,");
         this.world.getBackups(from).remove(backupID);
-        if (to.list) {
+        if (to.listing) {
             int id = ++this.world.lastID;
             this.world.getBackups(to).put(id, backup);
         }
@@ -317,7 +318,7 @@ public abstract class CommonBackupManager implements BackupManager {
 
     protected void extractBackup(int backupID, BackupType type) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        Assertion.argument(type.rollback, "Invalid type!");
+        Assertion.argument(type.listing, "Invalid type!");
         RollbackBackup backup = this.world.getBackup(backupID, type);
         Rollback.LOGGER.debug("Extracting the backup \"{}\"...", backup.backupPath.toString());
 

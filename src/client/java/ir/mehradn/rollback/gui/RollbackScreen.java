@@ -35,8 +35,8 @@ public class RollbackScreen extends Screen {
 
     @Override
     public void init() {
-        this.automatedTab = new BackupListTab(this, BackupType.AUTOMATED, "rollback.screen.tab.automated");
-        this.commandTab = new BackupListTab(this, BackupType.COMMAND, "rollback.screen.tab.command");
+        this.automatedTab = new BackupListTab(this, BackupType.ROLLBACK, "rollback.screen.tab.rollback");
+        this.commandTab = new BackupListTab(this, BackupType.BACKUP, "rollback.screen.tab.backup");
         setEntrySelected(false, false);
 
         this.navigationBar = TabNavigationBar.builder(this.tabManager, this.width)

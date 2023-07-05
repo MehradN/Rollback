@@ -28,9 +28,9 @@ public final class RollbackCommand {
             dispatcher.register(Commands.literal("rollback")
                 .requires(RollbackCommand::hasRequirements)
                 .then(Commands.literal("create")
-                    .executes((ctx) -> createBackup(ctx, null, BackupType.COMMAND))
+                    .executes((ctx) -> createBackup(ctx, null, BackupType.BACKUP))
                     .then(Commands.argument("name", StringArgumentType.greedyString())
-                        .executes((ctx) -> createBackup(ctx, StringArgumentType.getString(ctx, "name"), BackupType.COMMAND))))
+                        .executes((ctx) -> createBackup(ctx, StringArgumentType.getString(ctx, "name"), BackupType.BACKUP))))
                 .then(Commands.literal("create-manual")
                     .executes((ctx) -> createBackup(ctx, null, BackupType.MANUAL)))
                 .then(Commands.literal("gui")
@@ -44,7 +44,7 @@ public final class RollbackCommand {
     }
 
     private static int createBackup(CommandContext<CommandSourceStack> context, String name, BackupType type) throws CommandSyntaxException {
-        if (name != null && (!type.list || name.isBlank()))
+        if (name != null && (!type.listing || name.isBlank()))
             name = null;
         if (name != null && name.length() > BackupManager.MAX_NAME_LENGTH)
             throw new SimpleCommandExceptionType(Component.translatable("rollback.command.nameTooLong", BackupManager.MAX_NAME_LENGTH)).create();

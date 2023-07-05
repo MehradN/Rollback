@@ -210,14 +210,14 @@ public class ServerBackupManager extends CommonBackupManager {
 
     private long totalBackupSize() {
         long sum = 0;
-        for (RollbackBackup backup : getWorld().getBackups(BackupType.COMMAND).values())
+        for (RollbackBackup backup : getWorld().getBackups(BackupType.BACKUP).values())
             if (backup.fileSize > 0)
                 sum += backup.fileSize;
         return sum;
     }
 
     private void backupWarning() {
-        int count = getWorld().getBackups(BackupType.COMMAND).size();
+        int count = getWorld().getBackups(BackupType.BACKUP).size();
         if (!shouldSendBackupWarning(count))
             return;
 

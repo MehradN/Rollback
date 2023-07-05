@@ -76,15 +76,15 @@ public final class ClientPacketListener {
     private static void onSuccessfulBackup(SuccessfulBackup packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
             Minecraft.getInstance(),
-            Component.translatable("rollback.toast.successfulBackup.title"),
-            Component.translatable("rollback.toast.successfulBackup.info", packet.type.toComponent(), Utils.fileSizeToString(packet.fileSize))
+            Component.translatable("rollback.toast.title.successfulBackup." + packet.type),
+            Component.translatable("rollback.toast.info.successfulBackup", Utils.fileSizeToString(packet.fileSize))
         );
     }
 
     private static void onSuccessfulConfig(SuccessfulConfig packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
             Minecraft.getInstance(),
-            Component.translatable("rollback.toast.successfulConfig." + (packet.defaultConfig ? "default" : "world")),
+            Component.translatable("rollback.toast.title.successfulConfig." + (packet.defaultConfig ? "default" : "world")),
             Component.empty()
         );
     }
@@ -92,24 +92,24 @@ public final class ClientPacketListener {
     private static void onSuccessfulConvert(SuccessfulConvert packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
             Minecraft.getInstance(),
-            Component.translatable("rollback.toast.successfulConvert.title"),
-            Component.translatable("rollback.toast.successfulConvert.info", packet.backupId, packet.from.toComponent(), packet.to.toComponent())
+            Component.translatable("rollback.toast.title.successfulConvert." + packet.from),
+            Component.translatable("rollback.toast.info.successfulConvert", packet.backupId, packet.from.toComponent(), packet.to.toComponent())
         );
     }
 
     private static void onSuccessfulDelete(SuccessfulDelete packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
             Minecraft.getInstance(),
-            Component.translatable("rollback.toast.successfulDelete.title"),
-            Component.translatable("rollback.toast.successfulDelete.info", packet.type.toComponent(), packet.backupId)
+            Component.translatable("rollback.toast.title.successfulDelete"),
+            Component.translatable("rollback.toast.info.successfulDelete", packet.type.toComponent(), packet.backupId)
         );
     }
 
     private static void onSuccessfulRename(SuccessfulRename packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
             Minecraft.getInstance(),
-            Component.translatable("rollback.toast.successfulRename.title"),
-            Component.translatable("rollback.toast.successfulRename.info", packet.type.toComponent(), packet.backupId)
+            Component.translatable("rollback.toast.title.successfulRename"),
+            Component.translatable("rollback.toast.info.successfulRename", packet.type.toComponent(), packet.backupId)
         );
     }
 

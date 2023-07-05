@@ -34,9 +34,9 @@ public class NameScreen extends Screen {
         this.nameEdit.setValue(this.currentName);
         this.nameEdit.setResponder(this::updateDoneButtonStatus);
         addWidget(this.nameEdit);
-        this.doneButton = addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, this::onDone)
-            .bounds(this.width / 2 - 101, this.height / 2 + 4, 99, 20).build());
         addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, this::onCancel)
+            .bounds(this.width / 2 - 101, this.height / 2 + 4, 99, 20).build());
+        this.doneButton = addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, this::onDone)
             .bounds(this.width / 2 + 2, this.height / 2 + 4, 99, 20).build());
         this.updateDoneButtonStatus(this.currentName);
     }

@@ -45,7 +45,7 @@ public class WorldConfigScreen extends ResettableConfigScreen {
         super.init();
         int width = this.properties.buttonWidth().get(this.width, this.height, this.font) * 2 + 4;
         this.saveAsDefaultButton = addRenderableWidget(Button.builder(
-                Component.translatable("rollback.screen.button.saveAsDefault"),
+                Component.translatable("rollback.configScreen.button.saveAsDefault"),
                 this::saveAsDefault)
             .bounds((this.width - width) / 2, this.height - 59, width, 20).build());
     }
@@ -68,8 +68,8 @@ public class WorldConfigScreen extends ResettableConfigScreen {
         Assertion.runtime(this.minecraft != null);
         final WorldConfigScreen thisScreen = this;
         this.minecraft.setScreen(new ScreenManager.DirtConfirmScreen(
-            Component.translatable("rollback.screen.saveAsDefaultQuestion"),
-            Component.translatable("rollback.screen.saveAsDefaultWarning"),
+            Component.translatable("rollback.confirm.title.saveAsDefault"),
+            Component.translatable("rollback.confirm.info.saveAsDefault"),
             (confirmed) -> {
                 if (confirmed) {
                     thisScreen.savingAsDefault = true;

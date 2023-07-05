@@ -31,7 +31,7 @@ public class BackupListTab implements Tab {
         this.screen = screen;
         this.title = Component.translatable(title);
 
-        this.rollbackButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rollback"),
+        this.rollbackButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.rollback." + backupType.toString()),
             onClick(BackupSelectionList.Entry::playEntry)).size(152, 20).build());
         this.convertButton = addWidget(Button.builder(Component.translatable("rollback.screen.button.convert"),
             onClick(BackupSelectionList.Entry::convertEntry)).size(152, 20).build());

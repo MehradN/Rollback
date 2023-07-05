@@ -99,7 +99,7 @@ public class ScreenManager {
 
     public void loadMetadata() {
         try {
-            setMessageScreen(Component.translatable("rollback.screen.message.loading"));
+            setMessageScreen(Component.translatable("rollback.message.loading"));
             this.backupManager.loadWorld();
         } catch (BackupManagerException e) {
             Rollback.LOGGER.error("Failed to load the metadata!", e);
@@ -116,8 +116,8 @@ public class ScreenManager {
                 if (!submitted)
                     return;
                 try {
-                    setMessageScreen(Component.translatable("rollback.screen.message.creating"));
-                    this.backupManager.createBackup(BackupType.COMMAND, name);
+                    setMessageScreen(Component.translatable("rollback.message.creating"));
+                    this.backupManager.createBackup(BackupType.BACKUP, name);
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to create a new manual backup!", e);
                 }
@@ -127,7 +127,7 @@ public class ScreenManager {
 
     public void createManualBackup() {
         try {
-            setMessageScreen(Component.translatable("rollback.screen.message.creating"));
+            setMessageScreen(Component.translatable("rollback.message.creating"));
             this.backupManager.createBackup(BackupType.MANUAL, null);
         } catch (BackupManagerException e) {
             Rollback.LOGGER.error("Failed to create a new manual backup!", e);
@@ -137,14 +137,14 @@ public class ScreenManager {
     public void deleteBackup(int backupID, BackupType type) {
         this.onInputScreen = true;
         this.minecraft.setScreen(new DirtConfirmScreen(
-            Component.translatable("rollback.screen.deleteQuestion"),
+            Component.translatable("rollback.confirm.title.delete." + type),
             Component.empty(),
             (confirmed) -> {
                 this.onInputScreen = false;
                 if (!confirmed)
                     return;
                 try {
-                    setMessageScreen(Component.translatable("rollback.screen.message.deleting"));
+                    setMessageScreen(Component.translatable("rollback.message.deleting." + type));
                     this.backupManager.deleteBackup(backupID, type);
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to delete the backup!", e);
@@ -163,7 +163,7 @@ public class ScreenManager {
                 if (!submitted)
                     return;
                 try {
-                    setMessageScreen(Component.translatable("rollback.screen.message.renaming"));
+                    setMessageScreen(Component.translatable("rollback.message.renaming." + type));
                     this.backupManager.renameBackup(backupID, type, name);
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to rename the backup!", e);
@@ -180,7 +180,7 @@ public class ScreenManager {
                 if (!converted)
                     return;
                 try {
-                    setMessageScreen(Component.translatable("rollback.screen.message.converting"));
+                    setMessageScreen(Component.translatable("rollback.message.converting." + from));
                     this.backupManager.convertBackup(backupID, from, to);
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to convert the backup!", e);
@@ -192,14 +192,14 @@ public class ScreenManager {
     public void rollbackToBackup(int backupID, BackupType type) {
         this.onInputScreen = true;
         this.minecraft.setScreen(new DirtConfirmScreen(
-            Component.translatable("rollback.screen.rollbackQuestion"),
-            Component.translatable("rollback.screen.rollbackWarning"),
+            Component.translatable("rollback.confirm.title.rollback." + type),
+            Component.translatable("rollback.confirm.info.rollback"),
             (confirmed) -> {
                 this.onInputScreen = false;
                 if (!confirmed)
                     return;
                 try {
-                    setMessageScreen(Component.translatable("rollback.screen.message.rolling"));
+                    setMessageScreen(Component.translatable("rollback.message.rolling"));
                     this.backupManager.rollbackToBackup(backupID, type);
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to rollback to the backup!", e);
@@ -218,7 +218,7 @@ public class ScreenManager {
 
     public void saveConfig() {
         try {
-            setMessageScreen(Component.translatable("rollback.screen.message.savingConfig"));
+            setMessageScreen(Component.translatable("rollback.message.savingConfig"));
             this.backupManager.saveConfig();
         } catch (BackupManagerException e) {
             Rollback.LOGGER.error("Failed to save the config!", e);
@@ -227,7 +227,7 @@ public class ScreenManager {
 
     public void saveConfigAsDefault() {
         try {
-            setMessageScreen(Component.translatable("rollback.screen.message.savingConfig"));
+            setMessageScreen(Component.translatable("rollback.message.savingConfig"));
             this.backupManager.saveConfigAsDefault();
         } catch (BackupManagerException e) {
             Rollback.LOGGER.error("Failed to save the config as default!", e);
@@ -261,12 +261,12 @@ public class ScreenManager {
     }
 
     public void onWarning(int count, long size) {
-        MutableComponent title = Component.translatable("rollback.screen.backupWarning.title", count, Utils.fileSizeToString(size))
+        MutableComponent title = Component.translatable("rollback.confirm.title.backupLimit", count, Utils.fileSizeToString(size))
             .withStyle(ChatFormatting.YELLOW);
         MutableComponent info = Component.empty();
         if (count >= 90)
-            info.append(Component.translatable("rollback.screen.backupWarning.info.1", 99));
-        info.append(Component.translatable("rollback.screen.backupWarning.info.2"))
+            info.append(Component.translatable("rollback.confirm.info.backupLimit.1", 99));
+        info.append(Component.translatable("rollback.confirm.info.backupLimit.2"))
             .withStyle(ChatFormatting.YELLOW);
 
         this.onInputScreen = true;
