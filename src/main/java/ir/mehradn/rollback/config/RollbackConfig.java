@@ -1,27 +1,40 @@
 package ir.mehradn.rollback.config;
 
-import com.google.gson.*;
+import ir.mehradn.mehradconfig.MehradConfig;
+import ir.mehradn.mehradconfig.entry.ConfigEntry;
+import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.BackupType;
-import ir.mehradn.rollback.util.Utils;
-import net.minecraft.network.FriendlyByteBuf;
-import org.jetbrains.annotations.Nullable;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
-public abstract class RollbackConfig {
+public abstract class RollbackConfig extends MehradConfig {
     protected static final short MAX_AUTOMATED = 10;
     protected static final short MAX_COMMAND = 99;
     protected static final short MAX_FREQUENCY = 100;
     public final ConfigEntry<Boolean> backupEnabled;
-    public final ConfigEntry<Short> maxBackups;
-    public final ConfigEntry<Short> backupFrequency;
+    public final ConfigEntry<Integer> maxBackups;
+    public final ConfigEntry<Integer> backupFrequency;
     public final ConfigEntry<TimerMode> timerMode;
     protected List<ConfigEntry<?>> entries;
+    private final Supplier<RollbackConfig> constructor;
     private boolean locked = false;
 
-    protected RollbackConfig(ConfigEntry<Boolean> backupEnabled, ConfigEntry<Short> maxBackups, ConfigEntry<Short> backupFrequency,
-                             ConfigEntry<TimerMode> timerMode) {
+    protected RollbackConfig(Supplier<RollbackConfig> constructor, ConfigEntry<Boolean> backupEnabled, ConfigEntry<Integer> maxBackups,
+                             ConfigEntry<Integer> backupFrequency, ConfigEntry<TimerMode> timerMode) {
+        super(Rollback.MOD_ID);
+        this.constructor = constructor;
+        this.backupEnabled = backupEnabled;
+        this.maxBackups = maxBackups;
+        this.backupFrequency = backupFrequency;
+        this.timerMode = timerMode;
+        this.entries = new ArrayList<>(List.of(this.backupEnabled, this.maxBackups, this.backupFrequency, this.timerMode));
+    }
+
+    protected RollbackConfig(String name, Supplier<RollbackConfig> constructor, ConfigEntry<Boolean> backupEnabled, ConfigEntry<Integer> maxBackups,
+                             ConfigEntry<Integer> backupFrequency, ConfigEntry<TimerMode> timerMode) {
+        super(Rollback.MOD_ID, name);
+        this.constructor = constructor;
         this.backupEnabled = backupEnabled;
         this.maxBackups = maxBackups;
         this.backupFrequency = backupFrequency;
@@ -41,25 +54,7 @@ public abstract class RollbackConfig {
         return getMaxMaxBackups(type);
     }
 
-    public void reset() {
-        for (ConfigEntry<?> entry : this.getEntries())
-            entry.reset();
-    }
-
-    public void mergeFrom(RollbackConfig config) {
-        this.backupEnabled.mergeFrom(config.backupEnabled);
-        this.maxBackups.mergeFrom(config.maxBackups);
-        this.backupFrequency.mergeFrom(config.backupFrequency);
-        this.timerMode.mergeFrom(config.timerMode);
-    }
-
-    public void copyFrom(RollbackConfig config) {
-        this.backupEnabled.copyFrom(config.backupEnabled);
-        this.maxBackups.copyFrom(config.maxBackups);
-        this.backupFrequency.copyFrom(config.backupFrequency);
-        this.timerMode.copyFrom(config.timerMode);
-    }
-
+    @Override
     public List<ConfigEntry<?>> getEntries() {
         if (!this.locked) {
             this.entries = List.copyOf(this.entries);
@@ -68,44 +63,9 @@ public abstract class RollbackConfig {
         return this.entries;
     }
 
-    protected void writeToBuf(FriendlyByteBuf buf) {
-        int size = this.getEntries().size();
-        boolean[] c = new boolean[size];
-
-        for (int i = 0; i < size; i++)
-            c[i] = this.getEntries().get(i).hasValue();
-        Utils.writeBooleanArray(buf, c);
-
-        for (int i = 0; i < size; i++)
-            if (c[i])
-                getEntries().get(i).writeToBuf(buf);
-    }
-
-    protected void readFromBuf(FriendlyByteBuf buf) {
-        int size = this.getEntries().size();
-        boolean[] c = Utils.readBooleanArray(buf, size);
-
-        for (int i = 0; i < size; i++)
-            if (c[i])
-                getEntries().get(i).readFromBuf(buf);
-    }
-
-    protected JsonObject toJson() {
-        JsonObject json = new JsonObject();
-        for (ConfigEntry<?> entry : this.getEntries())
-            if (entry.hasValue())
-                json.add(entry.name, entry.toJson());
-        return json;
-    }
-
-    protected void fromJson(JsonObject json) {
-        for (ConfigEntry<?> entry : this.getEntries()) {
-            JsonElement obj = json.get(entry.name);
-            if (obj == null)
-                entry.reset();
-            else
-                entry.fromJson(obj);
-        }
+    @Override
+    public MehradConfig createNewInstance() {
+        return this.constructor.get();
     }
 
     public enum TimerMode {
@@ -119,30 +79,6 @@ public abstract class RollbackConfig {
 
         public String toString() {
             return this.id;
-        }
-    }
-
-    public static class Adapter <T extends RollbackConfig> implements JsonSerializer<T>, JsonDeserializer<T> {
-        private final Class<T> type;
-
-        public Adapter(Class<T> type) {
-            this.type = type;
-        }
-
-        @Override @Nullable
-        public T deserialize(JsonElement json, Type type, JsonDeserializationContext context) throws JsonParseException {
-            try {
-                T config = this.type.getDeclaredConstructor().newInstance();
-                config.fromJson(json.getAsJsonObject());
-                return config;
-            } catch (ReflectiveOperationException e) {
-                return null;
-            }
-        }
-
-        @Override
-        public JsonElement serialize(T object, Type type, JsonSerializationContext context) {
-            return object.toJson();
         }
     }
 }

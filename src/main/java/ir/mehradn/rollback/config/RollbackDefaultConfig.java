@@ -1,72 +1,40 @@
 package ir.mehradn.rollback.config;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import ir.mehradn.rollback.Rollback;
-import net.fabricmc.loader.api.FabricLoader;
+import ir.mehradn.mehradconfig.entry.BooleanEntry;
+import ir.mehradn.mehradconfig.entry.EnumEntry;
+import ir.mehradn.mehradconfig.entry.NumberEntry;
 import net.minecraft.server.level.ServerPlayer;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 
 public class RollbackDefaultConfig extends RollbackConfig {
-    private static final Gson GSON = new GsonBuilder()
-        .registerTypeAdapter(RollbackDefaultConfig.class, new Adapter<>(RollbackDefaultConfig.class))
-        .setPrettyPrinting().create();
-    // ConfigEntry.Boolean("backupEnabled", false)
-    // ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5)
-    // ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1)
-    // ConfigEntry.Enum<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
+    // BooleanEntry("backupEnabled", false)
+    // NumberEntry("maxBackups", 1, MAX_AUTOMATED, 5)
+    // NumberEntry("backupFrequency", 1, MAX_FREQUENCY, 1)
+    // EnumEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
 
     public RollbackDefaultConfig() {
+        this(RollbackDefaultConfig::new);
+    }
+
+    protected RollbackDefaultConfig(Supplier<RollbackConfig> constructor) {
         super(
-            new ConfigEntry.Boolean("backupEnabled", false),
-            new ConfigEntry.Short("maxBackups", (short)1, MAX_AUTOMATED, (short)5),
-            new ConfigEntry.Short("backupFrequency", (short)1, MAX_FREQUENCY, (short)1),
-            new ConfigEntry.Enum<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
+            constructor,
+            new BooleanEntry("backupEnabled", false),
+            new NumberEntry("maxBackups", 1, MAX_AUTOMATED, 5),
+            new NumberEntry("backupFrequency", 1, MAX_FREQUENCY, 1),
+            new EnumEntry<>("timerMode", TimerMode.class, TimerMode.DAYLIGHT_CYCLE)
         );
-    }
-
-    public static RollbackDefaultConfig load() {
-        return load(GSON, RollbackDefaultConfig.class, RollbackDefaultConfig::new);
-    }
-
-    public void save() throws IOException {
-        Path configDir = FabricLoader.getInstance().getConfigDir();
-        Path configFile = configDir.resolve(Rollback.MOD_ID + ".json");
-        try {
-            Files.createDirectories(configDir);
-            try (FileWriter writer = new FileWriter(configFile.toFile())) {
-                getGson().toJson(this, writer);
-            }
-        } catch (IOException e) {
-            Rollback.LOGGER.error("Failed to save the config file!", e);
-            throw e;
-        }
     }
 
     public boolean hasCommandPermission(ServerPlayer player) {
         return player.hasPermissions(4);
     }
 
-    protected static <T extends RollbackDefaultConfig> T load(Gson gson, Class<T> type, Supplier<T> constructor) {
-        Path configFile = FabricLoader.getInstance().getConfigDir().resolve(Rollback.MOD_ID + ".json");
-        try (FileReader reader = new FileReader(configFile.toFile())) {
-            JsonObject json = GSON.fromJson(reader, JsonObject.class);
-            ConfigUpdater configUpdater = new ConfigUpdater(json);
-            configUpdater.update();
-            return gson.fromJson(json, type);
-        } catch (IOException e) {
-            Rollback.LOGGER.warn("Failed to load the config file!", e);
-            return constructor.get();
-        }
-    }
-
-    protected Gson getGson() {
-        return GSON;
+    @Override
+    public void fromJson(JsonObject json) {
+        ConfigUpdater configUpdater = new ConfigUpdater(json);
+        configUpdater.update();
+        super.fromJson(json);
     }
 }

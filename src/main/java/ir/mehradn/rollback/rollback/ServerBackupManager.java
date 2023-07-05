@@ -1,6 +1,6 @@
 package ir.mehradn.rollback.rollback;
 
-import ir.mehradn.rollback.config.ConfigEntry;
+import ir.mehradn.mehradconfig.entry.ConfigEntry;
 import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
@@ -51,12 +51,12 @@ public class ServerBackupManager extends CommonBackupManager {
     }
 
     public void saveToConfig(RollbackWorldConfig config) throws BackupManagerException {
-        this.getWorld().config.copyFrom(config);
+        config.copyTo(this.getWorld().config);
         saveConfig();
     }
 
     public void saveToDefaultConfig(RollbackWorldConfig config) throws BackupManagerException {
-        this.getWorld().config.copyFrom(config);
+        config.copyTo(this.getWorld().config);
         saveConfigAsDefault();
     }
 
@@ -193,7 +193,7 @@ public class ServerBackupManager extends CommonBackupManager {
         RollbackConfig config = (defaultConfig ? getDefaultConfig() : getWorld().config);
         MutableComponent text = Component.translatable("rollback.success.updateConfig." + (defaultConfig ? "default" : "world"));
         for (ConfigEntry<?> entry : config.getEntries())
-            text.append("\n" + entry.name + " = " + entry.get().toString());
+            text.append("\n" + entry.getName() + " = " + entry.get().toString());
         this.server.sendSystemMessage(text);
         broadcast(new SuccessfulConfig(defaultConfig));
     }

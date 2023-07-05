@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.gui.config.WorldConfigScreen;
 import ir.mehradn.rollback.network.packets.TakeScreenshot;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
@@ -211,9 +210,8 @@ public class ScreenManager {
 
     public void openConfig() {
         this.onInputScreen = true;
-        this.minecraft.setScreen(new WorldConfigScreen(
+        this.minecraft.setScreen(WorldConfigScreen.build(
             this.backupManager.getWorld().config,
-            this.backupManager,
             () -> this.onInputScreen = false
         ));
     }

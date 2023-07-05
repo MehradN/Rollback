@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import ir.mehradn.rollback.Rollback;
-import ir.mehradn.rollback.config.RollbackConfig;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
@@ -31,7 +30,7 @@ public abstract class CommonBackupManager implements BackupManager {
         .registerTypeHierarchyAdapter(Path.class, new PathAdapter())
         .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
         .registerTypeAdapter(RollbackVersion.class, new RollbackVersion.Adapter())
-        .registerTypeAdapter(RollbackWorldConfig.class, new RollbackConfig.Adapter<>(RollbackWorldConfig.class))
+        .registerTypeAdapter(RollbackWorldConfig.class, new RollbackWorldConfig.Adapter())
         .create();
     private final RollbackDefaultConfig defaultConfig;
     @Nullable private RollbackData data = null;
@@ -285,7 +284,7 @@ public abstract class CommonBackupManager implements BackupManager {
     @Override
     public void saveConfigAsDefault() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        this.defaultConfig.mergeFrom(this.world.config);
+        this.world.config.mergeTo(this.defaultConfig);
         this.world.config.reset();
         try {
             saveWorld();

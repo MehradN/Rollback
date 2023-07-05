@@ -12,15 +12,11 @@ base {
 
 repositories {
 	maven {
-		name = 'ParchmentMC'
-		url = 'https://maven.parchmentmc.org'
+		name 'ParchmentMC'
+		url 'https://maven.parchmentmc.org'
 	}
-	maven {
-		url = 'https://jitpack.io'
-	}
-	maven {
-		url = 'https://maven.nucleoid.xyz'
-	}
+	maven { url 'https://jitpack.io' }
+	maven { url 'https://maven.nucleoid.xyz' }
 }
 
 loom {
@@ -53,6 +49,7 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	modImplementation include("xyz.nucleoid:server-translations-api:${project.translation_version}")
+	modImplementation include("com.github.MehradN:MehradConfig:${project.mehradconfig_version}")
 }
 
 processResources {
