@@ -280,9 +280,14 @@ public class ScreenManager {
         ));
     }
 
-    // TODO: Implement this
     public void onNotMatchingVersions() {
-
+        this.onInputScreen = true;
+        Rollback.LOGGER.error("You and the server are using incompatible versions! Please update the mod on your client and the server.");
+        this.minecraft.forceSetScreen(new DirtErrorScreen(
+            Component.translatable("rollback.confirm.title.incompatibleVersion").withStyle(ChatFormatting.RED),
+            Component.translatable("rollback.confirm.info.incompatibleVersion").withStyle(ChatFormatting.RED),
+            ScreenManager::deactivate
+        ));
     }
 
     public void onTick() {

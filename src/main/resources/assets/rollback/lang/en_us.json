@@ -62,6 +62,8 @@
   "rollback.confirm.title.backupLimit": "You have created %d backups! (Total file size of %s)",
   "rollback.confirm.info.backupLimit.1": "Backups will start to get automatically deleted\nonce you have more than %d of them.\n",
   "rollback.confirm.info.backupLimit.2": "Please consider deleting/converting some of them.",
+  "rollback.confirm.title.incompatibleVersion": "You and the server are using incompatible versions!",
+  "rollback.confirm.info.incompatibleVersion": "Please update the mod on your client and the server.",
   "rollback.mehrad-config.screenTitle.rollback": "Rollback Default Options",
   "rollback.mehrad-config.screenTitle.rollbackWorldOptions": "Rollback World Options",
   "rollback.mehrad-config.title.backupEnabled": "Automated Backups",
