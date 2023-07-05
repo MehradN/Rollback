@@ -3,12 +3,14 @@ package ir.mehradn.rollback.gui;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.Rollback;
+import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.packets.TakeScreenshot;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.util.Utils;
 import ir.mehradn.rollback.util.mixin.GameRendererExpanded;
+import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -21,12 +23,16 @@ import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.storage.LevelStorageSource;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class ScreenManager {
@@ -303,14 +309,51 @@ public class ScreenManager {
 
     // TODO: Implement rest of this
     public Component currentSaveLastPlayed() {
-        if (this.minecraft.level != null)
+        if (isInGame(this.minecraft))
             return Component.translatable("rollback.screen.text.playingNow");
         return Component.empty();
     }
 
-    // TODO: Implement this
+    // TODO: Implement rest of this
     public @Nullable NativeImage loadCurrentSaveIcon() {
-        return null;
+        if (isInGame(this.minecraft)) {
+            if (this.minecraft.hasSingleplayerServer()) {
+                MinecraftServerExpanded server = (MinecraftServerExpanded)this.minecraft.getSingleplayerServer();
+                Assertion.runtime(server != null);
+                Optional<Path> optional = server.getLevelStorageAccess().getIconFile();
+                if (optional.isEmpty())
+                    return null;
+
+                Path path = optional.get();
+                if (!Files.isRegularFile(path))
+                    return null;
+
+                Rollback.LOGGER.debug("Loading the world icon...");
+                try (InputStream inputStream = Files.newInputStream(path)) {
+                    return NativeImage.read(inputStream);
+                } catch (IOException e) {
+                    Rollback.LOGGER.error("Failed to load the world icon!", e);
+                    return null;
+                }
+            } else {
+                ServerData data = this.minecraft.getCurrentServer();
+                if (data == null)
+                    return null;
+                byte[] icon = data.getIconBytes();
+                if (icon == null)
+                    return null;
+
+                Rollback.LOGGER.debug("Loading the server icon...");
+                try {
+                    return NativeImage.read(icon);
+                } catch (IOException e) {
+                    Rollback.LOGGER.error("Failed to load the server icon!", e);
+                    return null;
+                }
+            }
+        } else {
+            return null;
+        }
     }
 
     // TODO: Implement rest of this
