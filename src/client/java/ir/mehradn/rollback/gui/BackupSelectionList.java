@@ -194,8 +194,11 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
 
     @Environment(EnvType.CLIENT)
     public class CurrentSaveEntry extends Entry {
+        private final Component lastPlayed;
+
         public CurrentSaveEntry() {
             super("backup_selection_list/current_save.png");
+            this.lastPlayed = this.screenManager.currentSaveLastPlayed();
             buildIconTexture();
         }
 
@@ -204,7 +207,7 @@ public class BackupSelectionList extends ObjectSelectionList<BackupSelectionList
                            int mouseX, int mouseY, boolean isMouseOver, float partialTick) {
             super.render(
                 Component.translatable("rollback.screen.text.currentSave"),
-                this.screenManager.currentSaveLastPlayed(),
+                this.lastPlayed,
                 Component.empty(),
                 poseStack, top, left, mouseX, isMouseOver
             );

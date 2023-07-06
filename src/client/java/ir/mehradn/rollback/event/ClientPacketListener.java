@@ -3,6 +3,7 @@ package ir.mehradn.rollback.event;
 import ir.mehradn.rollback.gui.ScreenManager;
 import ir.mehradn.rollback.network.packets.*;
 import ir.mehradn.rollback.rollback.NetworkBackupManager;
+import ir.mehradn.rollback.util.RollbackScreenCallback;
 import ir.mehradn.rollback.util.Utils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -55,7 +56,12 @@ public final class ClientPacketListener {
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.setScreen(null);
         minecraft.pauseGame(false);
-        ScreenManager.activate(minecraft, new NetworkBackupManager(minecraft));
+        ScreenManager.activate(minecraft, new NetworkBackupManager(minecraft), (action, lastScreen) -> {
+            if (action == RollbackScreenCallback.Action.PLAY && minecraft.level != null)
+                minecraft.setScreen(null);
+            else
+                minecraft.setScreen(lastScreen);
+        });
         ClientPlayNetworking.send(new OpenGUI());
     }
 
@@ -101,7 +107,7 @@ public final class ClientPacketListener {
         ScreenManager.showToast(
             Minecraft.getInstance(),
             Component.translatable("rollback.toast.title.successfulDelete"),
-            Component.translatable("rollback.toast.info.successfulDelete", packet.type.toComponent(), packet.backupId)
+            Component.translatable("rollback.toast.info.successfulDelete", packet.backupId)
         );
     }
 

@@ -3,6 +3,7 @@ package ir.mehradn.rollback.gui;
 import com.mojang.blaze3d.vertex.PoseStack;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.rollback.BackupType;
+import ir.mehradn.rollback.util.RollbackScreenCallback;
 import ir.mehradn.rollback.util.Utils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -91,7 +92,7 @@ public class RollbackScreen extends Screen {
     @Override
     public void onClose() {
         if (ScreenManager.getInstance() != null)
-            ScreenManager.deactivate();
+            ScreenManager.deactivate(RollbackScreenCallback.Action.NOTHING);
         else
             super.onClose();
     }

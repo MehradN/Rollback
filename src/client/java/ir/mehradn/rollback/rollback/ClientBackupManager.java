@@ -40,6 +40,10 @@ public class ClientBackupManager extends CommonBackupManager {
         }
     }
 
+    public LevelSummary getSummary() {
+        return this.levelSummary;
+    }
+
     public void deleteWorld() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         String levelID = getLevelID();
@@ -133,7 +137,7 @@ public class ClientBackupManager extends CommonBackupManager {
         ScreenManager.showToast(
             Minecraft.getInstance(),
             Component.translatable("rollback.toast.title.successfulDelete"),
-            Component.translatable("rollback.toast.info.successfulDelete", type.toComponent(), backupId)
+            Component.translatable("rollback.toast.info.successfulDelete", backupId)
         );
     }
 

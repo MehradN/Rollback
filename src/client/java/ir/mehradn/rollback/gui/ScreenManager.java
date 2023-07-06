@@ -8,6 +8,8 @@ import ir.mehradn.rollback.exception.BackupManagerException;
 import ir.mehradn.rollback.network.packets.TakeScreenshot;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
+import ir.mehradn.rollback.rollback.ClientBackupManager;
+import ir.mehradn.rollback.util.RollbackScreenCallback;
 import ir.mehradn.rollback.util.Utils;
 import ir.mehradn.rollback.util.mixin.GameRendererExpanded;
 import ir.mehradn.rollback.util.mixin.MinecraftServerExpanded;
@@ -32,38 +34,44 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Optional;
 
 @Environment(EnvType.CLIENT)
 public class ScreenManager {
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat();
     @Nullable private static ScreenManager instance = null;
     public final BackupManager backupManager;
     public final RollbackScreen rollbackScreen;
     private final Minecraft minecraft;
     private final Screen lastScreen;
+    private final RollbackScreenCallback callback;
     private boolean onInputScreen = false;
 
-    private ScreenManager(Minecraft minecraft, BackupManager backupManager) {
+    private ScreenManager(Minecraft minecraft, BackupManager backupManager, RollbackScreenCallback callback) {
         this.backupManager = backupManager;
         this.minecraft = minecraft;
         this.lastScreen = minecraft.screen;
         this.rollbackScreen = new RollbackScreen();
+        this.callback = callback;
     }
 
     public static @Nullable ScreenManager getInstance() {
         return instance;
     }
 
-    public static void activate(Minecraft minecraft, BackupManager backupManager) {
+    public static void activate(Minecraft minecraft, BackupManager backupManager, RollbackScreenCallback callback) {
         if (instance != null)
-            deactivate();
-        instance = new ScreenManager(minecraft, backupManager);
+            return;
+        instance = new ScreenManager(minecraft, backupManager, callback);
     }
 
-    public static void deactivate() {
+    public static void deactivate(RollbackScreenCallback.Action action) {
         if (instance == null)
             return;
-        instance.minecraft.setScreen(instance.lastScreen);
+        instance.callback.send(action, instance.lastScreen);
         instance = null;
     }
 
@@ -207,8 +215,10 @@ public class ScreenManager {
                 try {
                     setMessageScreen(Component.translatable("rollback.message.rolling"));
                     this.backupManager.rollbackToBackup(backupID, type);
+                    deactivate(RollbackScreenCallback.Action.PLAY);
                 } catch (BackupManagerException e) {
                     Rollback.LOGGER.error("Failed to rollback to the backup!", e);
+                    deactivate(RollbackScreenCallback.Action.RELOAD);
                 }
             }
         ));
@@ -292,7 +302,7 @@ public class ScreenManager {
         this.minecraft.forceSetScreen(new DirtErrorScreen(
             Component.translatable("rollback.confirm.title.incompatibleVersion").withStyle(ChatFormatting.RED),
             Component.translatable("rollback.confirm.info.incompatibleVersion").withStyle(ChatFormatting.RED),
-            ScreenManager::deactivate
+            () -> deactivate(RollbackScreenCallback.Action.RELOAD)
         ));
     }
 
@@ -307,14 +317,15 @@ public class ScreenManager {
             this.minecraft.setScreen(this.rollbackScreen);
     }
 
-    // TODO: Implement rest of this
     public Component currentSaveLastPlayed() {
         if (isInGame(this.minecraft))
             return Component.translatable("rollback.screen.text.playingNow");
+        if (this.backupManager instanceof ClientBackupManager clientBackupManager)
+            return Component.translatable("rollback.screen.text.lastPlayed",
+                DATE_FORMAT.format(new Date(clientBackupManager.getSummary().getLastPlayed())));
         return Component.empty();
     }
 
-    // TODO: Implement rest of this
     public @Nullable NativeImage loadCurrentSaveIcon() {
         if (isInGame(this.minecraft)) {
             if (this.minecraft.hasSingleplayerServer()) {
@@ -323,7 +334,6 @@ public class ScreenManager {
                 Optional<Path> optional = server.getLevelStorageAccess().getIconFile();
                 if (optional.isEmpty())
                     return null;
-
                 Path path = optional.get();
                 if (!Files.isRegularFile(path))
                     return null;
@@ -335,31 +345,40 @@ public class ScreenManager {
                     Rollback.LOGGER.error("Failed to load the world icon!", e);
                     return null;
                 }
-            } else {
-                ServerData data = this.minecraft.getCurrentServer();
-                if (data == null)
-                    return null;
-                byte[] icon = data.getIconBytes();
-                if (icon == null)
-                    return null;
-
-                Rollback.LOGGER.debug("Loading the server icon...");
-                try {
-                    return NativeImage.read(icon);
-                } catch (IOException e) {
-                    Rollback.LOGGER.error("Failed to load the server icon!", e);
-                    return null;
-                }
             }
-        } else {
-            return null;
+
+            ServerData data = this.minecraft.getCurrentServer();
+            if (data == null)
+                return null;
+            byte[] icon = data.getIconBytes();
+            if (icon == null)
+                return null;
+
+            Rollback.LOGGER.debug("Loading the server icon...");
+            try {
+                return NativeImage.read(icon);
+            } catch (IOException e) {
+                Rollback.LOGGER.error("Failed to load the server icon!", e);
+                return null;
+            }
         }
+
+        if (this.backupManager instanceof ClientBackupManager clientBackupManager) {
+            Rollback.LOGGER.debug("Loading the world icon...");
+            Path path = clientBackupManager.getSummary().getIcon();
+            try (InputStream inputStream = Files.newInputStream(path)) {
+                return NativeImage.read(inputStream);
+            } catch (IOException e) {
+                Rollback.LOGGER.error("Failed to load the world icon!", e);
+                return null;
+            }
+        }
+
+        return null;
     }
 
-    // TODO: Implement rest of this
     public void playCurrentSave() {
-        if (isInGame(this.minecraft))
-            deactivate();
+        deactivate(RollbackScreenCallback.Action.PLAY);
     }
 
     private void setMessageScreen(Component message) {
