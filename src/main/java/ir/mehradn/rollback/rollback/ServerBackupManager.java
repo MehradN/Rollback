@@ -171,21 +171,21 @@ public class ServerBackupManager extends CommonBackupManager {
     }
 
     @Override
-    protected void broadcastSuccessfulDelete(int backupID, BackupType type) {
-        this.server.sendSystemMessage(Component.translatable("rollback.success.deleteBackup", backupID, type));
-        broadcast(new SuccessfulDelete(backupID, type));
+    protected void broadcastSuccessfulDelete(int backupId, BackupType type) {
+        this.server.sendSystemMessage(Component.translatable("rollback.success.deleteBackup", backupId, type));
+        broadcast(new SuccessfulDelete(backupId, type));
     }
 
     @Override
-    protected void broadcastSuccessfulRename(int backupID, BackupType type) {
-        this.server.sendSystemMessage(Component.translatable("rollback.success.renameBackup", backupID, type));
-        broadcast(new SuccessfulRename(backupID, type));
+    protected void broadcastSuccessfulRename(int backupId, BackupType type) {
+        this.server.sendSystemMessage(Component.translatable("rollback.success.renameBackup", backupId, type));
+        broadcast(new SuccessfulRename(backupId, type));
     }
 
     @Override
-    protected void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to) {
-        this.server.sendSystemMessage(Component.translatable("rollback.success.convertBackup", backupID, from, to));
-        broadcast(new SuccessfulConvert(backupID, from, to));
+    protected void broadcastSuccessfulConvert(int backupId, BackupType from, BackupType to) {
+        this.server.sendSystemMessage(Component.translatable("rollback.success.convertBackup", backupId, from, to));
+        broadcast(new SuccessfulConvert(backupId, from, to));
     }
 
     @Override

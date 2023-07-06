@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -32,9 +31,9 @@ public abstract class CommonBackupManager implements BackupManager {
         .registerTypeAdapter(RollbackVersion.class, new RollbackVersion.Adapter())
         .registerTypeAdapter(RollbackWorldConfig.class, new RollbackWorldConfig.Adapter())
         .create();
+    @Nullable protected RollbackData data = null;
+    @Nullable protected RollbackWorld world = null;
     private final RollbackDefaultConfig defaultConfig;
-    @Nullable private RollbackData data = null;
-    @Nullable private RollbackWorld world = null;
 
     public CommonBackupManager() {
         this.defaultConfig = GlobalSuppliers.buildDefaultConfig();
@@ -61,23 +60,6 @@ public abstract class CommonBackupManager implements BackupManager {
             Rollback.LOGGER.error("Failed to save the metadata file!", e);
             throw new BackupManagerException(BackupManagerException.Cause.IO_EXCEPTION, "Failed to save the metadata file!", e);
         }
-    }
-
-    // TODO: Move to ClientBackupManager
-    public void deleteWorld() throws BackupManagerException {
-        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        String levelID = getLevelID();
-        Rollback.LOGGER.info("Deleting all the backups for world \"{}\"...", levelID);
-
-        Set<Integer> automatedIDs = this.world.automatedBackups.keySet();
-        Set<Integer> commandIDs = this.world.commandBackups.keySet();
-        while (!automatedIDs.isEmpty())
-            deleteBackup(automatedIDs.iterator().next(), BackupType.ROLLBACK);
-        while (!commandIDs.isEmpty())
-            deleteBackup(commandIDs.iterator().next(), BackupType.BACKUP);
-
-        this.data.worlds.remove(levelID);
-        saveWorld();
     }
 
     @Override
@@ -308,11 +290,11 @@ public abstract class CommonBackupManager implements BackupManager {
 
     protected abstract void broadcastSuccessfulBackup(BackupType type, long size);
 
-    protected abstract void broadcastSuccessfulDelete(int backupID, BackupType type);
+    protected abstract void broadcastSuccessfulDelete(int backupId, BackupType type);
 
-    protected abstract void broadcastSuccessfulRename(int backupID, BackupType type);
+    protected abstract void broadcastSuccessfulRename(int backupId, BackupType type);
 
-    protected abstract void broadcastSuccessfulConvert(int backupID, BackupType from, BackupType to);
+    protected abstract void broadcastSuccessfulConvert(int backupId, BackupType from, BackupType to);
 
     protected abstract void broadcastSuccessfulConfig(boolean defaultConfig);
 
@@ -344,7 +326,7 @@ public abstract class CommonBackupManager implements BackupManager {
         }
     }
 
-    private void deleteGhostIcons() {
+    protected void deleteGhostIcons() {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         for (RollbackBackup backup : this.world.automatedBackups.values())
             if (backup.iconPath != null && !Files.isRegularFile(getRollbackDirectory().resolve(backup.iconPath)))
@@ -354,13 +336,13 @@ public abstract class CommonBackupManager implements BackupManager {
                 backup.iconPath = null;
     }
 
-    private BackupManagerException showError(String title, String info, BackupManagerException.Cause cause, Throwable exception) {
+    protected BackupManagerException showError(String title, String info, BackupManagerException.Cause cause, Throwable exception) {
         Rollback.LOGGER.error(info, exception);
         broadcastError(title, info);
         return new BackupManagerException(cause, info, exception);
     }
 
-    private BackupManagerException showError(String title, String info, BackupManagerException cause) {
+    protected BackupManagerException showError(String title, String info, BackupManagerException cause) {
         Rollback.LOGGER.error(info, cause);
         broadcastError(title, info);
         return new BackupManagerException(info, cause);
