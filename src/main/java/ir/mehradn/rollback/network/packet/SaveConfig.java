@@ -1,4 +1,4 @@
-package ir.mehradn.rollback.network.packets;
+package ir.mehradn.rollback.network.packet;
 
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.rollback.metadata.RollbackWorldConfig;

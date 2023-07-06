@@ -8,7 +8,7 @@ import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.config.RollbackDefaultConfig;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.network.packets.OpenGUI;
+import ir.mehradn.rollback.network.packet.OpenGUI;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.rollback.ServerBackupManager;

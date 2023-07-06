@@ -6,7 +6,7 @@ import ir.mehradn.mehradconfig.gui.ConfigScreenBuilder;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
-import ir.mehradn.rollback.network.packets.TakeScreenshot;
+import ir.mehradn.rollback.network.packet.TakeScreenshot;
 import ir.mehradn.rollback.rollback.BackupManager;
 import ir.mehradn.rollback.rollback.BackupType;
 import ir.mehradn.rollback.rollback.ClientBackupManager;
