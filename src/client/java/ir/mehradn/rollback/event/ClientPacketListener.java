@@ -90,7 +90,7 @@ public final class ClientPacketListener {
     private static void onSuccessfulConfig(SuccessfulConfig packet, LocalPlayer player, PacketSender responseSender) {
         ScreenManager.showToast(
             Minecraft.getInstance(),
-            Component.translatable("rollback.toast.title.successfulConfig." + (packet.defaultConfig ? "default" : "world")),
+            Component.translatable("rollback.toast.title.successfulConfig"),
             Component.empty()
         );
     }

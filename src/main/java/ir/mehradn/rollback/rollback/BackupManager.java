@@ -29,8 +29,6 @@ public interface BackupManager {
 
     void saveConfig() throws BackupManagerException;
 
-    void saveConfigAsDefault() throws BackupManagerException;
-
     enum State {
         INITIAL,
         IDLE,

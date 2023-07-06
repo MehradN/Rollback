@@ -261,21 +261,7 @@ public abstract class CommonBackupManager implements BackupManager {
     public void saveConfig() throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
         saveWorld();
-        broadcastSuccessfulConfig(false);
-    }
-
-    @Override
-    public void saveConfigAsDefault() throws BackupManagerException {
-        Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");
-        this.world.config.mergeTo(this.defaultConfig);
-        this.world.config.reset();
-        try {
-            saveWorld();
-            this.defaultConfig.save();
-            broadcastSuccessfulConfig(true);
-        } catch (IOException e) {
-            throw showError("rollback.error.saveConfig", "Failed to save the config file!", BackupManagerException.Cause.IO_EXCEPTION, e);
-        }
+        broadcastSuccessfulConfig();
     }
 
     protected abstract String getLevelID();
@@ -296,7 +282,7 @@ public abstract class CommonBackupManager implements BackupManager {
 
     protected abstract void broadcastSuccessfulConvert(int backupId, BackupType from, BackupType to);
 
-    protected abstract void broadcastSuccessfulConfig(boolean defaultConfig);
+    protected abstract void broadcastSuccessfulConfig();
 
     protected void extractBackup(int backupID, BackupType type) throws BackupManagerException {
         Assertion.state(this.data != null && this.world != null, "Call loadWorld before this!");

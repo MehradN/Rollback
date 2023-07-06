@@ -2,7 +2,11 @@ package ir.mehradn.rollback.gui;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
+import ir.mehradn.mehradconfig.MehradConfig;
 import ir.mehradn.mehradconfig.gui.ConfigScreenBuilder;
+import ir.mehradn.mehradconfig.gui.EntryWidgetFactory;
+import ir.mehradn.mehradconfig.gui.screen.CompactConfigScreen;
+import ir.mehradn.mehradconfig.gui.screen.ResettableConfigScreen;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
@@ -39,37 +43,33 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
 public class ScreenManager {
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat();
+    private static final ConfigScreenBuilder WORLD_OPTIONS;
+    private static final ConfigScreenBuilder DEFAULT_OPTIONS;
     @Nullable private static ScreenManager instance = null;
-    private static final ConfigScreenBuilder CONFIG_SCREEN_BUILDER = new ConfigScreenBuilder()
-        .setScreenType(ConfigScreenBuilder.DefaultScreens.COMPACT)
-        .setOnSave((minecraft, thisScreen, parentScreen) -> {
-            if (ScreenManager.getInstance() == null) {
-                minecraft.setScreen(parentScreen);
-                return;
-            }
-            ScreenManager screenManager = ScreenManager.getInstance();
-            try {
-                screenManager.backupManager.getDefaultConfig().save();
-            } catch (IOException e) {
-                Rollback.LOGGER.error("Failed to save the config!", e);
-            }
-            screenManager.onInputScreen = false;
-        }).setOnCancel((minecraft, thisScreen, parentScreen) -> {
-            if (ScreenManager.getInstance() == null)
-                minecraft.setScreen(parentScreen);
-            else
-                ScreenManager.getInstance().onInputScreen = false;
-        });
     public final BackupManager backupManager;
     public final RollbackScreen rollbackScreen;
     private final Minecraft minecraft;
     private final Screen lastScreen;
     private final RollbackScreenCallback callback;
     private boolean onInputScreen = false;
+
+    static {
+        WORLD_OPTIONS = addOnActions(
+            new ConfigScreenBuilder().setScreenType(DirtResettableConfigScreen::new, ConfigScreenBuilder.DefaultScreens.RESETTABLE),
+            (screenManager) -> screenManager.onInputScreen = false,
+            ScreenManager::saveWorldConfig
+        );
+        DEFAULT_OPTIONS = addOnActions(
+            new ConfigScreenBuilder().setScreenType(DirtCompactConfigScreen::new, ConfigScreenBuilder.DefaultScreens.COMPACT),
+            (screenManager) -> screenManager.onInputScreen = false,
+            ScreenManager::saveDefaultConfig
+        );
+    }
 
     private ScreenManager(Minecraft minecraft, BackupManager backupManager, RollbackScreenCallback callback) {
         this.backupManager = backupManager;
@@ -245,15 +245,12 @@ public class ScreenManager {
         ));
     }
 
-    public void openConfig() {
+    public void openWorldConfig() {
         this.onInputScreen = true;
-        this.minecraft.setScreen(WorldConfigScreen.build(
-            this.backupManager.getWorld().config,
-            () -> this.onInputScreen = false
-        ));
+        this.minecraft.setScreen(WORLD_OPTIONS.buildForInstance(this.backupManager.getWorld().config));
     }
 
-    public void saveConfig() {
+    public void saveWorldConfig() {
         try {
             setMessageScreen(Component.translatable("rollback.message.savingConfig"));
             this.backupManager.saveConfig();
@@ -264,15 +261,14 @@ public class ScreenManager {
 
     public void openDefaultConfig() {
         this.onInputScreen = true;
-        this.minecraft.setScreen(CONFIG_SCREEN_BUILDER.buildForInstance(this.backupManager.getDefaultConfig()));
+        this.minecraft.setScreen(DEFAULT_OPTIONS.buildForInstance(this.backupManager.getDefaultConfig()));
     }
 
-    public void saveConfigAsDefault() {
+    public void saveDefaultConfig() {
         try {
-            setMessageScreen(Component.translatable("rollback.message.savingConfig"));
-            this.backupManager.saveConfigAsDefault();
-        } catch (BackupManagerException e) {
-            Rollback.LOGGER.error("Failed to save the config as default!", e);
+            this.backupManager.getDefaultConfig().save();
+        } catch (IOException e) {
+            Rollback.LOGGER.error("Failed to save the config!", e);
         }
     }
 
@@ -407,6 +403,22 @@ public class ScreenManager {
         deactivate(RollbackScreenCallback.Action.PLAY);
     }
 
+    private static ConfigScreenBuilder addOnActions(ConfigScreenBuilder builder, Consumer<ScreenManager> onClose, Consumer<ScreenManager> onSave) {
+        return builder.setOnCancel((m, s, p) -> {
+            if (instance != null)
+                onClose.accept(instance);
+            else
+                m.setScreen(p);
+        }).setOnSave((m, s, p) -> {
+            if (instance != null) {
+                onSave.accept(instance);
+                onClose.accept(instance);
+            } else {
+                m.setScreen(p);
+            }
+        });
+    }
+
     private void setMessageScreen(Component message) {
         this.minecraft.forceSetScreen(new GenericDirtMessageScreen(message));
     }
@@ -420,6 +432,32 @@ public class ScreenManager {
         @Override
         public void renderBackground(PoseStack poseStack) {
             renderDirtBackground(poseStack);
+        }
+    }
+
+    @Environment(EnvType.CLIENT)
+    public static class DirtResettableConfigScreen extends ResettableConfigScreen {
+        public DirtResettableConfigScreen(MehradConfig config, ConfigScreenBuilder.ScreenProperties properties,
+                                          EntryWidgetFactory entryWidgetFactory, Screen parentScreen) {
+            super(config, properties, entryWidgetFactory, parentScreen);
+        }
+
+        @Override
+        public void renderBackground(PoseStack poseStack) {
+            super.renderDirtBackground(poseStack);
+        }
+    }
+
+    @Environment(EnvType.CLIENT)
+    public static class DirtCompactConfigScreen extends CompactConfigScreen {
+        public DirtCompactConfigScreen(MehradConfig config, ConfigScreenBuilder.ScreenProperties properties, EntryWidgetFactory entryWidgetFactory,
+                                       Screen parentScreen) {
+            super(config, properties, entryWidgetFactory, parentScreen);
+        }
+
+        @Override
+        public void renderBackground(PoseStack poseStack) {
+            super.renderDirtBackground(poseStack);
         }
     }
 }

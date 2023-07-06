@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 public interface RollbackScreenCallback {
     void send(Action action, Screen lastScreen);
 
+    @Environment(EnvType.CLIENT)
     enum Action {
         NOTHING,
         RELOAD,

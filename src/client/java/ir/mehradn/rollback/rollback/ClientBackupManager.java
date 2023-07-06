@@ -160,11 +160,5 @@ public class ClientBackupManager extends CommonBackupManager {
     }
 
     @Override
-    protected void broadcastSuccessfulConfig(boolean defaultConfig) {
-        ScreenManager.showToast(
-            Minecraft.getInstance(),
-            Component.translatable("rollback.toast.title.successfulConfig." + (defaultConfig ? "default" : "world")),
-            Component.empty()
-        );
-    }
+    protected void broadcastSuccessfulConfig() { }
 }

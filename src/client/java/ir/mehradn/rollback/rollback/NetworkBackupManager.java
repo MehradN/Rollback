@@ -110,13 +110,7 @@ public class NetworkBackupManager implements BackupManager {
     @Override
     public void saveConfig() {
         this.state = State.ACTION;
-        ClientPlayNetworking.send(new SaveConfig(this.lastUpdateId, false, this.getWorld().config));
-    }
-
-    @Override
-    public void saveConfigAsDefault() {
-        this.state = State.ACTION;
-        ClientPlayNetworking.send(new SaveConfig(this.lastUpdateId, true, this.getWorld().config));
+        ClientPlayNetworking.send(new SaveConfig(this.lastUpdateId, this.getWorld().config));
     }
 
     private void actionFinished() {

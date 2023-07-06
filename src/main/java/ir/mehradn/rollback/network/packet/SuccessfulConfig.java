@@ -11,20 +11,13 @@ public class SuccessfulConfig implements FabricPacket {
         new ResourceLocation(Rollback.MOD_ID, "successful_config"),
         SuccessfulConfig::new
     );
-    public final boolean defaultConfig;
 
-    public SuccessfulConfig(boolean defaultConfig) {
-        this.defaultConfig = defaultConfig;
-    }
+    public SuccessfulConfig() { }
 
-    public SuccessfulConfig(FriendlyByteBuf buf) {
-        this.defaultConfig = buf.readBoolean();
-    }
+    public SuccessfulConfig(FriendlyByteBuf buf) { }
 
     @Override
-    public void write(FriendlyByteBuf buf) {
-        buf.writeBoolean(this.defaultConfig);
-    }
+    public void write(FriendlyByteBuf buf) { }
 
     @Override
     public PacketType<?> getType() {

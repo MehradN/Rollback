@@ -55,11 +55,6 @@ public class ServerBackupManager extends CommonBackupManager {
         saveConfig();
     }
 
-    public void saveToDefaultConfig(RollbackWorldConfig config) throws BackupManagerException {
-        config.copyTo(this.getWorld().config);
-        saveConfigAsDefault();
-    }
-
     public void setIconPath(int backupId, BackupType type, Path iconPath) throws BackupManagerException {
         this.getWorld().getBackup(backupId, type).iconPath = iconPath;
         saveWorld();
@@ -109,12 +104,6 @@ public class ServerBackupManager extends CommonBackupManager {
     @Override
     public void saveConfig() throws BackupManagerException {
         super.saveConfig();
-        increaseUpdateId();
-    }
-
-    @Override
-    public void saveConfigAsDefault() throws BackupManagerException {
-        super.saveConfigAsDefault();
         increaseUpdateId();
     }
 
@@ -189,13 +178,13 @@ public class ServerBackupManager extends CommonBackupManager {
     }
 
     @Override
-    protected void broadcastSuccessfulConfig(boolean defaultConfig) {
-        RollbackConfig config = (defaultConfig ? getDefaultConfig() : getWorld().config);
-        MutableComponent text = Component.translatable("rollback.success.updateConfig." + (defaultConfig ? "default" : "world"));
+    protected void broadcastSuccessfulConfig() {
+        RollbackConfig config = getWorld().config;
+        MutableComponent text = Component.translatable("rollback.success.updateConfig");
         for (ConfigEntry<?> entry : config.getEntries())
             text.append("\n" + entry.getName() + " = " + entry.get().toString());
         this.server.sendSystemMessage(text);
-        broadcast(new SuccessfulConfig(defaultConfig));
+        broadcast(new SuccessfulConfig());
     }
 
     private boolean shouldSendBackupWarning(int count) {

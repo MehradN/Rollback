@@ -103,10 +103,7 @@ public final class ServerPacketListener {
         if (backupManager.validateUpdateId(packet.lastUpdateId))
             return;
         try {
-            if (packet.saveAsDefault)
-                backupManager.saveToDefaultConfig(packet.worldConfig);
-            else
-                backupManager.saveToConfig(packet.worldConfig);
+            backupManager.saveToConfig(packet.worldConfig);
         } catch (BackupManagerException ignored) { }
     }
 
