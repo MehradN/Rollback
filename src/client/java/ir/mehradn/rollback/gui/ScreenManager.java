@@ -2,6 +2,7 @@ package ir.mehradn.rollback.gui;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
+import ir.mehradn.mehradconfig.gui.ConfigScreenBuilder;
 import ir.mehradn.rollback.Rollback;
 import ir.mehradn.rollback.exception.Assertion;
 import ir.mehradn.rollback.exception.BackupManagerException;
@@ -43,6 +44,26 @@ import java.util.Optional;
 public class ScreenManager {
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat();
     @Nullable private static ScreenManager instance = null;
+    private static final ConfigScreenBuilder CONFIG_SCREEN_BUILDER = new ConfigScreenBuilder()
+        .setScreenType(ConfigScreenBuilder.DefaultScreens.COMPACT)
+        .setOnSave((minecraft, thisScreen, parentScreen) -> {
+            if (ScreenManager.getInstance() == null) {
+                minecraft.setScreen(parentScreen);
+                return;
+            }
+            ScreenManager screenManager = ScreenManager.getInstance();
+            try {
+                screenManager.backupManager.getDefaultConfig().save();
+            } catch (IOException e) {
+                Rollback.LOGGER.error("Failed to save the config!", e);
+            }
+            screenManager.onInputScreen = false;
+        }).setOnCancel((minecraft, thisScreen, parentScreen) -> {
+            if (ScreenManager.getInstance() == null)
+                minecraft.setScreen(parentScreen);
+            else
+                ScreenManager.getInstance().onInputScreen = false;
+        });
     public final BackupManager backupManager;
     public final RollbackScreen rollbackScreen;
     private final Minecraft minecraft;
@@ -239,6 +260,11 @@ public class ScreenManager {
         } catch (BackupManagerException e) {
             Rollback.LOGGER.error("Failed to save the config!", e);
         }
+    }
+
+    public void openDefaultConfig() {
+        this.onInputScreen = true;
+        this.minecraft.setScreen(CONFIG_SCREEN_BUILDER.buildForInstance(this.backupManager.getDefaultConfig()));
     }
 
     public void saveConfigAsDefault() {

@@ -14,11 +14,14 @@ import java.util.function.Consumer;
 public class ActionTab extends GridLayoutTab {
     public ActionTab(RollbackScreen screen) {
         super(Component.translatable("rollback.screen.tab.action"));
+        Button defaultOptions;
         Button openFolder;
 
         GridLayout.RowHelper rowHelper = this.layout.spacing(4).createRowHelper(1);
-        rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.config"),
+        rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.worldConfig"),
             onClick(ScreenManager::openConfig)).width(200).build());
+        rowHelper.addChild(defaultOptions = Button.builder(Component.translatable("rollback.screen.button.defaultConfig"),
+            onClick(ScreenManager::openDefaultConfig)).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeCommand"),
             onClick(ScreenManager::createBackup)).width(200).build());
         rowHelper.addChild(Button.builder(Component.translatable("rollback.screen.button.makeManual"),
@@ -28,7 +31,9 @@ public class ActionTab extends GridLayoutTab {
         rowHelper.addChild(Button.builder(CommonComponents.GUI_CANCEL,
             (btn) -> screen.onClose()).width(200).build());
 
-        openFolder.active = ScreenManager.isIntegrated(Minecraft.getInstance());
+        Minecraft minecraft = Minecraft.getInstance();
+        defaultOptions.active = !ScreenManager.isInGame(minecraft);
+        openFolder.active = ScreenManager.isIntegrated(minecraft) || !ScreenManager.isInGame(minecraft);
     }
 
     private static Button.OnPress onClick(Consumer<ScreenManager> action) {
