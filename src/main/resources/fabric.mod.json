@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "rollback",
+  "version": "${version}",
+  "name": "Rollback",
+  "description": "This Minecraft mod improves the backup system. (Automatic backups, GUI, etc.)",
+  "authors": [
+    "Mehrad Nayyeri"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/rollback",
+    "sources": "https://github.com/MehradN/Rollback",
+    "issues": "https://github.com/MehradN/Rollback/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/rollback/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "ir.mehradn.rollback.Rollback"
+    ],
+    "client": [
+      "ir.mehradn.rollback.RollbackClient"
+    ]
+  },
+  "mixins": [
+    "rollback.mixins.json",
+    {
+      "config": "rollback.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "java": ">=17",
+    "minecraft": "~${minecraft}",
+    "fabricloader": ">=0.16.10",
+    "fabric-api": "*"
+  }
+}
